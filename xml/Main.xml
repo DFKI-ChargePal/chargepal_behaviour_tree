@@ -1,0 +1,40 @@
+<root BTCPP_format="4"
+      main_tree_to_execute="main">
+  <BehaviorTree ID="main">
+    <Fallback name="job">
+      <Sequence name="bring_charger">
+        <isBRING_CHARGER/>
+        <SubTree ID="BRING_CHARGER_MAIN"
+                 _autoremap="true"/>
+      </Sequence>
+      <Sequence name="recharge_charger">
+        <isRECHARGE_CHARGER/>
+        <SubTree ID="RECHARGE_CHARGER_MAIN"
+                 _autoremap="true"/>
+      </Sequence>
+      <Sequence name="stow_charger">
+        <isSTOW_CHARGER/>
+        <SubTree ID="STOW_CHARGER_MAIN"
+                 _autoremap="true"/>
+      </Sequence>
+      <Sequence name="recharge_charger">
+        <isRECHARGE_SELF/>
+        <SubTree ID="RECHARGE_SELF"
+                 _autoremap="true"/>
+      </Sequence>
+    </Fallback>
+  </BehaviorTree>
+
+  <!-- Description of Node Models (used by Groot) -->
+  <TreeNodesModel>
+    <Condition ID="isBRING_CHARGER"
+               editable="true"/>
+    <Condition ID="isRECHARGE_CHARGER"
+               editable="true"/>
+    <Condition ID="isRECHARGE_SELF"
+               editable="true"/>
+    <Condition ID="isSTOW_CHARGER"
+               editable="true"/>
+  </TreeNodesModel>
+
+</root>

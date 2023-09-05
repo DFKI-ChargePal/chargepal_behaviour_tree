@@ -1,0 +1,124 @@
+<root BTCPP_format="4">
+  <BehaviorTree ID="action_arrive_station">
+    <Fallback name="arrive_at_station">
+      <RetryUntilSuccessful num_attempts="3">
+        <arrive_at_station/>
+      </RetryUntilSuccessful>
+      <Recovery_AaS/>
+    </Fallback>
+  </BehaviorTree>
+
+  <BehaviorTree ID="action_drop_cart">
+    <Fallback name="drop_cart">
+      <RetryUntilSuccessful num_attempts="3">
+        <drop_cart/>
+      </RetryUntilSuccessful>
+      <Recovery_DC/>
+    </Fallback>
+  </BehaviorTree>
+
+  <BehaviorTree ID="action_go_home">
+    <Fallback name="go_home">
+      <RetryUntilSuccessful num_attempts="3">
+        <go_home/>
+      </RetryUntilSuccessful>
+      <Recovery_GH/>
+    </Fallback>
+  </BehaviorTree>
+
+  <BehaviorTree ID="action_pickup_cart">
+    <Fallback name="pickup_cart">
+      <RetryUntilSuccessful num_attempts="3">
+        <pickup_cart/>
+      </RetryUntilSuccessful>
+      <Recovery_PiC/>
+    </Fallback>
+  </BehaviorTree>
+
+  <BehaviorTree ID="action_plugin">
+    <Fallback name="plugin">
+      <Sequence name="plugin_bcs">
+        <isRobotAtBCS/>
+        <Fallback name="plugin_bcs">
+          <RetryUntilSuccessful num_attempts="3">
+            <plugin_BCS/>
+          </RetryUntilSuccessful>
+          <Recovery_PI_BCS/>
+        </Fallback>
+      </Sequence>
+      <Sequence name="plugin_ads">
+        <isRobotAtADS/>
+        <Fallback name="plugin_ads">
+          <RetryUntilSuccessful num_attempts="3">
+            <plugin_ADS/>
+          </RetryUntilSuccessful>
+          <Recovery_PI_ADS/>
+        </Fallback>
+      </Sequence>
+    </Fallback>
+  </BehaviorTree>
+
+  <BehaviorTree ID="action_plugout">
+    <Fallback name="plugout">
+      <Sequence name="plugout_bcs">
+        <isRobotAtBCS/>
+        <Fallback name="plugout_bcs">
+          <RetryUntilSuccessful num_attempts="3">
+            <plugout_BCS/>
+          </RetryUntilSuccessful>
+          <Recovery_PO_BCS/>
+        </Fallback>
+      </Sequence>
+      <Sequence name="plugout_ads">
+        <isRobotAtADS/>
+        <Fallback name="plugout_ads">
+          <RetryUntilSuccessful num_attempts="3">
+            <plugout_ADS/>
+          </RetryUntilSuccessful>
+          <Recovery_PO_ADS/>
+        </Fallback>
+      </Sequence>
+    </Fallback>
+  </BehaviorTree>
+
+  <!-- Description of Node Models (used by Groot) -->
+  <TreeNodesModel>
+    <Action ID="Recovery_AaS"
+            editable="true"/>
+    <Action ID="Recovery_DC"
+            editable="true"/>
+    <Action ID="Recovery_GH"
+            editable="true"/>
+    <Action ID="Recovery_PI_ADS"
+            editable="true"/>
+    <Action ID="Recovery_PI_BCS"
+            editable="true"/>
+    <Action ID="Recovery_PO_ADS"
+            editable="true"/>
+    <Action ID="Recovery_PO_BCS"
+            editable="true"/>
+    <Action ID="Recovery_PiC"
+            editable="true"/>
+    <Action ID="arrive_at_station"
+            editable="true"/>
+    <Action ID="drop_cart"
+            editable="true"/>
+    <Action ID="go_home"
+            editable="true"/>
+    <Condition ID="isRobotAtADS"
+               editable="true"/>
+    <Condition ID="isRobotAtBCS"
+               editable="true"/>
+    <Action ID="pickup_cart"
+            editable="true"/>
+    <Action ID="plugin_ADS"
+            editable="true"/>
+    <Action ID="plugin_BCS"
+            editable="true"/>
+    <Action ID="plugout_ADS"
+            editable="true"/>
+    <Action ID="plugout_BCS"
+            editable="true"/>
+  </TreeNodesModel>
+
+</root>

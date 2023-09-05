@@ -1,0 +1,3 @@
+<launch>
+    <node pkg="chargepal_behaviour_tree" type="chargepal_behaviour_tree" name="chargepal_behaviour_tree" respawn="true" output="screen" />
+</launch>

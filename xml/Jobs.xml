@@ -1,0 +1,195 @@
+<root BTCPP_format="4">
+  <BehaviorTree ID="BRING_CHARGER_ADS_BCS_BWS">
+    <Fallback name="bring_charger_ads_bcs_bws">
+      <Sequence name="same_battery">
+        <isSameBattery/>
+        <Fallback name="battery_location">
+          <Sequence>
+            <isbattery_ADS_BCS/>
+            <SubTree ID="actionset_A1"
+                     _autoremap="true"/>
+          </Sequence>
+          <Sequence>
+            <isbattery_BWS/>
+            <SubTree ID="actionset_A2"
+                     _autoremap="true"/>
+          </Sequence>
+        </Fallback>
+      </Sequence>
+      <Sequence name="different_battery">
+        <isDifferentBattery/>
+        <Fallback name="battery_location">
+          <Sequence>
+            <isbattery_ADS_BCS/>
+            <SubTree ID="actionset_B1"
+                     _autoremap="true"/>
+          </Sequence>
+          <Sequence>
+            <isbattery_BWS/>
+            <SubTree ID="actionset_C1"
+                     _autoremap="true"/>
+          </Sequence>
+        </Fallback>
+      </Sequence>
+    </Fallback>
+  </BehaviorTree>
+
+  <BehaviorTree ID="BRING_CHARGER_MAIN">
+    <Fallback name="job_bring_charger">
+      <Sequence name="bring_charger_ads_bcs_bws">
+        <isRobotAtADSorBCSorBWS/>
+        <SubTree ID="BRING_CHARGER_ADS_BCS_BWS"
+                 _autoremap="true"/>
+      </Sequence>
+      <Sequence name="bring_charger_rbs">
+        <isRobotAtRBS/>
+        <SubTree ID="BRING_CHARGER_RBS"
+                 _autoremap="true"/>
+      </Sequence>
+    </Fallback>
+  </BehaviorTree>
+
+  <BehaviorTree ID="BRING_CHARGER_RBS">
+    <Fallback name="bring_charger_rbs">
+      <Sequence name="different_battery_adsbcs">
+        <isbattery_ADS_BCS/>
+        <SubTree ID="actionset_B2"
+                 _autoremap="true"/>
+      </Sequence>
+      <Sequence name="different_battery_bws">
+        <isbattery_BWS/>
+        <SubTree ID="actionset_C2"
+                 _autoremap="true"/>
+      </Sequence>
+    </Fallback>
+  </BehaviorTree>
+
+  <BehaviorTree ID="RECHARGE_CHARGER_ADS_BCS_BWS">
+    <Fallback name="recharge_charger_ads_bcs_bws">
+      <Sequence name="same_battery">
+        <isSameBattery/>
+        <Fallback name="battery_location">
+          <Sequence>
+            <isbattery_ADS_BCS/>
+            <SubTree ID="actionset_D1"
+                     _autoremap="true"/>
+          </Sequence>
+          <Sequence>
+            <isbattery_BWS/>
+            <SubTree ID="actionset_D2"
+                     _autoremap="true"/>
+          </Sequence>
+        </Fallback>
+      </Sequence>
+      <Sequence name="different_battery">
+        <isDifferentBattery/>
+        <Fallback name="battery_location">
+          <Sequence>
+            <isbattery_ADS_BCS/>
+            <SubTree ID="actionset_E1"
+                     _autoremap="true"/>
+          </Sequence>
+          <Sequence>
+            <isbattery_BWS/>
+            <SubTree ID="actionset_F1"
+                     _autoremap="true"/>
+          </Sequence>
+        </Fallback>
+      </Sequence>
+    </Fallback>
+  </BehaviorTree>
+
+  <BehaviorTree ID="RECHARGE_CHARGER_MAIN">
+    <Fallback name="job_recharge_charger">
+      <Sequence name="recharge_charger_ads_bcs">
+        <isRobotAtADSorBCSorBWS/>
+        <SubTree ID="RECHARGE_CHARGER_ADS_BCS_BWS"
+                 _autoremap="true"/>
+      </Sequence>
+      <Sequence name="recharge_charger_rbs">
+        <isRobotAtRBS/>
+        <SubTree ID="RECHARGE_CHARGER_RBS"
+                 _autoremap="true"/>
+      </Sequence>
+    </Fallback>
+  </BehaviorTree>
+
+  <BehaviorTree ID="RECHARGE_CHARGER_RBS">
+    <Fallback name="recharge_charger_rbs">
+      <Sequence name="different_battery_adsbcs">
+        <isbattery_ADS_BCS/>
+        <SubTree ID="actionset_E2"
+                 _autoremap="true"/>
+      </Sequence>
+      <Sequence name="different_battery_bws">
+        <isbattery_BWS/>
+        <SubTree ID="actionset_F2"
+                 _autoremap="true"/>
+      </Sequence>
+    </Fallback>
+  </BehaviorTree>
+
+  <BehaviorTree ID="RECHARGE_SELF">
+    <Fallback name="job_recharge_self">
+      <SubTree ID="actionset_G0"
+               _autoremap="true"/>
+    </Fallback>
+  </BehaviorTree>
+
+  <BehaviorTree ID="STOW_CHARGER_ADS_BCS_BWS">
+    <Fallback name="stow_charger_ads_bcs_bws">
+      <Sequence name="same_battery">
+        <isSameBattery/>
+        <SubTree ID="actionset_A3"
+                 _autoremap="true"/>
+      </Sequence>
+      <Sequence name="different_battery">
+        <isDifferentBattery/>
+        <SubTree ID="actionset_B3"
+                 _autoremap="true"/>
+      </Sequence>
+    </Fallback>
+  </BehaviorTree>
+
+  <BehaviorTree ID="STOW_CHARGER_MAIN">
+    <Fallback name="job_stow_charger">
+      <Sequence name="stow_charger_ads_bcs_bws">
+        <isRobotAtADSorBCSorBWS/>
+        <SubTree ID="STOW_CHARGER_ADS_BCS_BWS"
+                 _autoremap="true"/>
+      </Sequence>
+      <Sequence name="stow_charger_rbs">
+        <isRobotAtRBS/>
+        <SubTree ID="STOW_CHARGER_RBS"
+                 _autoremap="true"/>
+      </Sequence>
+    </Fallback>
+  </BehaviorTree>
+
+  <BehaviorTree ID="STOW_CHARGER_RBS">
+    <Fallback name="stow_charger_rbs">
+      <Sequence>
+        <isDifferentBattery/>
+        <SubTree ID="actionset_B4"
+                 _autoremap="true"/>
+      </Sequence>
+    </Fallback>
+  </BehaviorTree>
+
+  <!-- Description of Node Models (used by Groot) -->
+  <TreeNodesModel>
+    <Condition ID="isDifferentBattery"
+               editable="true"/>
+    <Condition ID="isRobotAtADSorBCSorBWS"
+               editable="true"/>
+    <Condition ID="isRobotAtRBS"
+               editable="true"/>
+    <Condition ID="isSameBattery"
+               editable="true"/>
+    <Condition ID="isbattery_ADS_BCS"
+               editable="true"/>
+    <Condition ID="isbattery_BWS"
+               editable="true"/>
+  </TreeNodesModel>
+
+</root>

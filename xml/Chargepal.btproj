@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root BTCPP_format="4" project_name="ChargePal">
+    <include path="Actions.xml"/>
+    <include path="Actionsets.xml"/>
+    <include path="Jobs.xml"/>
+    <include path="Main.xml"/>
+    <!-- Description of Node Models (used by Groot) -->
+    <TreeNodesModel>
+        <Action ID="Recovery_AaS" editable="true"/>
+        <Action ID="Recovery_DC" editable="true"/>
+        <Action ID="Recovery_GH" editable="true"/>
+        <Action ID="Recovery_PI_ADS" editable="true"/>
+        <Action ID="Recovery_PI_BCS" editable="true"/>
+        <Action ID="Recovery_PO_ADS" editable="true"/>
+        <Action ID="Recovery_PO_BCS" editable="true"/>
+        <Action ID="Recovery_PiC" editable="true"/>
+        <Action ID="arrive_at_station" editable="true"/>
+        <Action ID="drop_cart" editable="true"/>
+        <Action ID="go_home" editable="true"/>
+        <Condition ID="isBRING_CHARGER" editable="true"/>
+        <Condition ID="isDiffBatteryADSorBCS" editable="true"/>
+        <Condition ID="isDiffBatteryBWS" editable="true"/>
+        <Condition ID="isDifferentBattery" editable="true"/>
+        <Condition ID="isRECHARGE_CHARGER" editable="true"/>
+        <Condition ID="isRECHARGE_SELF" editable="true"/>
+        <Condition ID="isRobotAtADS" editable="true"/>
+        <Condition ID="isRobotAtADSorBCSorBWS" editable="true"/>
+        <Condition ID="isRobotAtBCS" editable="true"/>
+        <Condition ID="isRobotAtBWS" editable="true"/>
+        <Condition ID="isRobotAtRBS" editable="true"/>
+        <Condition ID="isSTOW_CHARGER" editable="true"/>
+        <Condition ID="isSameBattery" editable="true"/>
+        <Condition ID="isbattery_ADS_BCS" editable="true"/>
+        <Condition ID="isbattery_BWS" editable="true"/>
+        <Action ID="pickup_cart" editable="true"/>
+        <Action ID="plugin_ADS" editable="true"/>
+        <Action ID="plugin_BCS" editable="true"/>
+        <Action ID="plugout_ADS" editable="true"/>
+        <Action ID="plugout_BCS" editable="true"/>
+    </TreeNodesModel>
+</root>

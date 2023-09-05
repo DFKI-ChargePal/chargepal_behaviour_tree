@@ -1,0 +1,211 @@
+<root BTCPP_format="4">
+  <BehaviorTree ID="actionset_A1">
+    <Sequence>
+      <SubTree ID="action_plugout"
+               _autoremap="true"/>
+      <SubTree ID="action_arrive_station"
+               _autoremap="true"/>
+      <SubTree ID="action_plugin"
+               _autoremap="true"/>
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="actionset_A2">
+    <Sequence>
+      <SubTree ID="action_arrive_station"
+               _autoremap="true"/>
+      <SubTree ID="action_plugin"
+               _autoremap="true"/>
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="actionset_A3">
+    <Sequence>
+      <SubTree ID="action_plugout"
+               _autoremap="true"/>
+      <SubTree ID="action_arrive_station"
+               _autoremap="true"/>
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="actionset_B1">
+    <Sequence>
+      <SubTree ID="action_drop_cart"
+               _autoremap="true"/>
+      <SubTree ID="action_arrive_station"
+               _autoremap="true"/>
+      <SubTree ID="action_pickup_cart"
+               _autoremap="true"/>
+      <SubTree ID="action_plugout"
+               _autoremap="true"/>
+      <SubTree ID="action_arrive_station"
+               _autoremap="true"/>
+      <SubTree ID="action_plugin"
+               _autoremap="true"/>
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="actionset_B2">
+    <Sequence>
+      <SubTree ID="action_arrive_station"
+               _autoremap="true"/>
+      <SubTree ID="action_pickup_cart"
+               _autoremap="true"/>
+      <SubTree ID="action_plugout"
+               _autoremap="true"/>
+      <SubTree ID="action_arrive_station"
+               _autoremap="true"/>
+      <SubTree ID="action_plugin"
+               _autoremap="true"/>
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="actionset_B3">
+    <Sequence>
+      <SubTree ID="action_drop_cart"
+               _autoremap="true"/>
+      <SubTree ID="action_arrive_station"
+               _autoremap="true"/>
+      <SubTree ID="action_pickup_cart"
+               _autoremap="true"/>
+      <SubTree ID="action_plugout"
+               _autoremap="true"/>
+      <SubTree ID="action_arrive_station"
+               _autoremap="true"/>
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="actionset_B4">
+    <Sequence>
+      <SubTree ID="action_arrive_station"
+               _autoremap="true"/>
+      <SubTree ID="action_pickup_cart"
+               _autoremap="true"/>
+      <SubTree ID="action_plugout"
+               _autoremap="true"/>
+      <SubTree ID="action_arrive_station"
+               _autoremap="true"/>
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="actionset_C1">
+    <Sequence>
+      <SubTree ID="action_drop_cart"
+               _autoremap="true"/>
+      <SubTree ID="action_arrive_station"
+               _autoremap="true"/>
+      <SubTree ID="action_pickup_cart"
+               _autoremap="true"/>
+      <SubTree ID="action_arrive_station"
+               _autoremap="true"/>
+      <SubTree ID="action_plugin"
+               _autoremap="true"/>
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="actionset_C2">
+    <Sequence>
+      <SubTree ID="action_arrive_station"
+               _autoremap="true"/>
+      <SubTree ID="action_pickup_cart"
+               _autoremap="true"/>
+      <SubTree ID="action_arrive_station"
+               _autoremap="true"/>
+      <SubTree ID="action_plugin"
+               _autoremap="true"/>
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="actionset_D1">
+    <Sequence>
+      <SubTree ID="action_plugout"
+               _autoremap="true"/>
+      <SubTree ID="action_arrive_station"
+               _autoremap="true"/>
+      <SubTree ID="action_plugin"
+               _autoremap="true"/>
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="actionset_D2">
+    <Sequence>
+      <SubTree ID="action_arrive_station"
+               _autoremap="true"/>
+      <SubTree ID="action_plugin"
+               _autoremap="true"/>
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="actionset_E1">
+    <Sequence>
+      <SubTree ID="action_drop_cart"
+               _autoremap="true"/>
+      <SubTree ID="action_arrive_station"
+               _autoremap="true"/>
+      <SubTree ID="action_pickup_cart"
+               _autoremap="true"/>
+      <SubTree ID="action_plugout"
+               _autoremap="true"/>
+      <SubTree ID="action_arrive_station"
+               _autoremap="true"/>
+      <SubTree ID="action_plugin"
+               _autoremap="true"/>
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="actionset_E2">
+    <Sequence>
+      <SubTree ID="action_arrive_station"
+               _autoremap="true"/>
+      <SubTree ID="action_pickup_cart"
+               _autoremap="true"/>
+      <SubTree ID="action_plugout"
+               _autoremap="true"/>
+      <SubTree ID="action_arrive_station"
+               _autoremap="true"/>
+      <SubTree ID="action_plugin"
+               _autoremap="true"/>
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="actionset_F1">
+    <Sequence>
+      <SubTree ID="action_drop_cart"
+               _autoremap="true"/>
+      <SubTree ID="action_arrive_station"
+               _autoremap="true"/>
+      <SubTree ID="action_pickup_cart"
+               _autoremap="true"/>
+      <SubTree ID="action_arrive_station"
+               _autoremap="true"/>
+      <SubTree ID="action_plugin"
+               _autoremap="true"/>
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="actionset_F2">
+    <Sequence>
+      <SubTree ID="action_arrive_station"
+               _autoremap="true"/>
+      <SubTree ID="action_pickup_cart"
+               _autoremap="true"/>
+      <SubTree ID="action_arrive_station"
+               _autoremap="true"/>
+      <SubTree ID="action_plugin"
+               _autoremap="true"/>
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="actionset_G0">
+    <Sequence>
+      <SubTree ID="action_drop_cart"
+               _autoremap="true"/>
+      <SubTree ID="action_go_home"
+               _autoremap="true"/>
+    </Sequence>
+  </BehaviorTree>
+
+  <!-- Description of Node Models (used by Groot) -->
+  <TreeNodesModel/>
+
+</root>
