@@ -16,6 +16,7 @@
 #include "chargepal_actions/PlaceChargerAction.h"
 #include "chargepal_actions/PlugInAction.h"
 #include "chargepal_actions/PlugOutAction.h"
+#include "chargepal_actions/CallForHelpAction.h"
 
 #include "behaviortree_cpp/tree_node.h"
 #include "behaviortree_cpp/exceptions.h"
@@ -176,6 +177,30 @@ class isRobotAtRBS : public  BT::ConditionNode {
         }
 };
 
+class isRobotAtBWS : public  BT::ConditionNode {
+    public:
+        isRobotAtBWS(const std::string& name, const BT::NodeConfiguration& config)
+        : BT::ConditionNode(name, config){}
+
+        static PortsList providedPorts(){
+            return { InputPort<std::string>("message") };
+        }
+        
+        virtual NodeStatus tick() override {
+            BT::Blackboard::Ptr masterBlackboard = config().blackboard;
+            std::string robot_name = masterBlackboard->get<std::string>("robot_name");
+
+            std::string location = read_robot_value(robot_name,"robot_location"); 
+            if (location.find("BWS") != std::string::npos) {
+                std::cout << "Robot location is at BWS" << std::endl;
+                return BT::NodeStatus::SUCCESS;
+            }
+            else {
+                std::cout << "Robot location is not at BWS" << std::endl;
+                return NodeStatus::FAILURE;
+            }   
+        }
+};
 
 class isRobotAtBCS : public  BT::ConditionNode {
     public:
@@ -328,6 +353,91 @@ class isbattery_BWS : public  BT::ConditionNode {
             
         }
 };
+class isArmFree : public  BT::ConditionNode {
+    public:
+        isArmFree(const std::string& name, const BT::NodeConfiguration& config)
+        : BT::ConditionNode(name, config){}
+
+        static PortsList providedPorts(){
+            return { InputPort<std::string>("message") };
+        }
+        
+        virtual NodeStatus tick() override {
+            BT::Blackboard::Ptr masterBlackboard = config().blackboard;
+            std::string robot_name = masterBlackboard->get<std::string>("robot_name");
+           
+            bool armFree = read_armFree_value(robot_name);
+            
+
+            if (armFree == true){
+                std::cout << "Arm is free" << std::endl;
+                return BT::NodeStatus::SUCCESS;
+            }
+            else {
+                std::cout << "Arm is not free" << std::endl;
+                return NodeStatus::FAILURE;
+            }
+            
+        }
+};
+
+class askAssertLift : public  BT::ConditionNode {
+    public:
+        askAssertLift(const std::string& name, const BT::NodeConfiguration& config)
+        : BT::ConditionNode(name, config){}
+
+        static PortsList providedPorts(){
+            return { InputPort<std::string>("message") };
+        }
+        
+        virtual NodeStatus tick() override {
+            BT::Blackboard::Ptr masterBlackboard = config().blackboard;
+            std::string robot_name = masterBlackboard->get<std::string>("robot_name");
+
+            std::string assertLift = read_assertLift_value(robot_name);
+            
+
+            if (assertLift == "down"){
+                std::cout << "Assert lift is down" << std::endl;
+                return BT::NodeStatus::SUCCESS;
+            }
+            else {
+                std::cout << "Assert lift is up" << std::endl;
+                return NodeStatus::FAILURE;
+            }
+            
+        }
+};
+
+
+class isCartPlaced : public  BT::ConditionNode {
+    public:
+        isCartPlaced(const std::string& name, const BT::NodeConfiguration& config)
+        : BT::ConditionNode(name, config){}
+
+        static PortsList providedPorts(){
+            return { InputPort<std::string>("message") };
+        }
+        
+        virtual NodeStatus tick() override {
+            BT::Blackboard::Ptr masterBlackboard = config().blackboard;
+            std::string cart_name = masterBlackboard->get<std::string>("charger");
+            std::string robot_name = masterBlackboard->get<std::string>("robot_name");
+
+            std::string cart_on_robot = read_robot_value(robot_name,"cart_on_robot");
+            std::string robot_on_cart = read_cart_value(cart_name,"robot_on_cart");
+
+            if (cart_on_robot == robot_on_cart && cart_on_robot == "none"){
+                std::cout << "Cart is placed" << std::endl;
+                return BT::NodeStatus::SUCCESS;
+            }
+            else {
+                std::cout << "Cart is not placed" << std::endl;
+                return NodeStatus::FAILURE;
+            }
+            
+        }
+};
 
 class arrive_at_station: public BT::SyncActionNode
 {
@@ -461,6 +571,55 @@ class go_home: public BT::SyncActionNode
         }  
     }
 };
+
+class call_for_help: public BT::SyncActionNode
+{
+    public:
+    call_for_help(const std::string& name, const BT::NodeConfiguration& config)
+        : BT::SyncActionNode(name, config){}
+
+        static PortsList providedPorts(){
+            return { InputPort<std::string>("message") };
+        }
+    // You must override the virtual function tick()
+    BT::NodeStatus tick() override
+    {
+        actionlib::SimpleActionClient<chargepal_actions::CallForHelpAction> cfh("call_for_help", true);
+        chargepal_actions::CallForHelpGoal goal;
+        cfh.waitForServer();
+        cfh.sendGoal(goal);
+    
+        bool cfh_action = cfh.waitForResult(ros::Duration(900.0));
+        if (cfh_action) {
+            chargepal_actions::CallForHelpResult result = *cfh.getResult();
+            return BT::NodeStatus::SUCCESS;
+            }
+ 
+        else {
+            return BT::NodeStatus::FAILURE;
+        }  
+    }
+};
+
+class sleep_until_charged: public BT::SyncActionNode
+{
+    public:
+    sleep_until_charged(const std::string& name, const BT::NodeConfiguration& config)
+        : BT::SyncActionNode(name, config){}
+
+        static PortsList providedPorts(){
+            return { InputPort<std::string>("message") };
+        }
+    // You must override the virtual function tick()
+    BT::NodeStatus tick() override
+    {
+        
+        //ToDo; Sleep asynchronously
+        return BT::NodeStatus::SUCCESS;
+            
+    }
+};
+
 
 class drop_cart: public BT::SyncActionNode
 {
@@ -725,10 +884,10 @@ class plugout_BCS: public BT::SyncActionNode
     }
 };
 
-class Recovery_AaS: public BT::SyncActionNode
+class recovery_arrive_BWS: public BT::SyncActionNode
 {
     public:
-    Recovery_AaS(const std::string& name, const BT::NodeConfiguration& config)
+    recovery_arrive_BWS(const std::string& name, const BT::NodeConfiguration& config)
         : BT::SyncActionNode(name, config){}
 
         static PortsList providedPorts(){
@@ -737,16 +896,127 @@ class Recovery_AaS: public BT::SyncActionNode
     // You must override the virtual function tick()
     BT::NodeStatus tick() override
     {
-        std::cout << "Recovery Arrive at station" << std::endl;
+        BT::Blackboard::Ptr masterBlackboard = config().blackboard;
+        std::string robot_name = masterBlackboard->get<std::string>("robot_name");
+        std::string cart = read_robot_value(robot_name,"cart_on_robot");
+        int retry_attempt = 0;
+        actionlib::SimpleActionClient<chargepal_actions::ArriveAtStationAction> aas("arrive_at_station", true);
+            
+        std::cout << "Ask for free BWS" << std::endl;
+        std::list<std::string> free_bws_list = ask_free_BWS();
+        for (std::list<std::string>::iterator it = free_bws_list.begin(); it != free_bws_list.end(); ++it) {
+            while (retry_attempt < 3) {
+                aas.waitForServer();
+                chargepal_actions::ArriveAtStationGoal goal;
+                goal.target_station = *it;
+                aas.sendGoal(goal);
+                set_robot_value(robot_name,"ongoing_action", "recovery_arrive_BWS");
+                bool aas_action = aas.waitForResult(ros::Duration(900.0));
+                if (aas_action) {
+                    chargepal_actions::ArriveAtStationResult result = *aas.getResult();
+                    bool station_reached = result.station_reached;
+                    if (station_reached){
+                        std::string current_station = result.current_station;
+                        set_robot_value(robot_name,"ongoing_action", "none");
+                        set_robot_value(robot_name,"previous_action", "recovery_arrive_BWS");
+                        set_robot_value(robot_name,"robot_location", current_station);
+
+                        std::string cart_on_robot = read_robot_value(robot_name,"cart_on_robot");
+                        if (cart_on_robot != "none"){
+                            set_cart_value(cart_on_robot,"cart_location", current_station);
+                        }
+                        return BT::NodeStatus::SUCCESS;
+                    }
+                    else {
+                        retry_attempt += 1 ;
+                    }
+                }
+            }
+        }
+        return BT::NodeStatus::FAILURE;
+            
+        }
+       
+    };
+
+class recovery_arrive_BCS: public BT::SyncActionNode
+{
+    public:
+    recovery_arrive_BCS(const std::string& name, const BT::NodeConfiguration& config)
+        : BT::SyncActionNode(name, config){}
+
+        static PortsList providedPorts(){
+            return { InputPort<std::string>("message") };
+        }
+    // You must override the virtual function tick()
+    BT::NodeStatus tick() override
+    {
+        BT::Blackboard::Ptr masterBlackboard = config().blackboard;
+        std::string robot_name = masterBlackboard->get<std::string>("robot_name");
+        std::string cart = read_robot_value(robot_name,"cart_on_robot");
+        int retry_attempt = 0;
+        actionlib::SimpleActionClient<chargepal_actions::ArriveAtStationAction> aas("arrive_at_station", true);
+            
+        std::cout << "Ask for free BCS" << std::endl;
+        std::list<std::string> free_bcs_list = ask_free_BCS();
+        for (std::list<std::string>::iterator it = free_bcs_list.begin(); it != free_bcs_list.end(); ++it) {
+            while (retry_attempt < 3) {
+                aas.waitForServer();
+                chargepal_actions::ArriveAtStationGoal goal;
+                goal.target_station = *it;
+                aas.sendGoal(goal);
+                set_robot_value(robot_name,"ongoing_action", "recovery_arrive_BCS");
+                bool aas_action = aas.waitForResult(ros::Duration(900.0));
+                if (aas_action) {
+                    chargepal_actions::ArriveAtStationResult result = *aas.getResult();
+                    bool station_reached = result.station_reached;
+                    if (station_reached){
+                        std::string current_station = result.current_station;
+                        set_robot_value(robot_name,"ongoing_action", "none");
+                        set_robot_value(robot_name,"previous_action", "recovery_arrive_BCS");
+                        set_robot_value(robot_name,"robot_location", current_station);
+
+                        std::string cart_on_robot = read_robot_value(robot_name,"cart_on_robot");
+                        if (cart_on_robot != "none"){
+                            set_cart_value(cart_on_robot,"cart_location", current_station);
+                        }
+                        return BT::NodeStatus::SUCCESS;
+                    }
+                    else {
+                        retry_attempt += 1 ;
+                    }
+                }
+            }
+        }
+        return BT::NodeStatus::FAILURE;
+            
+        } 
+    };
+
+
+
+class recovery_plugin_BCS: public BT::SyncActionNode
+{
+    public:
+    recovery_plugin_BCS(const std::string& name, const BT::NodeConfiguration& config)
+        : BT::SyncActionNode(name, config){}
+
+        static PortsList providedPorts(){
+            return { InputPort<std::string>("message") };
+        }
+    // You must override the virtual function tick()
+    BT::NodeStatus tick() override
+    {
+        std::cout << "recovery plugin BCS" << std::endl;
         std::this_thread::sleep_for(3s);
         return BT::NodeStatus::SUCCESS;
     }
 };
 
-class Recovery_GH: public BT::SyncActionNode
+class recovery_PO_BCS: public BT::SyncActionNode
 {
     public:
-    Recovery_GH(const std::string& name, const BT::NodeConfiguration& config)
+    recovery_PO_BCS(const std::string& name, const BT::NodeConfiguration& config)
         : BT::SyncActionNode(name, config){}
 
         static PortsList providedPorts(){
@@ -755,16 +1025,16 @@ class Recovery_GH: public BT::SyncActionNode
     // You must override the virtual function tick()
     BT::NodeStatus tick() override
     {
-        std::cout << "Recovery Go home" << std::endl;
+        std::cout << "recovery plugout BCS" << std::endl;
         std::this_thread::sleep_for(3s);
         return BT::NodeStatus::SUCCESS;
     }
 };
 
-class Recovery_DC: public BT::SyncActionNode
+class recovery_PO_ADS: public BT::SyncActionNode
 {
     public:
-    Recovery_DC(const std::string& name, const BT::NodeConfiguration& config)
+    recovery_PO_ADS(const std::string& name, const BT::NodeConfiguration& config)
         : BT::SyncActionNode(name, config){}
 
         static PortsList providedPorts(){
@@ -773,16 +1043,15 @@ class Recovery_DC: public BT::SyncActionNode
     // You must override the virtual function tick()
     BT::NodeStatus tick() override
     {
-        std::cout << "Recovery Drop cart" << std::endl;
+        std::cout << "recovery plugout ADS" << std::endl;
         std::this_thread::sleep_for(3s);
         return BT::NodeStatus::SUCCESS;
     }
 };
-
-class Recovery_PiC: public BT::SyncActionNode
+class recovery_PI_ADS: public BT::SyncActionNode
 {
     public:
-    Recovery_PiC(const std::string& name, const BT::NodeConfiguration& config)
+    recovery_PI_ADS(const std::string& name, const BT::NodeConfiguration& config)
         : BT::SyncActionNode(name, config){}
 
         static PortsList providedPorts(){
@@ -791,78 +1060,7 @@ class Recovery_PiC: public BT::SyncActionNode
     // You must override the virtual function tick()
     BT::NodeStatus tick() override
     {
-        std::cout << "Recovery plugin cart" << std::endl;
-        std::this_thread::sleep_for(3s);
-        return BT::NodeStatus::SUCCESS;
-    }
-};
-
-class Recovery_PI_BCS: public BT::SyncActionNode
-{
-    public:
-    Recovery_PI_BCS(const std::string& name, const BT::NodeConfiguration& config)
-        : BT::SyncActionNode(name, config){}
-
-        static PortsList providedPorts(){
-            return { InputPort<std::string>("message") };
-        }
-    // You must override the virtual function tick()
-    BT::NodeStatus tick() override
-    {
-        std::cout << "Recovery plugin BCS" << std::endl;
-        std::this_thread::sleep_for(3s);
-        return BT::NodeStatus::SUCCESS;
-    }
-};
-
-class Recovery_PO_BCS: public BT::SyncActionNode
-{
-    public:
-    Recovery_PO_BCS(const std::string& name, const BT::NodeConfiguration& config)
-        : BT::SyncActionNode(name, config){}
-
-        static PortsList providedPorts(){
-            return { InputPort<std::string>("message") };
-        }
-    // You must override the virtual function tick()
-    BT::NodeStatus tick() override
-    {
-        std::cout << "Recovery plugout BCS" << std::endl;
-        std::this_thread::sleep_for(3s);
-        return BT::NodeStatus::SUCCESS;
-    }
-};
-
-class Recovery_PO_ADS: public BT::SyncActionNode
-{
-    public:
-    Recovery_PO_ADS(const std::string& name, const BT::NodeConfiguration& config)
-        : BT::SyncActionNode(name, config){}
-
-        static PortsList providedPorts(){
-            return { InputPort<std::string>("message") };
-        }
-    // You must override the virtual function tick()
-    BT::NodeStatus tick() override
-    {
-        std::cout << "Recovery plugout ADS" << std::endl;
-        std::this_thread::sleep_for(3s);
-        return BT::NodeStatus::SUCCESS;
-    }
-};
-class Recovery_PI_ADS: public BT::SyncActionNode
-{
-    public:
-    Recovery_PI_ADS(const std::string& name, const BT::NodeConfiguration& config)
-        : BT::SyncActionNode(name, config){}
-
-        static PortsList providedPorts(){
-            return { InputPort<std::string>("message") };
-        }
-    // You must override the virtual function tick()
-    BT::NodeStatus tick() override
-    {
-        std::cout << "Recovery plugin ADS" << std::endl;
+        std::cout << "recovery plugin ADS" << std::endl;
         std::this_thread::sleep_for(3s);
         return BT::NodeStatus::SUCCESS;
     }
@@ -898,12 +1096,11 @@ BehaviorTreeFactory factory;
 BT::Blackboard::Ptr masterBlackboard = BT::Blackboard::create();
 
 // fake job
-masterBlackboard->set("job_type","BRING_CHARGER");
+masterBlackboard->set("job","BRING_CHARGER");
 masterBlackboard->set("robot_name","Chargepal1");
 masterBlackboard->set("charger","BAT_1");
 masterBlackboard->set("source_station","ADS_1");
 masterBlackboard->set("target_station","ADS_2");
-
 
 factory.registerNodeType<isBRING_CHARGER>("isBRING_CHARGER");
 factory.registerNodeType<isRECHARGE_SELF>("isRECHARGE_SELF");
@@ -914,16 +1111,22 @@ factory.registerNodeType<isRobotAtADS>("isRobotAtADS");
 factory.registerNodeType<isRobotAtBCS>("isRobotAtBCS");
 factory.registerNodeType<isRobotAtRBS>("isRobotAtRBS");
 factory.registerNodeType<isRobotAtADSorBCSorBWS>("isRobotAtADSorBCSorBWS");
+factory.registerNodeType<isRobotAtBWS>("isRobotAtBWS");
 
 factory.registerNodeType<isSameBattery>("isSameBattery");
 factory.registerNodeType<isDifferentBattery>("isDifferentBattery");
 
 factory.registerNodeType<isbattery_ADS_BCS>("isbattery_ADS_BCS");
-factory.registerNodeType<isbattery_BWS>("isbattery_BWS");
 
+factory.registerNodeType<askAssertLift>("askAssertLift");
+factory.registerNodeType<isArmFree>("isArmFree");
+factory.registerNodeType<isCartPlaced>("isCartPlaced");
+factory.registerNodeType<isbattery_BWS>("isbattery_BWS");
 
 factory.registerNodeType<drop_cart>("drop_cart");
 factory.registerNodeType<pickup_cart>("pickup_cart");
+factory.registerNodeType<call_for_help>("call_for_help");
+factory.registerNodeType<sleep_until_charged>("sleep_until_charged");
 
 factory.registerNodeType<plugin_ADS>("plugin_ADS");
 factory.registerNodeType<pickup_cart>("plugin_BCS");
@@ -933,14 +1136,11 @@ factory.registerNodeType<plugout_BCS>("plugout_BCS");
 factory.registerNodeType<arrive_at_station>("arrive_at_station");
 factory.registerNodeType<go_home>("go_home");
 
-factory.registerNodeType<Recovery_AaS>("Recovery_AaS");
-factory.registerNodeType<Recovery_PI_BCS>("Recovery_PI_BCS");
-factory.registerNodeType<Recovery_PI_ADS>("Recovery_PI_ADS");
-factory.registerNodeType<Recovery_PO_BCS>("Recovery_PO_BCS");
-factory.registerNodeType<Recovery_PO_ADS>("Recovery_PO_ADS");
-factory.registerNodeType<Recovery_DC>("Recovery_DC");
-factory.registerNodeType<Recovery_PiC>("Recovery_PiC");
-factory.registerNodeType<Recovery_GH>("Recovery_GH");
+factory.registerNodeType<recovery_arrive_BWS>("recovery_arrive_BWS");
+factory.registerNodeType<recovery_arrive_BCS>("recovery_arrive_BCS");
+factory.registerNodeType<recovery_plugin_BCS>("recovery_plugin_BCS");
+
+factory.registerNodeType<recovery_PO_BCS>("recovery_PO_BCS");
 
 
 std::string package_folder = ros::package::getPath("chargepal_behaviour_tree");
@@ -949,6 +1149,7 @@ factory.registerBehaviorTreeFromFile(package_folder + "/xml/Main.xml");
 factory.registerBehaviorTreeFromFile(package_folder + "/xml/Jobs.xml");
 factory.registerBehaviorTreeFromFile(package_folder + "/xml/Actionsets.xml");
 factory.registerBehaviorTreeFromFile(package_folder + "/xml/Actions.xml");
+factory.registerBehaviorTreeFromFile(package_folder + "/xml/Recovery.xml");
 
 
 BT::Tree mainTree = factory.createTree("main",masterBlackboard);

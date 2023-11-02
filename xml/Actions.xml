@@ -1,37 +1,51 @@
 <root BTCPP_format="4">
   <BehaviorTree ID="action_arrive_station">
     <Fallback name="arrive_at_station">
-      <RetryUntilSuccessful num_attempts="3">
+      <RetryUntilSuccessful num_attempts="5">
         <arrive_at_station/>
       </RetryUntilSuccessful>
-      <Recovery_AaS/>
+      <SubTree ID="recovery_aas"
+               _autoremap="true"/>
+      <ForceFailure>
+        <call_for_help/>
+      </ForceFailure>
     </Fallback>
   </BehaviorTree>
 
   <BehaviorTree ID="action_drop_cart">
     <Fallback name="drop_cart">
-      <RetryUntilSuccessful num_attempts="3">
+      <RetryUntilSuccessful num_attempts="5">
         <drop_cart/>
       </RetryUntilSuccessful>
-      <Recovery_DC/>
+      <SubTree ID="recovery_dc"
+               _autoremap="true"/>
+      <ForceFailure>
+        <call_for_help/>
+      </ForceFailure>
     </Fallback>
   </BehaviorTree>
 
   <BehaviorTree ID="action_go_home">
     <Fallback name="go_home">
-      <RetryUntilSuccessful num_attempts="3">
+      <RetryUntilSuccessful num_attempts="5">
         <go_home/>
       </RetryUntilSuccessful>
-      <Recovery_GH/>
+      <ForceFailure>
+        <call_for_help/>
+      </ForceFailure>
     </Fallback>
   </BehaviorTree>
 
   <BehaviorTree ID="action_pickup_cart">
     <Fallback name="pickup_cart">
-      <RetryUntilSuccessful num_attempts="3">
+      <RetryUntilSuccessful num_attempts="5">
         <pickup_cart/>
       </RetryUntilSuccessful>
-      <Recovery_PiC/>
+      <SubTree ID="recovery_pic"
+               _autoremap="true"/>
+      <ForceFailure>
+        <call_for_help/>
+      </ForceFailure>
     </Fallback>
   </BehaviorTree>
 
@@ -40,21 +54,26 @@
       <Sequence name="plugin_bcs">
         <isRobotAtBCS/>
         <Fallback name="plugin_bcs">
-          <RetryUntilSuccessful num_attempts="3">
+          <RetryUntilSuccessful num_attempts="5">
             <plugin_BCS/>
           </RetryUntilSuccessful>
-          <Recovery_PI_BCS/>
+          <SubTree ID="recovery_plugin"
+                   _autoremap="true"/>
         </Fallback>
       </Sequence>
       <Sequence name="plugin_ads">
         <isRobotAtADS/>
         <Fallback name="plugin_ads">
-          <RetryUntilSuccessful num_attempts="3">
+          <RetryUntilSuccessful num_attempts="5">
             <plugin_ADS/>
           </RetryUntilSuccessful>
-          <Recovery_PI_ADS/>
+          <SubTree ID="recovery_plugin"
+                   _autoremap="true"/>
         </Fallback>
       </Sequence>
+      <ForceFailure>
+        <call_for_help/>
+      </ForceFailure>
     </Fallback>
   </BehaviorTree>
 
@@ -63,43 +82,34 @@
       <Sequence name="plugout_bcs">
         <isRobotAtBCS/>
         <Fallback name="plugout_bcs">
-          <RetryUntilSuccessful num_attempts="3">
+          <RetryUntilSuccessful num_attempts="5">
             <plugout_BCS/>
           </RetryUntilSuccessful>
-          <Recovery_PO_BCS/>
+          <SubTree ID="recovery_plugout"
+                   _autoremap="true"/>
         </Fallback>
       </Sequence>
       <Sequence name="plugout_ads">
         <isRobotAtADS/>
         <Fallback name="plugout_ads">
-          <RetryUntilSuccessful num_attempts="3">
+          <RetryUntilSuccessful num_attempts="5">
             <plugout_ADS/>
           </RetryUntilSuccessful>
-          <Recovery_PO_ADS/>
+          <SubTree ID="recovery_plugout"
+                   _autoremap="true"/>
         </Fallback>
       </Sequence>
+      <ForceFailure>
+        <call_for_help/>
+      </ForceFailure>
     </Fallback>
   </BehaviorTree>
 
   <!-- Description of Node Models (used by Groot) -->
   <TreeNodesModel>
-    <Action ID="Recovery_AaS"
-            editable="true"/>
-    <Action ID="Recovery_DC"
-            editable="true"/>
-    <Action ID="Recovery_GH"
-            editable="true"/>
-    <Action ID="Recovery_PI_ADS"
-            editable="true"/>
-    <Action ID="Recovery_PI_BCS"
-            editable="true"/>
-    <Action ID="Recovery_PO_ADS"
-            editable="true"/>
-    <Action ID="Recovery_PO_BCS"
-            editable="true"/>
-    <Action ID="Recovery_PiC"
-            editable="true"/>
     <Action ID="arrive_at_station"
+            editable="true"/>
+    <Action ID="call_for_help"
             editable="true"/>
     <Action ID="drop_cart"
             editable="true"/>

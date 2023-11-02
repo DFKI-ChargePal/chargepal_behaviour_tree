@@ -3,6 +3,7 @@
 #include <ros/package.h>
 #include <SQLiteCpp/SQLiteCpp.h>
 #include <string>
+#include <list>
 
 std::string read_robot_value(const std::string& name,const std::string& key) {
     std::string robot_name = name;
@@ -63,7 +64,8 @@ bool set_robot_value(const std::string& name,const std::string& key,const std::s
     query.exec(); 
     query.reset();
     return true;
-    //
+    
+    //ToDo: Update the database on the server, receive a handshake that the value is updated. wait until received
 }
 
 bool set_cart_value(const std::string& name,const std::string& key,const std::string& value) {
@@ -81,5 +83,21 @@ bool set_cart_value(const std::string& name,const std::string& key,const std::st
     query.exec(); 
     query.reset();
     return true;
-    //
+    
+    //ToDo: Update the database on the server, receive a handshake that the value is updated. wait until received
 }
+
+std::list<std::string> ask_free_BWS() {
+    //ToDo: Ask the database for free BWS, it can be a list of strings
+}
+
+std::list<std::string> ask_free_BCS() {
+    //ToDo: Ask the database for free BCS, it can be a list of strings
+}
+std::string read_assertLift_value(const std::string& name) {
+    //ToDo: Ask the database for Assert Lift value
+    }
+bool read_armFree_value(const std::string& name) {
+//ToDo: Ask the database if arm is free
+}
+    

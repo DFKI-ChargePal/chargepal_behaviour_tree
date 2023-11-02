@@ -1,0 +1,161 @@
+<root BTCPP_format="4">
+  <BehaviorTree ID="recovery_aas">
+    <IfThenElse>
+      <isCartPlaced/>
+      <Fallback>
+        <go_home/>
+        <call_for_help/>
+      </Fallback>
+      <Fallback>
+        <Sequence>
+          <isRobotAtBWS/>
+          <recovery_arrive_BWS/>
+        </Sequence>
+        <Sequence>
+          <isRobotAtBCS/>
+          <Fallback>
+            <recovery_arrive_BCS/>
+            <Sequence>
+              <recovery_arrive_BWS/>
+              <RetryUntilSuccessful num_attempts="3">
+                <go_home/>
+              </RetryUntilSuccessful>
+            </Sequence>
+          </Fallback>
+        </Sequence>
+        <Sequence>
+          <isRobotAtADS/>
+          <recovery_arrive_BWS/>
+          <Fallback>
+            <RetryUntilSuccessful num_attempts="3">
+              <drop_cart/>
+            </RetryUntilSuccessful>
+            <SubTree ID="recovery_dc"
+                     _autoremap="true"/>
+          </Fallback>
+          <RetryUntilSuccessful num_attempts="3">
+            <go_home/>
+          </RetryUntilSuccessful>
+        </Sequence>
+      </Fallback>
+    </IfThenElse>
+  </BehaviorTree>
+
+  <BehaviorTree ID="recovery_dc">
+    <Fallback>
+      <Sequence>
+        <isRobotAtBCS/>
+        <recovery_arrive_BWS/>
+        <RetryUntilSuccessful num_attempts="3">
+          <drop_cart/>
+        </RetryUntilSuccessful>
+        <RetryUntilSuccessful num_attempts="3">
+          <go_home/>
+        </RetryUntilSuccessful>
+      </Sequence>
+      <Sequence>
+        <isRobotAtADS/>
+        <ReactiveFallback>
+          <Timeout msec="300000">
+            <isCartPlaced/>
+          </Timeout>
+          <sleep_until_charged/>
+        </ReactiveFallback>
+      </Sequence>
+    </Fallback>
+  </BehaviorTree>
+
+  <BehaviorTree ID="recovery_pic">
+    <Sequence>
+      <askAssertLift/>
+      <RetryUntilSuccessful num_attempts="3">
+        <go_home/>
+      </RetryUntilSuccessful>
+    </Sequence>
+  </BehaviorTree>
+
+  <BehaviorTree ID="recovery_plugin">
+    <Fallback>
+      <Sequence>
+        <isRobotAtBCS/>
+        <isArmFree/>
+        <Fallback>
+          <recovery_plugin_BCS/>
+          <recovery_arrive_BWS/>
+        </Fallback>
+        <Fallback>
+          <RetryUntilSuccessful num_attempts="3">
+            <drop_cart/>
+          </RetryUntilSuccessful>
+          <SubTree ID="recovery_dc"
+                   _autoremap="true"/>
+        </Fallback>
+        <RetryUntilSuccessful num_attempts="3">
+          <go_home/>
+        </RetryUntilSuccessful>
+      </Sequence>
+      <Sequence>
+        <isRobotAtADS/>
+        <isArmFree/>
+        <recovery_arrive_BWS/>
+        <Fallback>
+          <RetryUntilSuccessful num_attempts="3">
+            <drop_cart/>
+          </RetryUntilSuccessful>
+          <SubTree ID="recovery_dc"
+                   _autoremap="true"/>
+        </Fallback>
+        <RetryUntilSuccessful num_attempts="3">
+          <go_home/>
+        </RetryUntilSuccessful>
+      </Sequence>
+    </Fallback>
+  </BehaviorTree>
+
+  <BehaviorTree ID="recovery_plugout">
+    <Sequence>
+      <isArmFree/>
+      <Fallback>
+        <RetryUntilSuccessful num_attempts="3">
+          <drop_cart/>
+        </RetryUntilSuccessful>
+        <SubTree ID="recovery_dc"
+                 _autoremap="true"/>
+      </Fallback>
+      <RetryUntilSuccessful num_attempts="3">
+        <go_home/>
+      </RetryUntilSuccessful>
+    </Sequence>
+  </BehaviorTree>
+
+  <!-- Description of Node Models (used by Groot) -->
+  <TreeNodesModel>
+    <Condition ID="askAssertLift"
+               editable="true"/>
+    <Action ID="call_for_help"
+            editable="true"/>
+    <Action ID="drop_cart"
+            editable="true"/>
+    <Action ID="go_home"
+            editable="true"/>
+    <Condition ID="isArmFree"
+               editable="true"/>
+    <Condition ID="isCartPlaced"
+               editable="true"/>
+    <Condition ID="isRobotAtADS"
+               editable="true"/>
+    <Condition ID="isRobotAtBCS"
+               editable="true"/>
+    <Condition ID="isRobotAtBWS"
+               editable="true"/>
+    <Action ID="recovery_arrive_BCS"
+            editable="true"/>
+    <Action ID="recovery_arrive_BWS"
+            editable="true"/>
+    <Action ID="recovery_plugin_BCS"
+            editable="true"/>
+    <Action ID="sleep_until_charged"
+            editable="true"/>
+  </TreeNodesModel>
+
+</root>

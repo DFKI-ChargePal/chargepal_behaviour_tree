@@ -34,7 +34,7 @@ include_directories(
   ${behaviortree_cpp_INCLUDE_DIRS}
 )
 
-add_executable(${PROJECT_NAME} "scripts/chargepal_bt.cpp" "util/util.cpp")
+add_executable(${PROJECT_NAME} "util/util.cpp" "scripts/chargepal_bt.cpp") 
 
 add_dependencies(
   ${PROJECT_NAME}
