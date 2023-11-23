@@ -1,7 +1,7 @@
-cmake_minimum_required(VERSION 3.0.2)
+cmake_minimum_required(VERSION 3.5)
 project(chargepal_behaviour_tree)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_BUILD_TYPE Debug)
 
@@ -16,7 +16,6 @@ find_package(catkin REQUIRED COMPONENTS
   roslib
 )
 
-find_package(behaviortree_cpp REQUIRED)
 
 catkin_package(
   CATKIN_DEPENDS
@@ -44,8 +43,28 @@ add_dependencies(
 
 target_link_libraries(
   ${PROJECT_NAME}
-  BT::behaviortree_cpp
   ${catkin_LIBRARIES}
   SQLiteCpp
   )
+
+find_package(ament_cmake QUIET)
+
+if(ament_cmake_FOUND)
+
+    find_package(behaviortree_cpp REQUIRED)
+    ament_target_dependencies(${PROJECT_NAME} behaviortree_cpp)
+
+elseif( CATKIN_DEVEL_PREFIX OR CATKIN_BUILD_BINARY_PACKAGE)
+
+    find_package(catkin REQUIRED COMPONENTS behaviortree_cpp)
+    catkin_package(CATKIN_DEPENDS behaviortree_cpp)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${catkin_INCLUDE_DIRS})
+    target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
+
+else()
+
+    find_package(behaviortree_cpp REQUIRED)
+    target_link_libraries(${PROJECT_NAME} BT::behaviortree_cpp)
+
+endif()
 
