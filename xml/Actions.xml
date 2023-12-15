@@ -41,7 +41,7 @@
       <RetryUntilSuccessful num_attempts="5">
         <pickup_cart/>
       </RetryUntilSuccessful>
-      <SubTree ID="recovery_pic"
+      <SubTree ID="recovery_pc"
                _autoremap="true"/>
       <ForceFailure>
         <call_for_help/>

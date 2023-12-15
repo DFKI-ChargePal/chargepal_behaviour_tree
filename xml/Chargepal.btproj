@@ -4,22 +4,16 @@
     <include path="Actionsets.xml"/>
     <include path="Jobs.xml"/>
     <include path="Main.xml"/>
+    <include path="Recovery.xml"/>
     <!-- Description of Node Models (used by Groot) -->
     <TreeNodesModel>
-        <Action ID="Recovery_AaS" editable="true"/>
-        <Action ID="Recovery_DC" editable="true"/>
-        <Action ID="Recovery_GH" editable="true"/>
-        <Action ID="Recovery_PI_ADS" editable="true"/>
-        <Action ID="Recovery_PI_BCS" editable="true"/>
-        <Action ID="Recovery_PO_ADS" editable="true"/>
-        <Action ID="Recovery_PO_BCS" editable="true"/>
-        <Action ID="Recovery_PiC" editable="true"/>
         <Action ID="arrive_at_station" editable="true"/>
+        <Condition ID="askAssertLift" editable="true"/>
+        <Action ID="call_for_help" editable="true"/>
         <Action ID="drop_cart" editable="true"/>
         <Action ID="go_home" editable="true"/>
         <Condition ID="isBRING_CHARGER" editable="true"/>
-        <Condition ID="isDiffBatteryADSorBCS" editable="true"/>
-        <Condition ID="isDiffBatteryBWS" editable="true"/>
+        <Condition ID="isCartPlaced" editable="true"/>
         <Condition ID="isDifferentBattery" editable="true"/>
         <Condition ID="isRECHARGE_CHARGER" editable="true"/>
         <Condition ID="isRECHARGE_SELF" editable="true"/>
@@ -37,5 +31,11 @@
         <Action ID="plugin_BCS" editable="true"/>
         <Action ID="plugout_ADS" editable="true"/>
         <Action ID="plugout_BCS" editable="true"/>
+        <Action ID="recovery_arrive_BCS" editable="true"/>
+        <Action ID="recovery_arrive_BWS" editable="true"/>
+        <Action ID="recovery_plugin_BCS" editable="true"/>
+        <Action ID="set_arm_free_ADS" editable="true"/>
+        <Action ID="set_arm_free_BCS" editable="true"/>
+        <Action ID="sleep_until_charged" editable="true"/>
     </TreeNodesModel>
 </root>

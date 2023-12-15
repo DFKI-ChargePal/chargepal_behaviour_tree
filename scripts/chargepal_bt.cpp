@@ -8,6 +8,7 @@
 #include <SQLiteCpp/SQLiteCpp.h>
 #include "util.h"
 
+
 #include <actionlib/client/simple_action_client.h>
 #include <actionlib/client/terminal_state.h>
 #include "chargepal_actions/ArriveAtStationAction.h"
@@ -26,6 +27,7 @@
 
 using namespace BT;
 using namespace std::chrono_literals;
+using namespace std::chrono;
 //BT::Blackboard::Ptr masterBlackboard = config().blackboard;
 
 class isBRING_CHARGER : public  BT::ConditionNode {
@@ -39,7 +41,7 @@ class isBRING_CHARGER : public  BT::ConditionNode {
 
         virtual NodeStatus tick() override {
             BT::Blackboard::Ptr masterBlackboard = config().blackboard;
-            std::string job = masterBlackboard->get<std::string>("job");
+            std::string job = masterBlackboard->get<std::string>("job_type");
             std::string robot_name = masterBlackboard->get<std::string>("robot_name");
 
             if(job == "BRING_CHARGER"){
@@ -67,7 +69,7 @@ class isRECHARGE_CHARGER : public  BT::ConditionNode {
         virtual NodeStatus tick() override {
             BT::Blackboard::Ptr masterBlackboard = config().blackboard;
             std::string robot_name = masterBlackboard->get<std::string>("robot_name");
-            std::string job = masterBlackboard->get<std::string>("job");
+            std::string job = masterBlackboard->get<std::string>("job_type");
             if(job == "RECHARGE_CHARGER"){
                 set_robot_value(robot_name,"current_job", "RECHARGE_CHARGER");
                 return NodeStatus::SUCCESS;
@@ -90,7 +92,7 @@ class isRECHARGE_SELF : public  BT::ConditionNode {
         virtual NodeStatus tick() override {
             BT::Blackboard::Ptr masterBlackboard = config().blackboard;
             std::string robot_name = masterBlackboard->get<std::string>("robot_name");
-            std::string job = masterBlackboard->get<std::string>("job");
+            std::string job = masterBlackboard->get<std::string>("job_type");
             if(job == "RECHARGE_SELF"){
                 set_robot_value(robot_name,"current_job", "RECHARGE_SELF");
                 return NodeStatus::SUCCESS;
@@ -113,7 +115,7 @@ class isSTOW_CHARGER : public  BT::ConditionNode {
         virtual NodeStatus tick() override {
             BT::Blackboard::Ptr masterBlackboard = config().blackboard;
             std::string robot_name = masterBlackboard->get<std::string>("robot_name");
-            std::string job = masterBlackboard->get<std::string>("job");
+            std::string job = masterBlackboard->get<std::string>("job_type");
             if(job == "STOW_CHARGER"){
                 set_robot_value(robot_name,"current_job", "STOW_CHARGER");
                 return NodeStatus::SUCCESS;
@@ -353,33 +355,6 @@ class isbattery_BWS : public  BT::ConditionNode {
             
         }
 };
-class isArmFree : public  BT::ConditionNode {
-    public:
-        isArmFree(const std::string& name, const BT::NodeConfiguration& config)
-        : BT::ConditionNode(name, config){}
-
-        static PortsList providedPorts(){
-            return { InputPort<std::string>("message") };
-        }
-        
-        virtual NodeStatus tick() override {
-            BT::Blackboard::Ptr masterBlackboard = config().blackboard;
-            std::string robot_name = masterBlackboard->get<std::string>("robot_name");
-           
-            bool armFree = read_armFree_value(robot_name);
-            
-
-            if (armFree == true){
-                std::cout << "Arm is free" << std::endl;
-                return BT::NodeStatus::SUCCESS;
-            }
-            else {
-                std::cout << "Arm is not free" << std::endl;
-                return NodeStatus::FAILURE;
-            }
-            
-        }
-};
 
 class askAssertLift : public  BT::ConditionNode {
     public:
@@ -601,26 +576,6 @@ class call_for_help: public BT::SyncActionNode
     }
 };
 
-class sleep_until_charged: public BT::SyncActionNode
-{
-    public:
-    sleep_until_charged(const std::string& name, const BT::NodeConfiguration& config)
-        : BT::SyncActionNode(name, config){}
-
-        static PortsList providedPorts(){
-            return { InputPort<std::string>("message") };
-        }
-    // You must override the virtual function tick()
-    BT::NodeStatus tick() override
-    {
-        
-        //ToDo; Sleep asynchronously
-        return BT::NodeStatus::SUCCESS;
-            
-    }
-};
-
-
 class drop_cart: public BT::SyncActionNode
 {
     public:
@@ -716,48 +671,6 @@ class pickup_cart: public BT::SyncActionNode
     }
 };
 
-class plugin_BCS: public BT::SyncActionNode
-{
-    public:
-    plugin_BCS(const std::string& name, const BT::NodeConfiguration& config)
-        : BT::SyncActionNode(name, config){}
-
-        static PortsList providedPorts(){
-            return { InputPort<std::string>("message") };
-        }
-    // You must override the virtual function tick()
-    BT::NodeStatus tick() override
-    {
-        actionlib::SimpleActionClient<chargepal_actions::PlugInAction> pi_bcs("plugin_charger_bcs", true);
-        pi_bcs.waitForServer();
-        chargepal_actions::PlugInGoal goal;
-        
-        BT::Blackboard::Ptr masterBlackboard = config().blackboard;
-        std::string charger = masterBlackboard->get<std::string>("charger");
-        std::string robot_name = masterBlackboard->get<std::string>("robot_name");
-        
-        pi_bcs.sendGoal(goal);
-        set_robot_value(robot_name,"ongoing_action", "plugin_charger_bcs");
-        bool pi_bcs_action = pi_bcs.waitForResult(ros::Duration(900.0));
-        if (pi_bcs_action){
-            chargepal_actions::PlugInResult result = *pi_bcs.getResult();
-            bool plug_in = result.plug_in;
-            if (plug_in){
-                set_robot_value(robot_name,"ongoing_action", "none");
-                set_robot_value(robot_name,"previous_action", "plugin_charger_bcs");
-                set_cart_value(charger,"plugged", "True");
-                return BT::NodeStatus::SUCCESS;
-            }
-            else {
-                return BT::NodeStatus::FAILURE;
-            }
-        } 
-        else {
-            return BT::NodeStatus::FAILURE;
-        }  
-    }
-};
-
 class plugin_ADS: public BT::SyncActionNode
 {
     public:
@@ -787,7 +700,49 @@ class plugin_ADS: public BT::SyncActionNode
             if (plug_in){
                 set_robot_value(robot_name,"ongoing_action", "none");
                 set_robot_value(robot_name,"previous_action", "plugin_charger_ads");
-                set_cart_value(charger,"plugged", "True");
+                set_cart_value(charger,"plugged", "true");
+                return BT::NodeStatus::SUCCESS;
+            }
+            else {
+                return BT::NodeStatus::FAILURE;
+            }
+        } 
+        else {
+            return BT::NodeStatus::FAILURE;
+        }  
+    }
+};
+
+class plugin_BCS: public BT::SyncActionNode
+{
+    public:
+    plugin_BCS(const std::string& name, const BT::NodeConfiguration& config)
+        : BT::SyncActionNode(name, config){}
+
+        static PortsList providedPorts(){
+            return { InputPort<std::string>("message") };
+        }
+    // You must override the virtual function tick()
+    BT::NodeStatus tick() override
+    {
+        actionlib::SimpleActionClient<chargepal_actions::PlugInAction> pi_bcs("plugin_charger_bcs", true);
+        pi_bcs.waitForServer();
+        chargepal_actions::PlugInGoal goal;
+        
+        BT::Blackboard::Ptr masterBlackboard = config().blackboard;
+        std::string charger = masterBlackboard->get<std::string>("charger");
+        std::string robot_name = masterBlackboard->get<std::string>("robot_name");
+        
+        pi_bcs.sendGoal(goal);
+        set_robot_value(robot_name,"ongoing_action", "plugin_charger_bcs");
+        bool pi_bcs_action = pi_bcs.waitForResult(ros::Duration(900.0));
+        if (pi_bcs_action){
+            chargepal_actions::PlugInResult result = *pi_bcs.getResult();
+            bool plug_in = result.plug_in;
+            if (plug_in){
+                set_robot_value(robot_name,"ongoing_action", "none");
+                set_robot_value(robot_name,"previous_action", "plugin_charger_bcs");
+                set_cart_value(charger,"plugged", "true");
                 return BT::NodeStatus::SUCCESS;
             }
             else {
@@ -829,7 +784,7 @@ class plugout_ADS: public BT::SyncActionNode
             if (plug_out){
                 set_robot_value(robot_name,"ongoing_action", "none");
                 set_robot_value(robot_name,"previous_action", "plugout_charger_ads");
-                set_cart_value(charger,"plugged", "False");
+                set_cart_value(charger,"plugged", "false");
                 return BT::NodeStatus::SUCCESS;
             }
             else {
@@ -871,7 +826,7 @@ class plugout_BCS: public BT::SyncActionNode
             if (plug_out){
                 set_robot_value(robot_name,"ongoing_action", "none");
                 set_robot_value(robot_name,"previous_action", "plugout_charger_bcs");
-                set_cart_value(charger,"plugged", "False");
+                set_cart_value(charger,"plugged", "false");
                 return BT::NodeStatus::SUCCESS;
             }
             else {
@@ -898,17 +853,18 @@ class recovery_arrive_BWS: public BT::SyncActionNode
     {
         BT::Blackboard::Ptr masterBlackboard = config().blackboard;
         std::string robot_name = masterBlackboard->get<std::string>("robot_name");
-        std::string cart = read_robot_value(robot_name,"cart_on_robot");
         int retry_attempt = 0;
         actionlib::SimpleActionClient<chargepal_actions::ArriveAtStationAction> aas("arrive_at_station", true);
-            
+        
         std::cout << "Ask for free BWS" << std::endl;
-        std::list<std::string> free_bws_list = ask_free_BWS();
-        for (std::list<std::string>::iterator it = free_bws_list.begin(); it != free_bws_list.end(); ++it) {
+
+        std::string free_bws = ask_free_BWS();
+
+        while (free_bws != "none" || free_bws != "") {
             while (retry_attempt < 3) {
                 aas.waitForServer();
                 chargepal_actions::ArriveAtStationGoal goal;
-                goal.target_station = *it;
+                goal.target_station = free_bws;
                 aas.sendGoal(goal);
                 set_robot_value(robot_name,"ongoing_action", "recovery_arrive_BWS");
                 bool aas_action = aas.waitForResult(ros::Duration(900.0));
@@ -929,15 +885,25 @@ class recovery_arrive_BWS: public BT::SyncActionNode
                     }
                     else {
                         retry_attempt += 1 ;
+                        bool delete_mission = delete_mir_mission_queue();
+                        
+                        if (delete_mission == false) {
+                                ROS_ERROR("mir_delete_mission service failed");
+                            } 
                     }
                 }
-            }
+                else {
+                    ROS_ERROR("Failed waiting for arrive_at_station result");
+                } 
+                free_bws = ask_free_BWS();
+            } 
         }
         return BT::NodeStatus::FAILURE;
+        ROS_ERROR("No free BWS left");
             
-        }
+    }
        
-    };
+};
 
 class recovery_arrive_BCS: public BT::SyncActionNode
 {
@@ -953,17 +919,18 @@ class recovery_arrive_BCS: public BT::SyncActionNode
     {
         BT::Blackboard::Ptr masterBlackboard = config().blackboard;
         std::string robot_name = masterBlackboard->get<std::string>("robot_name");
-        std::string cart = read_robot_value(robot_name,"cart_on_robot");
         int retry_attempt = 0;
         actionlib::SimpleActionClient<chargepal_actions::ArriveAtStationAction> aas("arrive_at_station", true);
-            
+        
         std::cout << "Ask for free BCS" << std::endl;
-        std::list<std::string> free_bcs_list = ask_free_BCS();
-        for (std::list<std::string>::iterator it = free_bcs_list.begin(); it != free_bcs_list.end(); ++it) {
+        
+        std::string free_bcs = ask_free_BCS();
+        
+        while (free_bcs != "none" || free_bcs != "") {
             while (retry_attempt < 3) {
                 aas.waitForServer();
                 chargepal_actions::ArriveAtStationGoal goal;
-                goal.target_station = *it;
+                goal.target_station = free_bcs;
                 aas.sendGoal(goal);
                 set_robot_value(robot_name,"ongoing_action", "recovery_arrive_BCS");
                 bool aas_action = aas.waitForResult(ros::Duration(900.0));
@@ -984,21 +951,33 @@ class recovery_arrive_BCS: public BT::SyncActionNode
                     }
                     else {
                         retry_attempt += 1 ;
+                        bool delete_mission = delete_mir_mission_queue();
+                        
+                        if (delete_mission == false) {
+                                ROS_ERROR("mir_delete_mission service failed");
+                            } 
                     }
                 }
-            }
+                else {
+                    ROS_ERROR("Failed waiting for arrive_at_station result");
+                }
+            
+                free_bcs = ask_free_BCS();
+            } 
         }
         return BT::NodeStatus::FAILURE;
+        ROS_ERROR("No free BCS left");
             
-        } 
-    };
+    }
+       
+};
 
 
 
-class recovery_plugin_BCS: public BT::SyncActionNode
+class set_arm_free_BCS: public BT::SyncActionNode
 {
     public:
-    recovery_plugin_BCS(const std::string& name, const BT::NodeConfiguration& config)
+    set_arm_free_BCS(const std::string& name, const BT::NodeConfiguration& config)
         : BT::SyncActionNode(name, config){}
 
         static PortsList providedPorts(){
@@ -1007,16 +986,16 @@ class recovery_plugin_BCS: public BT::SyncActionNode
     // You must override the virtual function tick()
     BT::NodeStatus tick() override
     {
-        std::cout << "recovery plugin BCS" << std::endl;
+        std::cout << "set arm free at BCS" << std::endl;
         std::this_thread::sleep_for(3s);
         return BT::NodeStatus::SUCCESS;
     }
 };
 
-class recovery_PO_BCS: public BT::SyncActionNode
+class set_arm_free_ADS: public BT::SyncActionNode
 {
     public:
-    recovery_PO_BCS(const std::string& name, const BT::NodeConfiguration& config)
+    set_arm_free_ADS(const std::string& name, const BT::NodeConfiguration& config)
         : BT::SyncActionNode(name, config){}
 
         static PortsList providedPorts(){
@@ -1025,47 +1004,62 @@ class recovery_PO_BCS: public BT::SyncActionNode
     // You must override the virtual function tick()
     BT::NodeStatus tick() override
     {
-        std::cout << "recovery plugout BCS" << std::endl;
+        std::cout << "set arm free at ADS" << std::endl;
         std::this_thread::sleep_for(3s);
         return BT::NodeStatus::SUCCESS;
     }
 };
 
-class recovery_PO_ADS: public BT::SyncActionNode
+class sleep_until_charged: public BT::StatefulActionNode
 {
     public:
-    recovery_PO_ADS(const std::string& name, const BT::NodeConfiguration& config)
-        : BT::SyncActionNode(name, config){}
+    sleep_until_charged(const std::string& name, const BT::NodeConfiguration& config)
+        : BT::StatefulActionNode(name, config){}
 
         static PortsList providedPorts(){
-            return { InputPort<std::string>("message") };
+            return{ BT::InputPort<int>("msec") };
         }
     // You must override the virtual function tick()
-    BT::NodeStatus tick() override
+    virtual NodeStatus onStart() override
     {
-        std::cout << "recovery plugout ADS" << std::endl;
-        std::this_thread::sleep_for(3s);
-        return BT::NodeStatus::SUCCESS;
-    }
-};
-class recovery_PI_ADS: public BT::SyncActionNode
-{
-    public:
-    recovery_PI_ADS(const std::string& name, const BT::NodeConfiguration& config)
-        : BT::SyncActionNode(name, config){}
+        
+        BT::Blackboard::Ptr masterBlackboard = config().blackboard;
+        std::string robot_name = masterBlackboard->get<std::string>("robot_name");
+        std::string cart = read_robot_value(robot_name,"cart_on_robot");
+        //ToDo:get input and convert into milli seconds
+        int msec = get_operation_time(cart);
 
-        static PortsList providedPorts(){
-            return { InputPort<std::string>("message") };
+        if( msec <= 0 ) {
+            // No need to go into the RUNNING state
+            return BT::NodeStatus::SUCCESS;
         }
-    // You must override the virtual function tick()
-    BT::NodeStatus tick() override
-    {
-        std::cout << "recovery plugin ADS" << std::endl;
-        std::this_thread::sleep_for(3s);
-        return BT::NodeStatus::SUCCESS;
+        else {
+            // once the deadline is reached, we will return SUCCESS.
+            deadline_ = system_clock::now() + milliseconds(msec);
+            return BT::NodeStatus::RUNNING;
+        }
     }
-};
 
+    /// method invoked by an action in the RUNNING state.
+    virtual NodeStatus onRunning() override
+    {
+        if ( system_clock::now() >= deadline_ ) {
+            return BT::NodeStatus::SUCCESS;
+        }
+        else {
+            return BT::NodeStatus::RUNNING;
+        }
+    }
+
+    void onHalted() override
+    {
+      // nothing to do here...
+      std::cout << "SleepNode interrupted" << std::endl;
+    }
+    
+    private:
+        system_clock::time_point deadline_;
+};
 
 
 int main(int argc, char **argv){
@@ -1079,7 +1073,7 @@ chargepal_fake_planning::get_job srv
 
 if (client.call(srv))
 {
-    masterBlackboard->set("job",srv.response.job[0]);
+    masterBlackboard->set("job_type",srv.response.job[0]);
     masterBlackboard->set("robot_name",srv.response.job[1]);
     masterBlackboard->set("charger",srv.response.job[2]);
     masterBlackboard->set("source_station",srv.response.job[3]);
@@ -1094,53 +1088,47 @@ else
 
 BehaviorTreeFactory factory;
 BT::Blackboard::Ptr masterBlackboard = BT::Blackboard::create();
-
+//std::map<std::string,std::string> job = fetch_job()
 // fake job
-masterBlackboard->set("job","BRING_CHARGER");
+masterBlackboard->set("job_type","BRING_CHARGER");
 masterBlackboard->set("robot_name","Chargepal1");
 masterBlackboard->set("charger","BAT_1");
 masterBlackboard->set("source_station","ADS_1");
 masterBlackboard->set("target_station","ADS_2");
 
 factory.registerNodeType<isBRING_CHARGER>("isBRING_CHARGER");
-factory.registerNodeType<isRECHARGE_SELF>("isRECHARGE_SELF");
 factory.registerNodeType<isRECHARGE_CHARGER>("isRECHARGE_CHARGER");
+factory.registerNodeType<isRECHARGE_SELF>("isRECHARGE_SELF");
 factory.registerNodeType<isSTOW_CHARGER>("isSTOW_CHARGER");
 
-factory.registerNodeType<isRobotAtADS>("isRobotAtADS");
-factory.registerNodeType<isRobotAtBCS>("isRobotAtBCS");
-factory.registerNodeType<isRobotAtRBS>("isRobotAtRBS");
 factory.registerNodeType<isRobotAtADSorBCSorBWS>("isRobotAtADSorBCSorBWS");
+factory.registerNodeType<isRobotAtRBS>("isRobotAtRBS");
 factory.registerNodeType<isRobotAtBWS>("isRobotAtBWS");
+factory.registerNodeType<isRobotAtBCS>("isRobotAtBCS");
+factory.registerNodeType<isRobotAtADS>("isRobotAtADS");
 
 factory.registerNodeType<isSameBattery>("isSameBattery");
 factory.registerNodeType<isDifferentBattery>("isDifferentBattery");
-
 factory.registerNodeType<isbattery_ADS_BCS>("isbattery_ADS_BCS");
-
-factory.registerNodeType<askAssertLift>("askAssertLift");
-factory.registerNodeType<isArmFree>("isArmFree");
-factory.registerNodeType<isCartPlaced>("isCartPlaced");
 factory.registerNodeType<isbattery_BWS>("isbattery_BWS");
+factory.registerNodeType<askAssertLift>("askAssertLift");
+factory.registerNodeType<isCartPlaced>("isCartPlaced");
 
-factory.registerNodeType<drop_cart>("drop_cart");
-factory.registerNodeType<pickup_cart>("pickup_cart");
-factory.registerNodeType<call_for_help>("call_for_help");
-factory.registerNodeType<sleep_until_charged>("sleep_until_charged");
-
-factory.registerNodeType<plugin_ADS>("plugin_ADS");
-factory.registerNodeType<pickup_cart>("plugin_BCS");
-
-factory.registerNodeType<plugout_ADS>("plugout_ADS");
-factory.registerNodeType<plugout_BCS>("plugout_BCS");
 factory.registerNodeType<arrive_at_station>("arrive_at_station");
 factory.registerNodeType<go_home>("go_home");
-
+factory.registerNodeType<call_for_help>("call_for_help");
+factory.registerNodeType<drop_cart>("drop_cart");
+factory.registerNodeType<pickup_cart>("pickup_cart");
+factory.registerNodeType<plugin_ADS>("plugin_ADS");
+factory.registerNodeType<pickup_cart>("plugin_BCS");
+factory.registerNodeType<plugout_ADS>("plugout_ADS");
+factory.registerNodeType<plugout_BCS>("plugout_BCS");
 factory.registerNodeType<recovery_arrive_BWS>("recovery_arrive_BWS");
 factory.registerNodeType<recovery_arrive_BCS>("recovery_arrive_BCS");
-factory.registerNodeType<recovery_plugin_BCS>("recovery_plugin_BCS");
+factory.registerNodeType<sleep_until_charged>("sleep_until_charged");
+factory.registerNodeType<set_arm_free_BCS>("set_arm_free_BCS");
+factory.registerNodeType<set_arm_free_ADS>("set_arm_free_ADS");
 
-factory.registerNodeType<recovery_PO_BCS>("recovery_PO_BCS");
 
 
 std::string package_folder = ros::package::getPath("chargepal_behaviour_tree");

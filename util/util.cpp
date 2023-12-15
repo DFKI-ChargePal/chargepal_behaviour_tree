@@ -4,6 +4,14 @@
 #include <SQLiteCpp/SQLiteCpp.h>
 #include <string>
 #include <list>
+#include<map>
+
+#include <chargepal_services/deleteMirMission.h>
+#include <chargepal_services/askFreeBCS.h>
+#include <chargepal_services/askFreeBWS.h>
+#include <chargepal_services/assertLiftValue.h>
+#include <chargepal_services/askOperationTime.h>
+
 
 std::string read_robot_value(const std::string& name,const std::string& key) {
     std::string robot_name = name;
@@ -49,6 +57,7 @@ std::string read_cart_value(const std::string& name,const std::string& key) {
     // Implementation of function1
 }
 
+// ToDo: On setting robot value, first pull the db from server, update the robot db with new values, push the robot db
 bool set_robot_value(const std::string& name,const std::string& key,const std::string& value) {
     
     SQLite::Database db(ros::package::getPath("chargepal_ldb")+"/chargepal_ldb.db",SQLite::OPEN_READWRITE|SQLite::OPEN_CREATE);
@@ -87,17 +96,95 @@ bool set_cart_value(const std::string& name,const std::string& key,const std::st
     //ToDo: Update the database on the server, receive a handshake that the value is updated. wait until received
 }
 
-std::list<std::string> ask_free_BWS() {
-    //ToDo: Ask the database for free BWS, it can be a list of strings
+std::string ask_free_BWS() {
+    std::string free_bws = "";
+    ros::NodeHandle n;
+    ros::ServiceClient client_ldb_server = n.serviceClient<chargepal_services::askFreeBWS>("/ldb_server/ask_free_bws");
+    chargepal_services::askFreeBWS srv_ldb_server;
+    std::cout << "Ask for free BWS" << std::endl;
+    if (client_ldb_server.call(srv_ldb_server)){
+        free_bws = srv_ldb_server.response.station_name;
+    }
+    else {
+        ROS_ERROR("ask_free_bws service failed");
+    }
+    return free_bws;
 }
 
-std::list<std::string> ask_free_BCS() {
-    //ToDo: Ask the database for free BCS, it can be a list of strings
+std::string ask_free_BCS() {
+    std::string free_bcs = "";
+    ros::NodeHandle n;
+    ros::ServiceClient client_ldb_server = n.serviceClient<chargepal_services::askFreeBCS>("/ldb_server/ask_free_bcs");
+    chargepal_services::askFreeBCS srv_ldb_server;
+    std::cout << "Ask for free BCS" << std::endl;
+    if (client_ldb_server.call(srv_ldb_server)){
+        free_bcs = srv_ldb_server.response.station_name;
+    }
+    else {
+        ROS_ERROR("ask_free_bcs service failed");
+    }
+    return free_bcs;
 }
-std::string read_assertLift_value(const std::string& name) {
+std::string read_assertLift_value(const std::string& cart_name) {
+    std::string assert_lift_value = "";
+    ros::NodeHandle n;
+    ros::ServiceClient client_mir_rapi = n.serviceClient<chargepal_services::assertLiftValue>("/mir_rest_api/assert_lift_value");
+    chargepal_services::assertLiftValue srv_mir_rapi;
+    if (client_mir_rapi.call(srv_mir_rapi)){
+        assert_lift_value = srv_mir_rapi.response.state;
+    }
+    else {
+        ROS_ERROR("assert_lift_value service failed");
+    }
+    return assert_lift_value;
+}
+
+std::map<std::string,std::string> fetch_job() {
+
+}
+bool update_job_monitor() {
     //ToDo: Ask the database for Assert Lift value
     }
-bool read_armFree_value(const std::string& name) {
-//ToDo: Ask the database if arm is free
+
+bool request_ldb() {
+    //ToDo: Ask the database for Assert Lift value
+    }
+bool update_ldb() {
+    //ToDo: Ask the database for Assert Lift value
+    }
+
+bool delete_mir_mission_queue(){
+    ros::NodeHandle n;
+    ros::ServiceClient client_mir_rapi = n.serviceClient<chargepal_services::deleteMirMission>("/mir_rest_api/delete_mission_queue");
+    chargepal_services::deleteMirMission srv_mir_rapi;
+    if (client_mir_rapi.call(srv_mir_rapi)){
+        if (srv_mir_rapi.response.success == false) {
+            ROS_ERROR("mir_delete_mission service failed");
+            return false;
+        }
+        else{
+            return true;
+        }
+    }       
+    else{
+        ROS_ERROR("Failed to service call mir_delete_mission");
+        return false;
+    }
+        
 }
+
+int get_operation_time(const std::string& cart_name){
+    int operation_time = 0;
+    ros::NodeHandle n;
+    ros::ServiceClient client_ldb_server = n.serviceClient<chargepal_services::askOperationTime>("/mir_rest_api/assert_lift_value");
+    chargepal_services::askOperationTime srv_ldb_server;
+    if (client_ldb_server.call(srv_ldb_server)){
+        operation_time = srv_ldb_server.response.time_msec;
+    }
+    else {
+        ROS_ERROR("assert_lift_value service failed");
+    }
+    return operation_time;
+}
+
     
