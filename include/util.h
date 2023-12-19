@@ -12,8 +12,8 @@ bool delete_mir_mission_queue();
 std::string ask_free_BWS();
 std::string ask_free_BCS();
 std::string read_assertLift_value(const std::string& cart_name);
-std::map<std::string,std::string> fetch_job();
+std::string fetch_job(const std::string& robot);
 bool request_ldb();
 bool update_ldb();
-int get_operation_time(const std::string& name);
+int get_operation_time(const std::string& robot);
 #endif

@@ -9,6 +9,7 @@
 #include <chargepal_services/deleteMirMission.h>
 #include <chargepal_services/askFreeBCS.h>
 #include <chargepal_services/askFreeBWS.h>
+#include <chargepal_services/fetchJob.h>
 #include <chargepal_services/assertLiftValue.h>
 #include <chargepal_services/askOperationTime.h>
 
@@ -139,9 +140,24 @@ std::string read_assertLift_value(const std::string& cart_name) {
     return assert_lift_value;
 }
 
-std::map<std::string,std::string> fetch_job() {
-
+std::string fetch_job(const std::string& robot) {
+    std::string job;
+    ros::NodeHandle n;
+    ros::ServiceClient client_ldb_server = n.serviceClient<chargepal_services::fetchJob>("/ldb_server/fetch_job");
+    chargepal_services::fetchJob srv_ldb_server;
+    //std::cout << "Fetching job from server for " << robot << std::endl;
+    srv_ldb_server.request.robot_name = robot;
+    if (client_ldb_server.call(srv_ldb_server)){
+        
+        job = srv_ldb_server.response.job;
+        
+    }
+    else {
+        ROS_ERROR("Fetch job service failed");
+    }
+    return job;
 }
+
 bool update_job_monitor() {
     //ToDo: Ask the database for Assert Lift value
     }

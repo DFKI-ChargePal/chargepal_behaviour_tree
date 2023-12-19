@@ -7,7 +7,7 @@
 #include <vector>
 #include <SQLiteCpp/SQLiteCpp.h>
 #include "util.h"
-
+#include<nlohmann/json.hpp>
 
 #include <actionlib/client/simple_action_client.h>
 #include <actionlib/client/terminal_state.h>
@@ -24,11 +24,14 @@
 #include "behaviortree_cpp/action_node.h"
 #include "behaviortree_cpp/condition_node.h"
 #include "behaviortree_cpp/bt_factory.h"
+#include "behaviortree_cpp/loggers/bt_observer.h"
+#include "behaviortree_cpp/loggers/groot2_publisher.h"
 
 using namespace BT;
 using namespace std::chrono_literals;
 using namespace std::chrono;
-//BT::Blackboard::Ptr masterBlackboard = config().blackboard;
+using json = nlohmann::json;
+
 
 class isBRING_CHARGER : public  BT::ConditionNode {
     public:
@@ -36,7 +39,7 @@ class isBRING_CHARGER : public  BT::ConditionNode {
         : BT::ConditionNode(name, config){}
 
         static PortsList providedPorts(){
-            return { InputPort<std::string>("message") };
+            return {};
         }
 
         virtual NodeStatus tick() override {
@@ -63,7 +66,7 @@ class isRECHARGE_CHARGER : public  BT::ConditionNode {
         : BT::ConditionNode(name, config){}
 
         static PortsList providedPorts(){
-            return { InputPort<std::string>("message") };
+            return {};
         }
         
         virtual NodeStatus tick() override {
@@ -86,7 +89,7 @@ class isRECHARGE_SELF : public  BT::ConditionNode {
         : BT::ConditionNode(name, config){}
 
         static PortsList providedPorts(){
-            return { InputPort<std::string>("message") };
+            return {};
         }
         
         virtual NodeStatus tick() override {
@@ -109,7 +112,7 @@ class isSTOW_CHARGER : public  BT::ConditionNode {
         : BT::ConditionNode(name, config){}
 
         static PortsList providedPorts(){
-            return { InputPort<std::string>("message") };
+            return {};
         }
         
         virtual NodeStatus tick() override {
@@ -133,7 +136,7 @@ class isRobotAtADSorBCSorBWS : public  BT::ConditionNode {
         : BT::ConditionNode(name, config){}
 
         static PortsList providedPorts(){
-            return { InputPort<std::string>("message") };
+            return {};
         }
         
         virtual NodeStatus tick() override {
@@ -160,7 +163,7 @@ class isRobotAtRBS : public  BT::ConditionNode {
         : BT::ConditionNode(name, config){}
 
         static PortsList providedPorts(){
-            return { InputPort<std::string>("message") };
+            return {};
         }
         
         virtual NodeStatus tick() override {
@@ -185,7 +188,7 @@ class isRobotAtBWS : public  BT::ConditionNode {
         : BT::ConditionNode(name, config){}
 
         static PortsList providedPorts(){
-            return { InputPort<std::string>("message") };
+            return {};
         }
         
         virtual NodeStatus tick() override {
@@ -210,7 +213,7 @@ class isRobotAtBCS : public  BT::ConditionNode {
         : BT::ConditionNode(name, config){}
 
         static PortsList providedPorts(){
-            return { InputPort<std::string>("message") };
+            return {};
         }
         
         virtual NodeStatus tick() override {
@@ -235,7 +238,7 @@ class isRobotAtADS : public  BT::ConditionNode {
         : BT::ConditionNode(name, config){}
 
         static PortsList providedPorts(){
-            return { InputPort<std::string>("message") };
+            return {};
         }
         
         virtual NodeStatus tick() override {
@@ -261,7 +264,7 @@ class isSameBattery : public  BT::ConditionNode {
         : BT::ConditionNode(name, config){}
 
         static PortsList providedPorts(){
-            return { InputPort<std::string>("message") };
+            return {};
         }
         
         virtual NodeStatus tick() override {
@@ -289,7 +292,7 @@ class isDifferentBattery : public  BT::ConditionNode {
         : BT::ConditionNode(name, config){}
 
         static PortsList providedPorts(){
-            return { InputPort<std::string>("message") };
+            return {};
         }
         
         virtual NodeStatus tick() override {
@@ -315,7 +318,7 @@ class isbattery_ADS_BCS : public  BT::ConditionNode {
         : BT::ConditionNode(name, config){}
 
         static PortsList providedPorts(){
-            return { InputPort<std::string>("message") };
+            return {};
         }
         
         virtual NodeStatus tick() override {
@@ -338,7 +341,7 @@ class isbattery_BWS : public  BT::ConditionNode {
         : BT::ConditionNode(name, config){}
 
         static PortsList providedPorts(){
-            return { InputPort<std::string>("message") };
+            return {};
         }
         
         virtual NodeStatus tick() override {
@@ -362,7 +365,7 @@ class askAssertLift : public  BT::ConditionNode {
         : BT::ConditionNode(name, config){}
 
         static PortsList providedPorts(){
-            return { InputPort<std::string>("message") };
+            return {};
         }
         
         virtual NodeStatus tick() override {
@@ -391,7 +394,7 @@ class isCartPlaced : public  BT::ConditionNode {
         : BT::ConditionNode(name, config){}
 
         static PortsList providedPorts(){
-            return { InputPort<std::string>("message") };
+            return {};
         }
         
         virtual NodeStatus tick() override {
@@ -421,7 +424,7 @@ class arrive_at_station: public BT::SyncActionNode
         : BT::SyncActionNode(name, config){}
 
         static PortsList providedPorts(){
-            return { InputPort<std::string>("message") };
+            return {};
         }
     // You must override the virtual function tick()
     BT::NodeStatus tick() override
@@ -513,7 +516,7 @@ class go_home: public BT::SyncActionNode
         : BT::SyncActionNode(name, config){}
 
         static PortsList providedPorts(){
-            return { InputPort<std::string>("message") };
+            return {};
         }
     // You must override the virtual function tick()
     BT::NodeStatus tick() override
@@ -554,7 +557,7 @@ class call_for_help: public BT::SyncActionNode
         : BT::SyncActionNode(name, config){}
 
         static PortsList providedPorts(){
-            return { InputPort<std::string>("message") };
+            return {};
         }
     // You must override the virtual function tick()
     BT::NodeStatus tick() override
@@ -583,7 +586,7 @@ class drop_cart: public BT::SyncActionNode
         : BT::SyncActionNode(name, config){}
 
         static PortsList providedPorts(){
-            return { InputPort<std::string>("message") };
+            return {};
         }
     // You must override the virtual function tick()
     BT::NodeStatus tick() override
@@ -630,7 +633,7 @@ class pickup_cart: public BT::SyncActionNode
         : BT::SyncActionNode(name, config){}
 
         static PortsList providedPorts(){
-            return { InputPort<std::string>("message") };
+            return {};
         }
     // You must override the virtual function tick()
     BT::NodeStatus tick() override
@@ -678,7 +681,7 @@ class plugin_ADS: public BT::SyncActionNode
         : BT::SyncActionNode(name, config){}
 
         static PortsList providedPorts(){
-            return { InputPort<std::string>("message") };
+            return {};
         }
     // You must override the virtual function tick()
     BT::NodeStatus tick() override
@@ -720,7 +723,7 @@ class plugin_BCS: public BT::SyncActionNode
         : BT::SyncActionNode(name, config){}
 
         static PortsList providedPorts(){
-            return { InputPort<std::string>("message") };
+            return {};
         }
     // You must override the virtual function tick()
     BT::NodeStatus tick() override
@@ -762,7 +765,7 @@ class plugout_ADS: public BT::SyncActionNode
         : BT::SyncActionNode(name, config){}
 
         static PortsList providedPorts(){
-            return { InputPort<std::string>("message") };
+            return {};
         }
     // You must override the virtual function tick()
     BT::NodeStatus tick() override
@@ -804,7 +807,7 @@ class plugout_BCS: public BT::SyncActionNode
         : BT::SyncActionNode(name, config){}
 
         static PortsList providedPorts(){
-            return { InputPort<std::string>("message") };
+            return {};
         }
     // You must override the virtual function tick()
     BT::NodeStatus tick() override
@@ -846,7 +849,7 @@ class recovery_arrive_BWS: public BT::SyncActionNode
         : BT::SyncActionNode(name, config){}
 
         static PortsList providedPorts(){
-            return { InputPort<std::string>("message") };
+            return {};
         }
     // You must override the virtual function tick()
     BT::NodeStatus tick() override
@@ -912,7 +915,7 @@ class recovery_arrive_BCS: public BT::SyncActionNode
         : BT::SyncActionNode(name, config){}
 
         static PortsList providedPorts(){
-            return { InputPort<std::string>("message") };
+            return {};
         }
     // You must override the virtual function tick()
     BT::NodeStatus tick() override
@@ -981,7 +984,7 @@ class set_arm_free_BCS: public BT::SyncActionNode
         : BT::SyncActionNode(name, config){}
 
         static PortsList providedPorts(){
-            return { InputPort<std::string>("message") };
+            return {};
         }
     // You must override the virtual function tick()
     BT::NodeStatus tick() override
@@ -999,7 +1002,7 @@ class set_arm_free_ADS: public BT::SyncActionNode
         : BT::SyncActionNode(name, config){}
 
         static PortsList providedPorts(){
-            return { InputPort<std::string>("message") };
+            return {};
         }
     // You must override the virtual function tick()
     BT::NodeStatus tick() override
@@ -1067,35 +1070,19 @@ int main(int argc, char **argv){
 ros::init(argc, argv, "chargepal_bt");
 ros::NodeHandle nh;
 
-/* ros::ServiceClient client = nh.serviceClient<chargepal_fake_planning::get_job>("chargepal_planner/get_job");
-chargepal_fake_planning::get_job srv
 
-
-if (client.call(srv))
-{
-    masterBlackboard->set("job_type",srv.response.job[0]);
-    masterBlackboard->set("robot_name",srv.response.job[1]);
-    masterBlackboard->set("charger",srv.response.job[2]);
-    masterBlackboard->set("source_station",srv.response.job[3]);
-    masterBlackboard->set("target_station",srv.response.job[4]);;
-}
-else
-{
-  ROS_ERROR("Failed to call service get job");
-  return 1;
-}
-*/
 
 BehaviorTreeFactory factory;
 BT::Blackboard::Ptr masterBlackboard = BT::Blackboard::create();
-//std::map<std::string,std::string> job = fetch_job()
-// fake job
+
+
+/*
 masterBlackboard->set("job_type","BRING_CHARGER");
 masterBlackboard->set("robot_name","Chargepal1");
 masterBlackboard->set("charger","BAT_1");
-masterBlackboard->set("source_station","ADS_1");
-masterBlackboard->set("target_station","ADS_2");
-
+masterBlackboard->set("source_station","BWS_1");
+masterBlackboard->set("target_station","ADS_1");
+*/
 factory.registerNodeType<isBRING_CHARGER>("isBRING_CHARGER");
 factory.registerNodeType<isRECHARGE_CHARGER>("isRECHARGE_CHARGER");
 factory.registerNodeType<isRECHARGE_SELF>("isRECHARGE_SELF");
@@ -1140,17 +1127,45 @@ factory.registerBehaviorTreeFromFile(package_folder + "/xml/Actions.xml");
 factory.registerBehaviorTreeFromFile(package_folder + "/xml/Recovery.xml");
 
 
-BT::Tree mainTree = factory.createTree("main",masterBlackboard);
+json job_requested;
 
-BT::NodeStatus status = mainTree.rootNode()->executeTick();
 
-if (status == BT::NodeStatus::SUCCESS) {
-        ROS_INFO("Behavior Tree tick succeeded.");
-    } else {
-        ROS_ERROR("Behavior Tree tick failed.");
+auto mainTree = factory.createTree("main",masterBlackboard);
+BT::Groot2Publisher publisher(mainTree);
+
+while (job_requested.empty()){
+    std::string job_jsonString = fetch_job("Chargepal1");
+    job_requested = json::parse(job_jsonString);
+
+    if (job_requested.empty()){
+        std::cout << "Waiting for new job";
     }
 
-    // Exit the ROS node
-    ros::shutdown();
-    return 0;
+    else {
+        std::string job_type = job_requested["job_type"];
+        std::string robot_name = job_requested["robot_name"];
+        std::string charger = job_requested["charger"];
+        std::string source_station = job_requested["source_station"];
+        std::string target_station = job_requested["target_station"];
+
+        masterBlackboard->set("job_type", job_type);
+        masterBlackboard->set("robot_name",robot_name);
+        masterBlackboard->set("charger",charger);
+        masterBlackboard->set("source_station",source_station);
+        masterBlackboard->set("target_station",target_station);
+
+        BT::NodeStatus status = mainTree.rootNode()->executeTick();
+        if (status == BT::NodeStatus::SUCCESS) {
+            ROS_INFO("Behavior Tree tick succeeded.");
+            job_requested.clear();
+        }  
+        else {
+        ROS_ERROR("Behavior Tree tick failed.");
+        }
+    }
+}
+
+// Exit the ROS node
+ros::shutdown();
+return 0;
 }
