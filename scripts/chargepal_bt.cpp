@@ -23,9 +23,11 @@
 #include "behaviortree_cpp/exceptions.h"
 #include "behaviortree_cpp/action_node.h"
 #include "behaviortree_cpp/condition_node.h"
+#include "behaviortree_cpp/decorators/delay_node.h"
 #include "behaviortree_cpp/bt_factory.h"
 #include "behaviortree_cpp/loggers/bt_observer.h"
 #include "behaviortree_cpp/loggers/groot2_publisher.h"
+#include "behaviortree_cpp/controls/reactive_fallback.h"
 
 using namespace BT;
 using namespace std::chrono_literals;
@@ -46,7 +48,7 @@ class isBRING_CHARGER : public  BT::ConditionNode {
             BT::Blackboard::Ptr masterBlackboard = config().blackboard;
             std::string job = masterBlackboard->get<std::string>("job_type");
             std::string robot_name = masterBlackboard->get<std::string>("robot_name");
-
+            
             if(job == "BRING_CHARGER"){
                 std::cout << "BRING CHARGER requested" << std::endl;
                 set_robot_value(robot_name,"current_job", "BRING_CHARGER");
@@ -429,6 +431,8 @@ class arrive_at_station: public BT::SyncActionNode
     // You must override the virtual function tick()
     BT::NodeStatus tick() override
     {
+        int retry_attempt = 0;
+        bool retry_flag = true;
         actionlib::SimpleActionClient<chargepal_actions::ArriveAtStationAction> aas("arrive_at_station", true);
         aas.waitForServer();
         chargepal_actions::ArriveAtStationGoal goal;
@@ -479,32 +483,59 @@ class arrive_at_station: public BT::SyncActionNode
                 goal.target_station = "ADSpick_" + charger;
             }
         }
-        
-        aas.sendGoal(goal);
-        set_robot_value(robot_name,"ongoing_action", "arrive_at_station");
-        bool aas_action = aas.waitForResult(ros::Duration(900.0));
-        if (aas_action) {
-            chargepal_actions::ArriveAtStationResult result = *aas.getResult();
-            bool station_reached = result.station_reached;
-            if (station_reached){
-                std::string current_station = result.current_station;
-                set_robot_value(robot_name,"ongoing_action", "none");
-                set_robot_value(robot_name,"previous_action", "arrive_at_station");
-                set_robot_value(robot_name,"robot_location", current_station);
+        while (retry_flag){
+            aas.sendGoal(goal);
+            set_robot_value(robot_name,"ongoing_action", "arrive_at_station");
+            bool aas_action = aas.waitForResult(ros::Duration(900.0));
+            if (aas_action) {
+                chargepal_actions::ArriveAtStationResult result = *aas.getResult();
+                bool station_reached = result.station_reached;
 
-                std::string cart_on_robot = read_robot_value(robot_name,"cart_on_robot");
-                if (cart_on_robot != "none"){
-                    set_cart_value(cart_on_robot,"cart_location", current_station);
+                if (station_reached){
+                    std::string current_station = result.current_station;
+                    set_robot_value(robot_name,"ongoing_action", "none");
+                    set_robot_value(robot_name,"previous_action", "arrive_at_station");
+                    set_robot_value(robot_name,"robot_location", current_station);
+
+                    std::string cart_on_robot = read_robot_value(robot_name,"cart_on_robot");
+                    if (cart_on_robot != "none"){
+                        set_cart_value(cart_on_robot,"cart_location", current_station);
+                    }
+                    return BT::NodeStatus::SUCCESS;
                 }
-                return BT::NodeStatus::SUCCESS;
             }
-            else {
-                return BT::NodeStatus::FAILURE;
+                
+            retry_attempt ++;
+
+            int delete_mission_attempt = 0;
+            while (delete_mission_attempt < 3) {
+                try{
+                    bool delete_mission = delete_mir_mission_queue();
+                    if (delete_mission) {
+                        break;
+                    }
+                }
+                catch (const std::runtime_error& e){
+                    ROS_ERROR("mir_delete_mission service failed, retrying!");
+                    delete_mission_attempt ++ ;
+                    if (delete_mission_attempt > 3){
+                        ROS_ERROR("mir_delete_mission service failed!");
+                    }
+                }
             }
+            
+            if (retry_attempt > 5 || delete_mission_attempt > 3) {
+                ROS_ERROR("arrive_at_station action did not finish after multiple retrials.");
+                break;
+            }   
         }
-        else {
-            return BT::NodeStatus::FAILURE;
-        }    
+        set_robot_value(robot_name,"ongoing_action", "none");
+        set_robot_value(robot_name,"previous_action", "arrive_at_station");
+        set_robot_value(robot_name,"robot_location", robot_location);
+        std::string error_count = read_robot_value(robot_name,"error_count");
+        int error = std::stoi(error_count);
+        set_robot_value(robot_name,"error_count", std::to_string(error ++));
+        return BT::NodeStatus::FAILURE;    
     }
 };
 
@@ -521,6 +552,8 @@ class go_home: public BT::SyncActionNode
     // You must override the virtual function tick()
     BT::NodeStatus tick() override
     {
+        int retry_attempt = 0;
+        bool retry_flag = true;
         actionlib::SimpleActionClient<chargepal_actions::ArriveAtHomeAction> aah("arrive_at_home", true);
         aah.waitForServer();
         chargepal_actions::ArriveAtHomeGoal goal;
@@ -528,27 +561,66 @@ class go_home: public BT::SyncActionNode
         BT::Blackboard::Ptr masterBlackboard = config().blackboard;
         std::string robot_name = masterBlackboard->get<std::string>("robot_name");
         std::string robot_location = read_robot_value(robot_name,"robot_location");
-        aah.sendGoal(goal);
-        set_robot_value(robot_name,"ongoing_action", "place_charger");
+        
+        for (char c : robot_name){
+            if (std::isdigit(c)){
+                std::string robot_number = std::string(1,c);
+                goal.target_station = "RBS_" + robot_number;
+            }
+        }
+        
+        
 
-        bool aah_action = aah.waitForResult(ros::Duration(900.0));
-        if (aah_action) {
-            chargepal_actions::ArriveAtHomeResult result = *aah.getResult();
-            bool home_reached = result.home_reached;
-            if (home_reached){
-                set_robot_value(robot_name,"ongoing_action", "none");
-                set_robot_value(robot_name,"previous_action", "go_home");
-                return BT::NodeStatus::SUCCESS;
+        while (retry_flag){
+            aah.sendGoal(goal);
+            set_robot_value(robot_name,"ongoing_action", "go_home");
+
+            bool aah_action = aah.waitForResult(ros::Duration(900.0));
+            if (aah_action) {
+                chargepal_actions::ArriveAtHomeResult result = *aah.getResult();
+                bool home_reached = result.station_reached;
+                if (home_reached){
+                    std::string current_station = result.current_station;
+                    set_robot_value(robot_name,"ongoing_action", "none");
+                    set_robot_value(robot_name,"previous_action", "go_home");
+                    set_robot_value(robot_name,"robot_location", current_station);
+                    return BT::NodeStatus::SUCCESS;
+                }
             }
-            else {
-                return BT::NodeStatus::FAILURE;
+            retry_attempt ++;
+
+            int delete_mission_attempt = 0;
+            while (delete_mission_attempt < 3) {
+                try{
+                    bool delete_mission = delete_mir_mission_queue();
+                    if (delete_mission) {
+                        break;
+                    }
+                }
+                catch (const std::runtime_error& e){
+                    ROS_ERROR("mir_delete_mission service failed, retrying!");
+                    delete_mission_attempt ++ ;
+                    if (delete_mission_attempt > 3){
+                        ROS_ERROR("mir_delete_mission service failed!");
+                    }
+                }
             }
-        } 
-        else {
-            return BT::NodeStatus::FAILURE;
-        }  
+            
+            if (retry_attempt > 5 || delete_mission_attempt > 3) {
+                ROS_ERROR("arrive_at_station action did not finish after multiple retrials.");
+                break; 
+            }   
+        }
+        set_robot_value(robot_name,"ongoing_action", "none");
+        set_robot_value(robot_name,"previous_action", "arrive_at_station");
+        set_robot_value(robot_name,"robot_location", robot_location);
+        std::string error_count = read_robot_value(robot_name,"error_count");
+        int error = std::stoi(error_count);
+        set_robot_value(robot_name,"error_count", std::to_string(error ++));
+        return BT::NodeStatus::FAILURE;        
     }
 };
+
 
 class call_for_help: public BT::SyncActionNode
 {
@@ -562,20 +634,44 @@ class call_for_help: public BT::SyncActionNode
     // You must override the virtual function tick()
     BT::NodeStatus tick() override
     {
+        int retry_attempt = 0;
+        bool retry_flag = true;
         actionlib::SimpleActionClient<chargepal_actions::CallForHelpAction> cfh("call_for_help", true);
         chargepal_actions::CallForHelpGoal goal;
         cfh.waitForServer();
-        cfh.sendGoal(goal);
-    
-        bool cfh_action = cfh.waitForResult(ros::Duration(900.0));
-        if (cfh_action) {
-            chargepal_actions::CallForHelpResult result = *cfh.getResult();
-            return BT::NodeStatus::SUCCESS;
+        while (retry_flag){
+            cfh.sendGoal(goal);
+        
+            bool cfh_action = cfh.waitForResult(ros::Duration(900.0));
+            if (cfh_action) {
+                chargepal_actions::CallForHelpResult result = *cfh.getResult();
+                return BT::NodeStatus::SUCCESS;
             }
- 
-        else {
-            return BT::NodeStatus::FAILURE;
-        }  
+            retry_attempt ++;
+
+            int delete_mission_attempt = 0;
+            while (delete_mission_attempt < 3) {
+                try{
+                    bool delete_mission = delete_mir_mission_queue();
+                    if (delete_mission) {
+                        break;
+                    }
+                }
+                catch (const std::runtime_error& e){
+                    ROS_ERROR("mir_delete_mission service failed, retrying!");
+                    delete_mission_attempt ++ ;
+                    if (delete_mission_attempt > 3){
+                        ROS_ERROR("mir_delete_mission service failed!");
+                    }
+                }
+            }
+            
+            if (retry_attempt > 5 || delete_mission_attempt > 3) {
+                ROS_ERROR("arrive_at_station action did not finish after multiple retrials.");
+                break;
+            }   
+        }
+        return BT::NodeStatus::FAILURE;     
     }
 };
 
@@ -591,6 +687,8 @@ class drop_cart: public BT::SyncActionNode
     // You must override the virtual function tick()
     BT::NodeStatus tick() override
     {
+        int retry_attempt = 0;
+        bool retry_flag = true;
         actionlib::SimpleActionClient<chargepal_actions::PlaceChargerAction> plc("place_charger", true);
         plc.waitForServer();
         chargepal_actions::PlaceChargerGoal goal;
@@ -601,30 +699,52 @@ class drop_cart: public BT::SyncActionNode
         std::string robot_location = read_robot_value(robot_name,"robot_location");
         
         goal.charger_name = charger;
-        plc.sendGoal(goal);
-        set_robot_value(robot_name,"ongoing_action", "place_charger");
+        while (retry_flag){
+            plc.sendGoal(goal);
+            set_robot_value(robot_name,"ongoing_action", "place_charger");
 
-        bool plc_action = plc.waitForResult(ros::Duration(900.0));
-        if (plc_action) {
-            chargepal_actions::PlaceChargerResult result = *plc.getResult();
-            bool charger_placed = result.charger_placed;
-            if (charger_placed){
-                set_robot_value(robot_name,"cart_on_robot", "none");
-                set_robot_value(robot_name,"ongoing_action", "none");
-                set_robot_value(robot_name,"previous_action", "place_charger");
-                set_cart_value(charger,"cart_location", robot_location);
-                set_cart_value(charger,"robot_on_cart", "none");
-                return BT::NodeStatus::SUCCESS;
+            bool plc_action = plc.waitForResult(ros::Duration(900.0));
+            if (plc_action) {
+                chargepal_actions::PlaceChargerResult result = *plc.getResult();
+                bool charger_placed = result.charger_placed;
+                if (charger_placed){
+                    set_robot_value(robot_name,"cart_on_robot", "none");
+                    set_robot_value(robot_name,"ongoing_action", "none");
+                    set_robot_value(robot_name,"previous_action", "place_charger");
+                    set_cart_value(charger,"cart_location", robot_location);
+                    set_cart_value(charger,"robot_on_cart", "none");
+                    return BT::NodeStatus::SUCCESS;
+                }
             }
-            else {
-                return BT::NodeStatus::FAILURE;
+                
+            retry_attempt ++;
+
+            int delete_mission_attempt = 0;
+            while (delete_mission_attempt < 3) {
+                try{
+                    bool delete_mission = delete_mir_mission_queue();
+                    if (delete_mission) {
+                        break;
+                    }
+                }
+                catch (const std::runtime_error& e){
+                    ROS_ERROR("mir_delete_mission service failed, retrying!");
+                    delete_mission_attempt ++ ;
+                    if (delete_mission_attempt > 3){
+                        ROS_ERROR("mir_delete_mission service failed!");
+                    }
+                }
             }
-        } 
-        else {
-            return BT::NodeStatus::FAILURE;
-        }  
+            
+            if (retry_attempt > 5 || delete_mission_attempt > 3) {
+                ROS_ERROR("arrive_at_station action did not finish after multiple retrials.");
+                break;
+            }   
+        }
+        return BT::NodeStatus::FAILURE;     
     }
 };
+            
 
 class pickup_cart: public BT::SyncActionNode
 {
@@ -638,6 +758,8 @@ class pickup_cart: public BT::SyncActionNode
     // You must override the virtual function tick()
     BT::NodeStatus tick() override
     {
+        int retry_attempt = 0;
+        bool retry_flag = true;
         actionlib::SimpleActionClient<chargepal_actions::PickUpChargerAction> puc("pick_up_charger", true);
         puc.waitForServer();
         chargepal_actions::PickUpChargerGoal goal;
@@ -648,31 +770,52 @@ class pickup_cart: public BT::SyncActionNode
         std::string robot_location = read_robot_value(robot_name,"robot_location");
 
         goal.charger_name = charger;
-        puc.sendGoal(goal);
-        set_robot_value(robot_name,"ongoing_action", "pickup_charger");
+        while (retry_flag){
+            puc.sendGoal(goal);
+            set_robot_value(robot_name,"ongoing_action", "pickup_charger");
 
-        bool puc_action = puc.waitForResult(ros::Duration(900.0));
-        if (puc_action) {
-            chargepal_actions::PickUpChargerResult result = *puc.getResult();
-            bool charger_picked = result.charger_picked;
-            if (charger_picked){
-                set_robot_value(robot_name,"cart_on_robot", charger);
-                set_robot_value(robot_name,"ongoing_action", "none");
-                set_robot_value(robot_name,"previous_action", "pickup_charger");
-                set_cart_value(charger,"cart_location", robot_location);
-                set_cart_value(charger,"robot_on_cart", robot_name);
-                return BT::NodeStatus::SUCCESS;
+            bool puc_action = puc.waitForResult(ros::Duration(900.0));
+            if (puc_action) {
+                chargepal_actions::PickUpChargerResult result = *puc.getResult();
+                bool charger_picked = result.charger_picked;
+                if (charger_picked){
+                    set_robot_value(robot_name,"cart_on_robot", charger);
+                    set_robot_value(robot_name,"ongoing_action", "none");
+                    set_robot_value(robot_name,"previous_action", "pickup_charger");
+                    set_cart_value(charger,"cart_location", robot_location);
+                    set_cart_value(charger,"robot_on_cart", robot_name);
+                    return BT::NodeStatus::SUCCESS;
+                }
             }
-            else {
-                return BT::NodeStatus::FAILURE;
+                
+            retry_attempt ++;
+
+            int delete_mission_attempt = 0;
+            while (delete_mission_attempt < 3) {
+                try{
+                    bool delete_mission = delete_mir_mission_queue();
+                    if (delete_mission) {
+                        break;
+                    }
+                }
+                catch (const std::runtime_error& e){
+                    ROS_ERROR("mir_delete_mission service failed, retrying!");
+                    delete_mission_attempt ++ ;
+                    if (delete_mission_attempt > 3){
+                        ROS_ERROR("mir_delete_mission service failed!");
+                    }
+                }
             }
-        } 
-        else {
-            return BT::NodeStatus::FAILURE;
-        }  
-        
+            
+            if (retry_attempt > 5 || delete_mission_attempt > 3) {
+                ROS_ERROR("arrive_at_station action did not finish after multiple retrials.");
+                break;
+            }   
+        }
+        return BT::NodeStatus::FAILURE;     
     }
 };
+            
 
 class plugin_ADS: public BT::SyncActionNode
 {
@@ -686,6 +829,8 @@ class plugin_ADS: public BT::SyncActionNode
     // You must override the virtual function tick()
     BT::NodeStatus tick() override
     {
+        int retry_attempt = 0;
+        bool retry_flag = true;
         actionlib::SimpleActionClient<chargepal_actions::PlugInAction> pi_ads("plugin_charger_ads", true);
         pi_ads.waitForServer();
         chargepal_actions::PlugInGoal goal;
@@ -694,27 +839,49 @@ class plugin_ADS: public BT::SyncActionNode
         std::string charger = masterBlackboard->get<std::string>("charger");
         std::string robot_name = masterBlackboard->get<std::string>("robot_name");
         
-        pi_ads.sendGoal(goal);
-        set_robot_value(robot_name,"ongoing_action", "plugin_charger_ads");
-        bool pi_ads_action = pi_ads.waitForResult(ros::Duration(900.0));
-        if (pi_ads_action){
-            chargepal_actions::PlugInResult result = *pi_ads.getResult();
-            bool plug_in = result.plug_in;
-            if (plug_in){
-                set_robot_value(robot_name,"ongoing_action", "none");
-                set_robot_value(robot_name,"previous_action", "plugin_charger_ads");
-                set_cart_value(charger,"plugged", "true");
-                return BT::NodeStatus::SUCCESS;
+        while (retry_flag){
+            pi_ads.sendGoal(goal);
+            set_robot_value(robot_name,"ongoing_action", "plugin_charger_ads");
+            bool pi_ads_action = pi_ads.waitForResult(ros::Duration(900.0));
+            if (pi_ads_action){
+                chargepal_actions::PlugInResult result = *pi_ads.getResult();
+                bool plug_in = result.plug_in;
+                if (plug_in){
+                    set_robot_value(robot_name,"ongoing_action", "none");
+                    set_robot_value(robot_name,"previous_action", "plugin_charger_ads");
+                    set_cart_value(charger,"plugged", "true");
+                    return BT::NodeStatus::SUCCESS;
+                }
             }
-            else {
-                return BT::NodeStatus::FAILURE;
+                
+            retry_attempt ++;
+
+            int delete_mission_attempt = 0;
+            while (delete_mission_attempt < 3) {
+                try{
+                    bool delete_mission = delete_mir_mission_queue();
+                    if (delete_mission) {
+                        break;
+                    }
+                }
+                catch (const std::runtime_error& e){
+                    ROS_ERROR("mir_delete_mission service failed, retrying!");
+                    delete_mission_attempt ++ ;
+                    if (delete_mission_attempt > 3){
+                        ROS_ERROR("mir_delete_mission service failed!");
+                    }
+                }
             }
-        } 
-        else {
-            return BT::NodeStatus::FAILURE;
-        }  
+            
+            if (retry_attempt > 5 || delete_mission_attempt > 3) {
+                ROS_ERROR("arrive_at_station action did not finish after multiple retrials.");
+                break;
+            }   
+        }
+        return BT::NodeStatus::FAILURE;     
     }
 };
+            
 
 class plugin_BCS: public BT::SyncActionNode
 {
@@ -728,6 +895,8 @@ class plugin_BCS: public BT::SyncActionNode
     // You must override the virtual function tick()
     BT::NodeStatus tick() override
     {
+        int retry_attempt = 0;
+        bool retry_flag = true;
         actionlib::SimpleActionClient<chargepal_actions::PlugInAction> pi_bcs("plugin_charger_bcs", true);
         pi_bcs.waitForServer();
         chargepal_actions::PlugInGoal goal;
@@ -736,27 +905,48 @@ class plugin_BCS: public BT::SyncActionNode
         std::string charger = masterBlackboard->get<std::string>("charger");
         std::string robot_name = masterBlackboard->get<std::string>("robot_name");
         
-        pi_bcs.sendGoal(goal);
-        set_robot_value(robot_name,"ongoing_action", "plugin_charger_bcs");
-        bool pi_bcs_action = pi_bcs.waitForResult(ros::Duration(900.0));
-        if (pi_bcs_action){
-            chargepal_actions::PlugInResult result = *pi_bcs.getResult();
-            bool plug_in = result.plug_in;
-            if (plug_in){
-                set_robot_value(robot_name,"ongoing_action", "none");
-                set_robot_value(robot_name,"previous_action", "plugin_charger_bcs");
-                set_cart_value(charger,"plugged", "true");
-                return BT::NodeStatus::SUCCESS;
+        while (retry_flag){
+            pi_bcs.sendGoal(goal);
+            set_robot_value(robot_name,"ongoing_action", "plugin_charger_bcs");
+            bool pi_bcs_action = pi_bcs.waitForResult(ros::Duration(900.0));
+            if (pi_bcs_action){
+                chargepal_actions::PlugInResult result = *pi_bcs.getResult();
+                bool plug_in = result.plug_in;
+                if (plug_in){
+                    set_robot_value(robot_name,"ongoing_action", "none");
+                    set_robot_value(robot_name,"previous_action", "plugin_charger_bcs");
+                    set_cart_value(charger,"plugged", "true");
+                    return BT::NodeStatus::SUCCESS;
+                }
             }
-            else {
-                return BT::NodeStatus::FAILURE;
+            retry_attempt ++;
+
+            int delete_mission_attempt = 0;
+            while (delete_mission_attempt < 3) {
+                try{
+                    bool delete_mission = delete_mir_mission_queue();
+                    if (delete_mission) {
+                        break;
+                    }
+                }
+                catch (const std::runtime_error& e){
+                    ROS_ERROR("mir_delete_mission service failed, retrying!");
+                    delete_mission_attempt ++ ;
+                    if (delete_mission_attempt > 3){
+                        ROS_ERROR("mir_delete_mission service failed!");
+                    }
+                }
             }
-        } 
-        else {
-            return BT::NodeStatus::FAILURE;
-        }  
+            
+            if (retry_attempt > 5 || delete_mission_attempt > 3) {
+                ROS_ERROR("arrive_at_station action did not finish after multiple retrials.");
+                break;
+            }   
+        }
+        return BT::NodeStatus::FAILURE;     
     }
 };
+            
 
 class plugout_ADS: public BT::SyncActionNode
 {
@@ -770,6 +960,8 @@ class plugout_ADS: public BT::SyncActionNode
     // You must override the virtual function tick()
     BT::NodeStatus tick() override
     {
+        int retry_attempt = 0;
+        bool retry_flag = true;
         actionlib::SimpleActionClient<chargepal_actions::PlugOutAction> po_ads("plugout_charger_ads", true);
         po_ads.waitForServer();
         chargepal_actions::PlugOutGoal goal;
@@ -778,27 +970,49 @@ class plugout_ADS: public BT::SyncActionNode
         std::string charger = masterBlackboard->get<std::string>("charger");
         std::string robot_name = masterBlackboard->get<std::string>("robot_name");
         
-        po_ads.sendGoal(goal);
-        set_robot_value(robot_name,"ongoing_action", "plugout_charger_ads");
-        bool po_ads_action = po_ads.waitForResult(ros::Duration(900.0));
-        if (po_ads_action){
-            chargepal_actions::PlugOutResult result = *po_ads.getResult();
-            bool plug_out = result.plug_out;
-            if (plug_out){
-                set_robot_value(robot_name,"ongoing_action", "none");
-                set_robot_value(robot_name,"previous_action", "plugout_charger_ads");
-                set_cart_value(charger,"plugged", "false");
-                return BT::NodeStatus::SUCCESS;
+        while (retry_flag){
+            po_ads.sendGoal(goal);
+            set_robot_value(robot_name,"ongoing_action", "plugout_charger_ads");
+            bool po_ads_action = po_ads.waitForResult(ros::Duration(900.0));
+            if (po_ads_action){
+                chargepal_actions::PlugOutResult result = *po_ads.getResult();
+                bool plug_out = result.plug_out;
+                if (plug_out){
+                    set_robot_value(robot_name,"ongoing_action", "none");
+                    set_robot_value(robot_name,"previous_action", "plugout_charger_ads");
+                    set_cart_value(charger,"plugged", "false");
+                    return BT::NodeStatus::SUCCESS;
+                }
             }
-            else {
-                return BT::NodeStatus::FAILURE;
+                
+            retry_attempt ++;
+
+            int delete_mission_attempt = 0;
+            while (delete_mission_attempt < 3) {
+                try{
+                    bool delete_mission = delete_mir_mission_queue();
+                    if (delete_mission) {
+                        break;
+                    }
+                }
+                catch (const std::runtime_error& e){
+                    ROS_ERROR("mir_delete_mission service failed, retrying!");
+                    delete_mission_attempt ++ ;
+                    if (delete_mission_attempt > 3){
+                        ROS_ERROR("mir_delete_mission service failed!");
+                    }
+                }
             }
-        } 
-        else {
-            return BT::NodeStatus::FAILURE;
-        }  
+            
+            if (retry_attempt > 5 || delete_mission_attempt > 3) {
+                ROS_ERROR("arrive_at_station action did not finish after multiple retrials.");
+                break;
+            }   
+        }
+        return BT::NodeStatus::FAILURE;    
     }
 };
+            
 
 class plugout_BCS: public BT::SyncActionNode
 {
@@ -812,6 +1026,8 @@ class plugout_BCS: public BT::SyncActionNode
     // You must override the virtual function tick()
     BT::NodeStatus tick() override
     {
+        int retry_attempt = 0;
+        bool retry_flag = true;
         actionlib::SimpleActionClient<chargepal_actions::PlugOutAction> po_bcs("plugout_charger_bcs", true);
         po_bcs.waitForServer();
         chargepal_actions::PlugOutGoal goal;
@@ -820,25 +1036,46 @@ class plugout_BCS: public BT::SyncActionNode
         std::string charger = masterBlackboard->get<std::string>("charger");
         std::string robot_name = masterBlackboard->get<std::string>("robot_name");
         
-        po_bcs.sendGoal(goal);
-        set_robot_value(robot_name,"ongoing_action", "plugout_charger_bcs");
-        bool po_bcs_action = po_bcs.waitForResult(ros::Duration(900.0));
-        if (po_bcs_action){
-            chargepal_actions::PlugOutResult result = *po_bcs.getResult();
-            bool plug_out = result.plug_out;
-            if (plug_out){
-                set_robot_value(robot_name,"ongoing_action", "none");
-                set_robot_value(robot_name,"previous_action", "plugout_charger_bcs");
-                set_cart_value(charger,"plugged", "false");
-                return BT::NodeStatus::SUCCESS;
+        while (retry_flag){
+            po_bcs.sendGoal(goal);
+            set_robot_value(robot_name,"ongoing_action", "plugout_charger_bcs");
+            bool po_bcs_action = po_bcs.waitForResult(ros::Duration(900.0));
+            if (po_bcs_action){
+                chargepal_actions::PlugOutResult result = *po_bcs.getResult();
+                bool plug_out = result.plug_out;
+                if (plug_out){
+                    set_robot_value(robot_name,"ongoing_action", "none");
+                    set_robot_value(robot_name,"previous_action", "plugout_charger_bcs");
+                    set_cart_value(charger,"plugged", "false");
+                    return BT::NodeStatus::SUCCESS;
+                }
             }
-            else {
-                return BT::NodeStatus::FAILURE;
+                
+            retry_attempt ++;
+
+            int delete_mission_attempt = 0;
+            while (delete_mission_attempt < 3) {
+                try{
+                    bool delete_mission = delete_mir_mission_queue();
+                    if (delete_mission) {
+                        break;
+                    }
+                }
+                catch (const std::runtime_error& e){
+                    ROS_ERROR("mir_delete_mission service failed, retrying!");
+                    delete_mission_attempt ++ ;
+                    if (delete_mission_attempt > 3){
+                        ROS_ERROR("mir_delete_mission service failed!");
+                    }
+                }
             }
-        } 
-        else {
-            return BT::NodeStatus::FAILURE;
-        }  
+            
+            if (retry_attempt > 5 || delete_mission_attempt > 3) {
+                ROS_ERROR("arrive_at_station action did not finish after multiple retrials.");
+                break;
+            }   
+        }
+        return BT::NodeStatus::FAILURE;     
     }
 };
 
@@ -901,8 +1138,8 @@ class recovery_arrive_BWS: public BT::SyncActionNode
                 free_bws = ask_free_BWS();
             } 
         }
+        ROS_ERROR("No free BWS left");    
         return BT::NodeStatus::FAILURE;
-        ROS_ERROR("No free BWS left");
             
     }
        
@@ -968,14 +1205,13 @@ class recovery_arrive_BCS: public BT::SyncActionNode
                 free_bcs = ask_free_BCS();
             } 
         }
-        return BT::NodeStatus::FAILURE;
         ROS_ERROR("No free BCS left");
+        return BT::NodeStatus::FAILURE;
+        
             
     }
        
 };
-
-
 
 class set_arm_free_BCS: public BT::SyncActionNode
 {
@@ -989,6 +1225,8 @@ class set_arm_free_BCS: public BT::SyncActionNode
     // You must override the virtual function tick()
     BT::NodeStatus tick() override
     {
+        int retry_attempt = 0;
+        bool retry_flag = true;
         std::cout << "set arm free at BCS" << std::endl;
         std::this_thread::sleep_for(3s);
         return BT::NodeStatus::SUCCESS;
@@ -1007,12 +1245,30 @@ class set_arm_free_ADS: public BT::SyncActionNode
     // You must override the virtual function tick()
     BT::NodeStatus tick() override
     {
+        int retry_attempt = 0;
+        bool retry_flag = true;
         std::cout << "set arm free at ADS" << std::endl;
         std::this_thread::sleep_for(3s);
         return BT::NodeStatus::SUCCESS;
     }
 };
 
+class time_sleep: public BT::SyncActionNode
+{
+    public:
+    time_sleep(const std::string& name, const BT::NodeConfiguration& config)
+        : BT::SyncActionNode(name, config){}
+
+        static PortsList providedPorts(){
+            return {};
+        }
+    // You must override the virtual function tick()
+    BT::NodeStatus tick() override
+    {
+        ros::Duration(10).sleep();
+        return BT::NodeStatus::SUCCESS;
+    }
+};
 class sleep_until_charged: public BT::StatefulActionNode
 {
     public:
@@ -1020,7 +1276,7 @@ class sleep_until_charged: public BT::StatefulActionNode
         : BT::StatefulActionNode(name, config){}
 
         static PortsList providedPorts(){
-            return{ BT::InputPort<int>("msec") };
+            return{};
         }
     // You must override the virtual function tick()
     virtual NodeStatus onStart() override
@@ -1070,19 +1326,9 @@ int main(int argc, char **argv){
 ros::init(argc, argv, "chargepal_bt");
 ros::NodeHandle nh;
 
-
-
 BehaviorTreeFactory factory;
 BT::Blackboard::Ptr masterBlackboard = BT::Blackboard::create();
 
-
-/*
-masterBlackboard->set("job_type","BRING_CHARGER");
-masterBlackboard->set("robot_name","Chargepal1");
-masterBlackboard->set("charger","BAT_1");
-masterBlackboard->set("source_station","BWS_1");
-masterBlackboard->set("target_station","ADS_1");
-*/
 factory.registerNodeType<isBRING_CHARGER>("isBRING_CHARGER");
 factory.registerNodeType<isRECHARGE_CHARGER>("isRECHARGE_CHARGER");
 factory.registerNodeType<isRECHARGE_SELF>("isRECHARGE_SELF");
@@ -1115,7 +1361,7 @@ factory.registerNodeType<recovery_arrive_BCS>("recovery_arrive_BCS");
 factory.registerNodeType<sleep_until_charged>("sleep_until_charged");
 factory.registerNodeType<set_arm_free_BCS>("set_arm_free_BCS");
 factory.registerNodeType<set_arm_free_ADS>("set_arm_free_ADS");
-
+factory.registerNodeType<time_sleep>("time_sleep");
 
 
 std::string package_folder = ros::package::getPath("chargepal_behaviour_tree");
@@ -1127,21 +1373,33 @@ factory.registerBehaviorTreeFromFile(package_folder + "/xml/Actions.xml");
 factory.registerBehaviorTreeFromFile(package_folder + "/xml/Recovery.xml");
 
 
-json job_requested;
-
-
 auto mainTree = factory.createTree("main",masterBlackboard);
 BT::Groot2Publisher publisher(mainTree);
 
+
+/*
+masterBlackboard->set("job_type","BRING_CHARGER");
+masterBlackboard->set("robot_name","Chargepal1");
+masterBlackboard->set("charger","BAT_1");
+masterBlackboard->set("source_station","BWS_1");
+masterBlackboard->set("target_station","ADS_1");
+*/
+
+
+
+json job_requested;
+
+
 while (job_requested.empty()){
-    std::string job_jsonString = fetch_job("Chargepal1");
-    job_requested = json::parse(job_jsonString);
+    std::string job_input = fetch_job("Chargepal1");
+    job_requested = json::parse(job_input);
 
     if (job_requested.empty()){
         std::cout << "Waiting for new job";
     }
 
     else {
+
         std::string job_type = job_requested["job_type"];
         std::string robot_name = job_requested["robot_name"];
         std::string charger = job_requested["charger"];
@@ -1154,14 +1412,18 @@ while (job_requested.empty()){
         masterBlackboard->set("source_station",source_station);
         masterBlackboard->set("target_station",target_station);
 
-        BT::NodeStatus status = mainTree.rootNode()->executeTick();
+        mainTree.tickWhileRunning();
+        
+        BT::NodeStatus status = mainTree.rootNode()->status();
         if (status == BT::NodeStatus::SUCCESS) {
             ROS_INFO("Behavior Tree tick succeeded.");
-            job_requested.clear();
-        }  
+        } 
+        
         else {
-        ROS_ERROR("Behavior Tree tick failed.");
+            ROS_ERROR("Behavior Tree tick failed.");
+            break;
         }
+
     }
 }
 

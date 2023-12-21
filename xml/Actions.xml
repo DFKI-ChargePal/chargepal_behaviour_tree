@@ -1,9 +1,7 @@
 <root BTCPP_format="4">
   <BehaviorTree ID="action_arrive_station">
     <Fallback name="arrive_at_station">
-      <RetryUntilSuccessful num_attempts="5">
-        <arrive_at_station/>
-      </RetryUntilSuccessful>
+      <arrive_at_station/>
       <SubTree ID="recovery_aas"
                _autoremap="true"/>
       <ForceFailure>
@@ -14,9 +12,7 @@
 
   <BehaviorTree ID="action_drop_cart">
     <Fallback name="drop_cart">
-      <RetryUntilSuccessful num_attempts="5">
-        <drop_cart/>
-      </RetryUntilSuccessful>
+      <drop_cart/>
       <SubTree ID="recovery_dc"
                _autoremap="true"/>
       <ForceFailure>
@@ -27,9 +23,7 @@
 
   <BehaviorTree ID="action_go_home">
     <Fallback name="go_home">
-      <RetryUntilSuccessful num_attempts="5">
-        <go_home/>
-      </RetryUntilSuccessful>
+      <go_home/>
       <ForceFailure>
         <call_for_help/>
       </ForceFailure>
@@ -38,9 +32,7 @@
 
   <BehaviorTree ID="action_pickup_cart">
     <Fallback name="pickup_cart">
-      <RetryUntilSuccessful num_attempts="5">
-        <pickup_cart/>
-      </RetryUntilSuccessful>
+      <pickup_cart/>
       <SubTree ID="recovery_pc"
                _autoremap="true"/>
       <ForceFailure>
@@ -54,9 +46,7 @@
       <Sequence name="plugin_bcs">
         <isRobotAtBCS/>
         <Fallback name="plugin_bcs">
-          <RetryUntilSuccessful num_attempts="5">
-            <plugin_BCS/>
-          </RetryUntilSuccessful>
+          <plugin_BCS/>
           <SubTree ID="recovery_plugin"
                    _autoremap="true"/>
         </Fallback>
@@ -64,9 +54,7 @@
       <Sequence name="plugin_ads">
         <isRobotAtADS/>
         <Fallback name="plugin_ads">
-          <RetryUntilSuccessful num_attempts="5">
-            <plugin_ADS/>
-          </RetryUntilSuccessful>
+          <plugin_ADS/>
           <SubTree ID="recovery_plugin"
                    _autoremap="true"/>
         </Fallback>
@@ -82,9 +70,7 @@
       <Sequence name="plugout_bcs">
         <isRobotAtBCS/>
         <Fallback name="plugout_bcs">
-          <RetryUntilSuccessful num_attempts="5">
-            <plugout_BCS/>
-          </RetryUntilSuccessful>
+          <plugout_BCS/>
           <SubTree ID="recovery_plugout"
                    _autoremap="true"/>
         </Fallback>
@@ -92,9 +78,7 @@
       <Sequence name="plugout_ads">
         <isRobotAtADS/>
         <Fallback name="plugout_ads">
-          <RetryUntilSuccessful num_attempts="5">
-            <plugout_ADS/>
-          </RetryUntilSuccessful>
+          <plugout_ADS/>
           <SubTree ID="recovery_plugout"
                    _autoremap="true"/>
         </Fallback>

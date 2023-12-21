@@ -17,9 +17,7 @@
             <recovery_arrive_BCS/>
             <Sequence>
               <recovery_arrive_BWS/>
-              <RetryUntilSuccessful num_attempts="3">
-                <go_home/>
-              </RetryUntilSuccessful>
+              <go_home/>
             </Sequence>
           </Fallback>
         </Sequence>
@@ -27,15 +25,11 @@
           <isRobotAtADS/>
           <recovery_arrive_BWS/>
           <Fallback>
-            <RetryUntilSuccessful num_attempts="3">
-              <drop_cart/>
-            </RetryUntilSuccessful>
+            <drop_cart/>
             <SubTree ID="recovery_dc"
                      _autoremap="true"/>
           </Fallback>
-          <RetryUntilSuccessful num_attempts="3">
-            <go_home/>
-          </RetryUntilSuccessful>
+          <go_home/>
         </Sequence>
       </Fallback>
     </IfThenElse>
@@ -46,26 +40,21 @@
       <Sequence>
         <isRobotAtBCS/>
         <recovery_arrive_BWS/>
-        <RetryUntilSuccessful num_attempts="3">
-          <drop_cart/>
-        </RetryUntilSuccessful>
-        <RetryUntilSuccessful num_attempts="3">
-          <go_home/>
-        </RetryUntilSuccessful>
+        <drop_cart/>
+        <go_home/>
       </Sequence>
       <Sequence>
         <isRobotAtADS/>
         <ReactiveFallback>
-          <Timeout msec="300000">
+          <Sequence>
+            <time_sleep/>
             <drop_cart/>
-          </Timeout>
+          </Sequence>
           <sleep_until_charged/>
         </ReactiveFallback>
         <Sequence>
           <isCartPlaced/>
-          <RetryUntilSuccessful num_attempts="3">
-            <go_home/>
-          </RetryUntilSuccessful>
+          <go_home/>
         </Sequence>
       </Sequence>
     </Fallback>
@@ -74,9 +63,7 @@
   <BehaviorTree ID="recovery_pc">
     <Sequence>
       <askAssertLift/>
-      <RetryUntilSuccessful num_attempts="3">
-        <go_home/>
-      </RetryUntilSuccessful>
+      <go_home/>
     </Sequence>
   </BehaviorTree>
 
@@ -84,26 +71,18 @@
     <Fallback>
       <Sequence>
         <isRobotAtBCS/>
-        <RetryUntilSuccessful num_attempts="3">
-          <set_arm_free_BCS/>
-        </RetryUntilSuccessful>
+        <set_arm_free_BCS/>
         <recovery_arrive_BWS/>
         <Fallback>
-          <RetryUntilSuccessful num_attempts="3">
-            <drop_cart/>
-          </RetryUntilSuccessful>
+          <drop_cart/>
           <SubTree ID="recovery_dc"
                    _autoremap="true"/>
         </Fallback>
-        <RetryUntilSuccessful num_attempts="3">
-          <go_home/>
-        </RetryUntilSuccessful>
+        <go_home/>
       </Sequence>
       <Sequence>
         <isRobotAtADS/>
-        <RetryUntilSuccessful num_attempts="3">
-          <set_arm_free_ADS/>
-        </RetryUntilSuccessful>
+        <set_arm_free_ADS/>
         <recovery_arrive_BWS/>
         <Fallback>
           <RetryUntilSuccessful num_attempts="3">
@@ -112,9 +91,7 @@
           <SubTree ID="recovery_dc"
                    _autoremap="true"/>
         </Fallback>
-        <RetryUntilSuccessful num_attempts="3">
-          <go_home/>
-        </RetryUntilSuccessful>
+        <go_home/>
       </Sequence>
     </Fallback>
   </BehaviorTree>
@@ -123,23 +100,15 @@
     <Sequence>
       <IfThenElse>
         <isRobotAtBCS/>
-        <RetryUntilSuccessful num_attempts="3">
-          <set_arm_free_BCS/>
-        </RetryUntilSuccessful>
-        <RetryUntilSuccessful num_attempts="3">
-          <set_arm_free_ADS/>
-        </RetryUntilSuccessful>
+        <set_arm_free_BCS/>
+        <set_arm_free_ADS/>
       </IfThenElse>
       <Fallback>
-        <RetryUntilSuccessful num_attempts="3">
-          <drop_cart/>
-        </RetryUntilSuccessful>
+        <drop_cart/>
         <SubTree ID="recovery_dc"
                  _autoremap="true"/>
       </Fallback>
-      <RetryUntilSuccessful num_attempts="3">
-        <go_home/>
-      </RetryUntilSuccessful>
+      <go_home/>
     </Sequence>
   </BehaviorTree>
 
@@ -170,6 +139,8 @@
     <Action ID="set_arm_free_BCS"
             editable="true"/>
     <Action ID="sleep_until_charged"
+            editable="true"/>
+    <Action ID="time_sleep"
             editable="true"/>
   </TreeNodesModel>
 

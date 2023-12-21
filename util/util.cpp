@@ -13,7 +13,6 @@
 #include <chargepal_services/assertLiftValue.h>
 #include <chargepal_services/askOperationTime.h>
 
-
 std::string read_robot_value(const std::string& name,const std::string& key) {
     std::string robot_name = name;
     std::string selected_column = key;
@@ -24,6 +23,7 @@ std::string read_robot_value(const std::string& name,const std::string& key) {
                         "WHEN 'previous_action' THEN previous_action "
                         "WHEN 'ongoing_action' THEN ongoing_action "
                         "WHEN 'current_job' THEN current_job "
+                        "WHEN 'error_count' THEN error_count "
                         "ELSE NULL END AS result "
                         "FROM robot_info WHERE robot_name = ?");
     //SQLite::Statement query(db, "SELECT robot_location FROM robot_info WHERE robot_name = ?");
@@ -192,13 +192,14 @@ bool delete_mir_mission_queue(){
 int get_operation_time(const std::string& cart_name){
     int operation_time = 0;
     ros::NodeHandle n;
-    ros::ServiceClient client_ldb_server = n.serviceClient<chargepal_services::askOperationTime>("/mir_rest_api/assert_lift_value");
+    ros::ServiceClient client_ldb_server = n.serviceClient<chargepal_services::askOperationTime>("/ldb_server/charging_operation_time");
     chargepal_services::askOperationTime srv_ldb_server;
+    srv_ldb_server.request.cart_name = cart_name;
     if (client_ldb_server.call(srv_ldb_server)){
         operation_time = srv_ldb_server.response.time_msec;
     }
     else {
-        ROS_ERROR("assert_lift_value service failed");
+        ROS_ERROR("asking operation time service failed");
     }
     return operation_time;
 }
