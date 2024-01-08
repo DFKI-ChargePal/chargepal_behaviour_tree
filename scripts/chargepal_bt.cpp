@@ -464,11 +464,11 @@ class arrive_at_station: public BT::SyncActionNode
         std::string target_station = masterBlackboard->get<std::string>("target_station");
         std::string robot_location = read_robot_value(robot_name,"robot_location");
         // When the robot is at the source station
-        if (source_station == robot_location) {
+        if (robot_location.find(source_station) !=std::string::npos) {
             goal.target_station = target_station;
 
             if (goal.target_station.find("ADS")!= std::string::npos && job == "BRING_CHARGER"){
-                goal.target_station = "ADSplace_" + charger;
+                goal.target_station = target_station +"_place";
             }
             
         }
@@ -476,30 +476,30 @@ class arrive_at_station: public BT::SyncActionNode
         else{
             goal.target_station = source_station;
             if (goal.target_station.find("ADS")!= std::string::npos && job == "BRING_CHARGER"){
-                goal.target_station = "ADSpick_" + charger;
+                goal.target_station = source_station +"_pick";
             }
         }
         
         //When goal station is BWS
         if (goal.target_station.find("BWS")!= std::string::npos) {
             if (job == "BRING_CHARGER"){
-                goal.target_station = "BWSpick_" + charger;
+                goal.target_station = source_station + "_pick";//"BWSpick_" + charger;
             }
             else if (job == "STOW_CHARGER"){
-                goal.target_station = "BWSplace_" + charger;
+                goal.target_station = target_station + "_place"; //"BWSplace_" + charger;
             }
         } 
         else if (goal.target_station.find("BCS")!= std::string::npos) {
             if (job == "BRING_CHARGER" || job == "STOW_CHARGER"){
-                goal.target_station = "BCSpick_" + charger;
+                goal.target_station = source_station + "_pick"; //"BCSpick_" + charger;
             }
             else if (job == "RECHARGE_CHARGER"){
-                goal.target_station = "BCSplace_" + charger;
+                goal.target_station =  target_station + "_place"; //"BCSplace_" + charger;
             }
         }
         else if (goal.target_station.find("ADS")!= std::string::npos) {
             if (job == "RECHARGE_CHARGER" || job == "STOW_CHARGER"){
-                goal.target_station = "ADSpick_" + charger;
+                goal.target_station = source_station + "_pick" ;//"ADSpick_" + charger;
             }
         }
         
@@ -1216,7 +1216,7 @@ factory.registerNodeType<call_for_help>("call_for_help");
 factory.registerNodeType<drop_cart>("drop_cart");
 factory.registerNodeType<pickup_cart>("pickup_cart");
 factory.registerNodeType<plugin_ADS>("plugin_ADS");
-factory.registerNodeType<pickup_cart>("plugin_BCS");
+factory.registerNodeType<plugin_BCS>("plugin_BCS");
 factory.registerNodeType<plugout_ADS>("plugout_ADS");
 factory.registerNodeType<plugout_BCS>("plugout_BCS");
 factory.registerNodeType<recovery_arrive_BWS>("recovery_arrive_BWS");
@@ -1267,8 +1267,15 @@ while (job_requested.empty()){
         mainTree.tickWhileRunning();
         
         BT::NodeStatus status = mainTree.rootNode()->status();
-        if (status == BT::NodeStatus::SUCCESS) {
-            ROS_INFO("Behavior Tree tick succeeded.");
+        
+        if (status == BT::NodeStatus::SUCCESS || status == BT::NodeStatus::IDLE) {
+            bool job_server_update = false;
+            while(job_server_update == false){
+                ROS_INFO("Updating job completion to server!");
+                job_server_update = update_job_monitor();
+            }
+            job_requested.clear();
+            ROS_INFO("Job completion succeeded.");
         } 
         
         else {

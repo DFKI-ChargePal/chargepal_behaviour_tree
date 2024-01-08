@@ -1,114 +1,136 @@
 <root BTCPP_format="4">
   <BehaviorTree ID="recovery_aas">
-    <IfThenElse>
-      <isCartPlaced/>
-      <Fallback>
-        <go_home/>
-        <call_for_help/>
-      </Fallback>
-      <Fallback>
-        <Sequence>
-          <isRobotAtBWS/>
-          <recovery_arrive_BWS/>
-        </Sequence>
-        <Sequence>
-          <isRobotAtBCS/>
-          <Fallback>
-            <recovery_arrive_BCS/>
-            <Sequence>
-              <recovery_arrive_BWS/>
+    <Sequence>
+      <error_count/>
+      <RetryUntilSuccessful num_attempts="3">
+        <delete_mir_mission_queue/>
+      </RetryUntilSuccessful>
+      <IfThenElse>
+        <isCartPlaced/>
+        <Fallback>
+          <RetryUntilSuccessful num_attempts="3">
+            <go_home/>
+          </RetryUntilSuccessful>
+          <call_for_help/>
+        </Fallback>
+        <Fallback>
+          <Sequence>
+            <isRobotAtBWS/>
+            <recovery_arrive_BWS/>
+          </Sequence>
+          <Sequence>
+            <isRobotAtBCS/>
+            <Fallback>
+              <recovery_arrive_BCS/>
+              <Sequence>
+                <recovery_arrive_BWS/>
+                <go_home/>
+              </Sequence>
+            </Fallback>
+          </Sequence>
+          <Sequence>
+            <isRobotAtADS/>
+            <recovery_arrive_BWS/>
+            <Fallback>
+              <RetryUntilSuccessful num_attempts="3">
+                <drop_cart/>
+              </RetryUntilSuccessful>
+              <SubTree ID="recovery_dc"
+                       _autoremap="true"/>
+            </Fallback>
+            <RetryUntilSuccessful num_attempts="3">
               <go_home/>
-            </Sequence>
-          </Fallback>
-        </Sequence>
-        <Sequence>
-          <isRobotAtADS/>
-          <recovery_arrive_BWS/>
-          <Fallback>
-            <drop_cart/>
-            <SubTree ID="recovery_dc"
-                     _autoremap="true"/>
-          </Fallback>
-          <go_home/>
-        </Sequence>
-      </Fallback>
-    </IfThenElse>
+            </RetryUntilSuccessful>
+          </Sequence>
+        </Fallback>
+      </IfThenElse>
+    </Sequence>
   </BehaviorTree>
 
   <BehaviorTree ID="recovery_dc">
-    <Fallback>
-      <Sequence>
-        <isRobotAtBCS/>
-        <recovery_arrive_BWS/>
-        <drop_cart/>
-        <go_home/>
-      </Sequence>
-      <Sequence>
-        <isRobotAtADS/>
-        <ReactiveFallback>
-          <Sequence>
-            <time_sleep/>
-            <drop_cart/>
-          </Sequence>
-          <sleep_until_charged/>
-        </ReactiveFallback>
+    <Sequence>
+      <error_count/>
+      <RetryUntilSuccessful num_attempts="3">
+        <delete_mir_mission_queue/>
+      </RetryUntilSuccessful>
+      <Fallback>
         <Sequence>
-          <isCartPlaced/>
-          <go_home/>
+          <isRobotAtBCS/>
+          <recovery_arrive_BWS/>
+          <RetryUntilSuccessful num_attempts="3">
+            <drop_cart/>
+          </RetryUntilSuccessful>
+          <RetryUntilSuccessful num_attempts="3">
+            <go_home/>
+          </RetryUntilSuccessful>
         </Sequence>
-      </Sequence>
-    </Fallback>
+        <Sequence>
+          <isRobotAtADS/>
+          <ReactiveFallback>
+            <Sequence>
+              <time_sleep/>
+              <RetryUntilSuccessful num_attempts="3">
+                <drop_cart/>
+              </RetryUntilSuccessful>
+            </Sequence>
+            <sleep_until_charged/>
+          </ReactiveFallback>
+          <Sequence>
+            <isCartPlaced/>
+            <RetryUntilSuccessful num_attempts="3">
+              <go_home/>
+            </RetryUntilSuccessful>
+          </Sequence>
+        </Sequence>
+      </Fallback>
+    </Sequence>
   </BehaviorTree>
 
   <BehaviorTree ID="recovery_pc">
     <Sequence>
+      <error_count/>
+      <RetryUntilSuccessful num_attempts="3">
+        <delete_mir_mission_queue/>
+      </RetryUntilSuccessful>
       <askAssertLift/>
-      <go_home/>
+      <RetryUntilSuccessful num_attempts="3">
+        <go_home/>
+      </RetryUntilSuccessful>
     </Sequence>
   </BehaviorTree>
 
   <BehaviorTree ID="recovery_plugin">
-    <Fallback>
-      <Sequence>
-        <isRobotAtBCS/>
-        <set_arm_free_BCS/>
-        <recovery_arrive_BWS/>
-        <Fallback>
+    <Sequence>
+      <error_count/>
+      <isArmFree/>
+      <recovery_arrive_BWS/>
+      <Fallback>
+        <RetryUntilSuccessful num_attempts="3">
           <drop_cart/>
-          <SubTree ID="recovery_dc"
-                   _autoremap="true"/>
-        </Fallback>
+        </RetryUntilSuccessful>
+        <SubTree ID="recovery_dc"
+                 _autoremap="true"/>
+      </Fallback>
+      <RetryUntilSuccessful num_attempts="3">
         <go_home/>
-      </Sequence>
-      <Sequence>
-        <isRobotAtADS/>
-        <set_arm_free_ADS/>
-        <recovery_arrive_BWS/>
-        <Fallback>
-          <RetryUntilSuccessful num_attempts="3">
-            <drop_cart/>
-          </RetryUntilSuccessful>
-          <SubTree ID="recovery_dc"
-                   _autoremap="true"/>
-        </Fallback>
-        <go_home/>
-      </Sequence>
-    </Fallback>
+      </RetryUntilSuccessful>
+    </Sequence>
   </BehaviorTree>
 
   <BehaviorTree ID="recovery_plugout">
     <Sequence>
-      <IfThenElse>
-        <isRobotAtBCS/>
-        <set_arm_free_BCS/>
-        <set_arm_free_ADS/>
-      </IfThenElse>
+      <error_count/>
+      <isArmFree/>
       <Fallback>
-        <drop_cart/>
+        <RetryUntilSuccessful num_attempts="3">
+          <drop_cart/>
+        </RetryUntilSuccessful>
         <SubTree ID="recovery_dc"
                  _autoremap="true"/>
       </Fallback>
-      <go_home/>
+      <RetryUntilSuccessful num_attempts="3">
+        <go_home/>
+      </RetryUntilSuccessful>
     </Sequence>
   </BehaviorTree>
 
@@ -118,10 +140,16 @@
                editable="true"/>
     <Action ID="call_for_help"
             editable="true"/>
+    <Action ID="delete_mir_mission_queue"
+            editable="true"/>
     <Action ID="drop_cart"
+            editable="true"/>
+    <Action ID="error_count"
             editable="true"/>
     <Action ID="go_home"
             editable="true"/>
+    <Condition ID="isArmFree"
+               editable="true"/>
     <Condition ID="isCartPlaced"
                editable="true"/>
     <Condition ID="isRobotAtADS"
@@ -133,10 +161,6 @@
     <Action ID="recovery_arrive_BCS"
             editable="true"/>
     <Action ID="recovery_arrive_BWS"
-            editable="true"/>
-    <Action ID="set_arm_free_ADS"
-            editable="true"/>
-    <Action ID="set_arm_free_BCS"
             editable="true"/>
     <Action ID="sleep_until_charged"
             editable="true"/>

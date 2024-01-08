@@ -1,7 +1,9 @@
 <root BTCPP_format="4">
   <BehaviorTree ID="action_arrive_station">
     <Fallback name="arrive_at_station">
-      <arrive_at_station/>
+      <RetryUntilSuccessful num_attempts="3">
+        <arrive_at_station/>
+      </RetryUntilSuccessful>
       <SubTree ID="recovery_aas"
                _autoremap="true"/>
       <ForceFailure>
@@ -12,7 +14,9 @@
 
   <BehaviorTree ID="action_drop_cart">
     <Fallback name="drop_cart">
-      <drop_cart/>
+      <RetryUntilSuccessful num_attempts="3">
+        <drop_cart/>
+      </RetryUntilSuccessful>
       <SubTree ID="recovery_dc"
                _autoremap="true"/>
       <ForceFailure>
@@ -23,7 +27,9 @@
 
   <BehaviorTree ID="action_go_home">
     <Fallback name="go_home">
-      <go_home/>
+      <RetryUntilSuccessful num_attempts="3">
+        <go_home/>
+      </RetryUntilSuccessful>
       <ForceFailure>
         <call_for_help/>
       </ForceFailure>
@@ -32,7 +38,9 @@
 
   <BehaviorTree ID="action_pickup_cart">
     <Fallback name="pickup_cart">
-      <pickup_cart/>
+      <RetryUntilSuccessful num_attempts="3">
+        <pickup_cart/>
+      </RetryUntilSuccessful>
       <SubTree ID="recovery_pc"
                _autoremap="true"/>
       <ForceFailure>

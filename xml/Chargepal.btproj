@@ -5,13 +5,17 @@
     <include path="Jobs.xml"/>
     <include path="Main.xml"/>
     <include path="Recovery.xml"/>
+    <include path="../ROS_interface/src/chargepal_behaviour_tree/xml/Test.xml"/>
     <!-- Description of Node Models (used by Groot) -->
     <TreeNodesModel>
         <Action ID="arrive_at_station" editable="true"/>
         <Condition ID="askAssertLift" editable="true"/>
         <Action ID="call_for_help" editable="true"/>
+        <Action ID="delete_mir_mission_queue" editable="true"/>
         <Action ID="drop_cart" editable="true"/>
+        <Action ID="error_count" editable="true"/>
         <Action ID="go_home" editable="true"/>
+        <Condition ID="isArmFree" editable="true"/>
         <Condition ID="isBRING_CHARGER" editable="true"/>
         <Condition ID="isCartPlaced" editable="true"/>
         <Condition ID="isDifferentBattery" editable="true"/>
@@ -34,8 +38,8 @@
         <Action ID="recovery_arrive_BCS" editable="true"/>
         <Action ID="recovery_arrive_BWS" editable="true"/>
         <Action ID="recovery_plugin_BCS" editable="true"/>
-        <Action ID="set_arm_free_ADS" editable="true"/>
-        <Action ID="set_arm_free_BCS" editable="true"/>
+        <Action ID="sample_node" editable="true"/>
         <Action ID="sleep_until_charged" editable="true"/>
+        <Action ID="time_sleep" editable="true"/>
     </TreeNodesModel>
 </root>

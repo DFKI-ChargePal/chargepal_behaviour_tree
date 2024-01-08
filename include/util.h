@@ -17,4 +17,5 @@ bool request_ldb();
 bool update_ldb();
 int get_operation_time(const std::string& robot);
 bool reset_station_blocker(const std::string& station);
+bool update_job_monitor();
 #endif
