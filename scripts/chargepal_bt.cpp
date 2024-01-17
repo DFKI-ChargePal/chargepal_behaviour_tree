@@ -447,7 +447,7 @@ class arrive_at_station: public BT::SyncActionNode
         static PortsList providedPorts(){
             return {};
         }
-    // You must override the virtual function tick()
+    
     BT::NodeStatus tick() override
     {
         int retry_attempt = 0;
@@ -468,7 +468,7 @@ class arrive_at_station: public BT::SyncActionNode
             goal.target_station = target_station;
 
             if (goal.target_station.find("ADS")!= std::string::npos && job == "BRING_CHARGER"){
-                goal.target_station = target_station +"_place";
+                goal.target_station = target_station;
             }
             
         }
@@ -486,7 +486,7 @@ class arrive_at_station: public BT::SyncActionNode
                 goal.target_station = source_station + "_pick";//"BWSpick_" + charger;
             }
             else if (job == "STOW_CHARGER"){
-                goal.target_station = target_station + "_place"; //"BWSplace_" + charger;
+                goal.target_station = target_station; //"BWSplace_" + charger;
             }
         } 
         else if (goal.target_station.find("BCS")!= std::string::npos) {
@@ -494,7 +494,7 @@ class arrive_at_station: public BT::SyncActionNode
                 goal.target_station = source_station + "_pick"; //"BCSpick_" + charger;
             }
             else if (job == "RECHARGE_CHARGER"){
-                goal.target_station =  target_station + "_place"; //"BCSplace_" + charger;
+                goal.target_station =  target_station; //"BCSplace_" + charger;
             }
         }
         else if (goal.target_station.find("ADS")!= std::string::npos) {
@@ -541,7 +541,7 @@ class go_home: public BT::SyncActionNode
         static PortsList providedPorts(){
             return {};
         }
-    // You must override the virtual function tick()
+    
     BT::NodeStatus tick() override
     {
         int retry_attempt = 0;
@@ -594,7 +594,7 @@ class call_for_help: public BT::SyncActionNode
         static PortsList providedPorts(){
             return {};
         }
-    // You must override the virtual function tick()
+    
     BT::NodeStatus tick() override
     {
         int retry_attempt = 0;
@@ -624,7 +624,7 @@ class drop_cart: public BT::SyncActionNode
         static PortsList providedPorts(){
             return {};
         }
-    // You must override the virtual function tick()
+    
     BT::NodeStatus tick() override
     {
         int retry_attempt = 0;
@@ -672,7 +672,7 @@ class pickup_cart: public BT::SyncActionNode
         static PortsList providedPorts(){
             return {};
         }
-    // You must override the virtual function tick()
+    
     BT::NodeStatus tick() override
     {
         int retry_attempt = 0;
@@ -720,7 +720,7 @@ class plugin_ADS: public BT::SyncActionNode
         static PortsList providedPorts(){
             return {};
         }
-    // You must override the virtual function tick()
+    
     BT::NodeStatus tick() override
     {
         int retry_attempt = 0;
@@ -764,7 +764,7 @@ class plugin_BCS: public BT::SyncActionNode
         static PortsList providedPorts(){
             return {};
         }
-    // You must override the virtual function tick()
+    
     BT::NodeStatus tick() override
     {
         int retry_attempt = 0;
@@ -806,7 +806,7 @@ class plugout_ADS: public BT::SyncActionNode
         static PortsList providedPorts(){
             return {};
         }
-    // You must override the virtual function tick()
+    
     BT::NodeStatus tick() override
     {
         int retry_attempt = 0;
@@ -849,7 +849,7 @@ class plugout_BCS: public BT::SyncActionNode
         static PortsList providedPorts(){
             return {};
         }
-    // You must override the virtual function tick()
+    
     BT::NodeStatus tick() override
     {
         int retry_attempt = 0;
@@ -890,7 +890,7 @@ class recovery_arrive_BWS: public BT::SyncActionNode
         static PortsList providedPorts(){
             return {};
         }
-    // You must override the virtual function tick()
+    
     BT::NodeStatus tick() override
     {
         int retry_attempt = 0;
@@ -984,7 +984,7 @@ class recovery_arrive_BCS: public BT::SyncActionNode
         static PortsList providedPorts(){
             return {};
         }
-    // You must override the virtual function tick()
+    
     BT::NodeStatus tick() override
     {
         int retry_attempt = 0;
@@ -1075,7 +1075,7 @@ class delete_mir_mission_queue: public BT::SyncActionNode
         static PortsList providedPorts(){
             return {};
         }
-    // You must override the virtual function tick()
+    
     BT::NodeStatus tick() override
     {
         BT::Blackboard::Ptr masterBlackboard = config().blackboard;
@@ -1100,7 +1100,7 @@ class error_count: public BT::SyncActionNode
         static PortsList providedPorts(){
             return {};
         }
-    // You must override the virtual function tick()
+    
     BT::NodeStatus tick() override
     {
         BT::Blackboard::Ptr masterBlackboard = config().blackboard;
@@ -1124,7 +1124,7 @@ class time_sleep: public BT::SyncActionNode
         static PortsList providedPorts(){
             return {};
         }
-    // You must override the virtual function tick()
+    
     BT::NodeStatus tick() override
     {
         ros::Duration(10).sleep();
@@ -1140,18 +1140,16 @@ class sleep_until_charged: public BT::StatefulActionNode
         static PortsList providedPorts(){
             return{};
         }
-    // You must override the virtual function tick()
+    
     virtual NodeStatus onStart() override
     {
         
         BT::Blackboard::Ptr masterBlackboard = config().blackboard;
         std::string robot_name = masterBlackboard->get<std::string>("robot_name");
         std::string cart = read_robot_value(robot_name,"cart_on_robot");
-        //ToDo:get input and convert into milli seconds
         int msec = get_operation_time(cart);
 
         if( msec <= 0 ) {
-            // No need to go into the RUNNING state
             return BT::NodeStatus::SUCCESS;
         }
         else {
@@ -1174,7 +1172,6 @@ class sleep_until_charged: public BT::StatefulActionNode
 
     void onHalted() override
     {
-      // nothing to do here...
       std::cout << "SleepNode interrupted" << std::endl;
     }
     

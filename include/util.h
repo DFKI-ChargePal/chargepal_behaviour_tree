@@ -2,7 +2,7 @@
 #define MY_FUNCTIONS_H
 
 #include "ros/ros.h"
-#include <string> // Include any necessary header files
+#include <string> 
 
 std::string read_robot_value(const std::string& name,const std::string& key);
 std::string read_cart_value(const std::string& name,const std::string& key);

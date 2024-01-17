@@ -21,6 +21,11 @@
 #include <chargepal_services/verifyRdbSync.h>
 #include <chargepal_services/updateJobMonitor.h>
 
+/**
+ * @brief This function calls the service to update the rdb_copy 
+ * 
+ * @return The boolean response to the service call
+ */
 bool update_rdb_copy() {
     ros::NodeHandle n;
     ros::ServiceClient client_ldb_server = n.serviceClient<chargepal_services::updateRdbCopy>("/robot_db/update_rdb_copy");
@@ -33,6 +38,13 @@ bool update_rdb_copy() {
 
 }
 
+/**
+ * @brief This function calls the service to push the robot database to local data base 
+ * 
+ * @param table: table name to push to
+ * @param item: row name to be pushed 
+ * @return The boolean response to the service call
+ */
 bool push_rdb_copy(const std::string& table,const std::string& item) {
     ros::NodeHandle n;
     ros::ServiceClient client_ldb_server = n.serviceClient<chargepal_services::pushToLDB>("/ldb_server/push_to_ldb");
@@ -47,6 +59,11 @@ bool push_rdb_copy(const std::string& table,const std::string& item) {
 
 }
 
+/**
+ * @brief This function calls the service to verify syncronization between local database and robot database 
+ * 
+ * @return The boolean response to the service call
+ */
 bool verify_sync() {
     ros::NodeHandle n;
     ros::ServiceClient client_ldb_server = n.serviceClient<chargepal_services::verifyRdbSync>("/robot_db/verify_rdb_rdb_copy_sync");
@@ -58,8 +75,15 @@ bool verify_sync() {
 
 }
 
-
+/**
+ * @brief This function helps reading a robot information from the robot databse 
+ * 
+ * @param name: the name of the robot
+ * @param key: the name of the column in robot_info table 
+ * @return The string response of the value in the column
+ */
 std::string read_robot_value(const std::string& name,const std::string& key) {
+    // Update the rdb_copy from rdb beofre reading any information
     bool updated_rdb_copy = update_rdb_copy();
 
     if (updated_rdb_copy) {
@@ -86,7 +110,13 @@ std::string read_robot_value(const std::string& name,const std::string& key) {
     }
 }
 
-
+/**
+ * @brief This function helps reading a cart information from the robot databse 
+ * 
+ * @param name: the name of the cart
+ * @param key: the name of the column in cart_info table 
+ * @return The string response of the value in the column
+ */
 std::string read_cart_value(const std::string& name,const std::string& key) {
     bool updated_rdb_copy = update_rdb_copy();
 
@@ -111,6 +141,14 @@ std::string read_cart_value(const std::string& name,const std::string& key) {
     }
 }
 
+/**
+ * @brief This function helps update a robot value in the robot databse 
+ * 
+ * @param name: the name of the robot
+ * @param key: the name of the column in robot_info table 
+ * @param value: the value to be updated  
+ * @return The boolean response of update success
+ */
 bool set_robot_value(const std::string& name,const std::string& key,const std::string& value) {
     bool updated_rdb_copy = update_rdb_copy();
     if (updated_rdb_copy) {
@@ -138,6 +176,14 @@ bool set_robot_value(const std::string& name,const std::string& key,const std::s
     
 }
 
+/**
+ * @brief This function helps update a cart value in the robot databse 
+ * 
+ * @param name: the name of the cart
+ * @param key: the name of the column in cart_info table 
+ * @param value: the value to be updated  
+ * @return The boolean response of update success
+ */
 bool set_cart_value(const std::string& name,const std::string& key,const std::string& value) {
     
     bool updated_rdb_copy = update_rdb_copy();
@@ -165,6 +211,12 @@ bool set_cart_value(const std::string& name,const std::string& key,const std::st
     }
 }
 
+/**
+ * @brief This function calls the service to reset a blocked station in the local database
+ * 
+ * @param station_name: the name of the station
+ * @return The boolean response of update success
+ */
 bool reset_station_blocker(const std::string& station_name) {
 
     ros::NodeHandle n;
@@ -179,6 +231,12 @@ bool reset_station_blocker(const std::string& station_name) {
 
 }
 
+/**
+ * @brief This function calls the service to ask the database for an available battery waiting station
+ * 
+ * @param ask_ldb: a boolean if to ask the local databse or not
+ * @return returns a pair of strings containing the available battery waiting station and connection status to the local database
+ */
 std::pair<std::string,std::string> ask_free_BWS(const bool& ask_ldb) {
     std::string connection_status = "";
     std::string free_bws = "";
@@ -198,6 +256,12 @@ std::pair<std::string,std::string> ask_free_BWS(const bool& ask_ldb) {
     return std::make_pair(free_bws,connection_status);
 }
 
+/**
+ * @brief This function calls the service to ask the database for an available battery charging station
+ * 
+ * @param ask_ldb: a boolean if to ask the local databse or not
+ * @return returns a pair of strings containing the available battery charging station and connection status to the local database
+ */
 std::pair<std::string,std::string> ask_free_BCS(const bool& ask_ldb) {
     std::string connection_status = "";
     std::string free_bcs = "";
@@ -217,8 +281,13 @@ std::pair<std::string,std::string> ask_free_BCS(const bool& ask_ldb) {
     return std::make_pair(free_bcs,connection_status);
 }
 
-
-std::string read_assertLift_value(const std::string& cart_name) {
+/**
+ * @brief This function calls the service to ask the mir platform if the status of assert lift 
+ * 
+ * @param robot_name: the name of the robot
+ * @return returns a boolean of assert lift value
+ */
+std::string read_assertLift_value(const std::string& robot_name) {
     std::string assert_lift_value = "";
     ros::NodeHandle n;
     ros::ServiceClient client_mir_rapi = n.serviceClient<chargepal_services::assertLiftValue>("/mir_rest_api/assert_lift_value");
@@ -232,7 +301,11 @@ std::string read_assertLift_value(const std::string& cart_name) {
     return assert_lift_value;
 }
 
-
+/**
+ * @brief This function calls the service to fetch a job from the local server 
+ * 
+ * @return returns a string that contains the job
+ */
 std::string fetch_job() {
     std::string job;
     ros::NodeHandle n;
@@ -250,7 +323,11 @@ std::string fetch_job() {
     return job;
 }
 
-
+/**
+ * @brief This function calls the service to update the job monitor in the local server 
+ * 
+ * @return returns a boolean of update success value
+ */
 bool update_job_monitor() {
     int operation_time = 0;
     ros::NodeHandle n;
@@ -266,6 +343,11 @@ bool update_job_monitor() {
 
 }
 
+/**
+ * @brief This function calls the service to delete the queue actions in mir platform
+ *
+ * @return returns a boolean of update success
+ */
 bool delete_mission_queue(){
     ros::NodeHandle n;
     ros::ServiceClient client_mir_rapi = n.serviceClient<chargepal_services::deleteMirMission>("/mir_rest_api/delete_mission_queue");
@@ -286,6 +368,12 @@ bool delete_mission_queue(){
         
 }
 
+/**
+ * @brief This function calls the service to fetch the booking time of the cart in mseconds  
+ * 
+ * @param cart_name: the name of the cart
+ * @return returns the time in mseconds
+ */
 int get_operation_time(const std::string& cart_name){
     int operation_time = 0;
     ros::NodeHandle n;
