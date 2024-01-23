@@ -20,6 +20,7 @@
 #include <chargepal_services/resetStationBlocker.h>
 #include <chargepal_services/verifyRdbSync.h>
 #include <chargepal_services/updateJobMonitor.h>
+#include <chargepal_services/readRobotCharge.h>
 
 /**
  * @brief This function calls the service to update the rdb_copy 
@@ -167,6 +168,8 @@ bool set_robot_value(const std::string& name,const std::string& key,const std::s
         query.exec(); 
         query.reset();
 
+        update_robot_charge(robot_name);
+
         push_rdb_copy(table_name,robot_name);
         std::this_thread::sleep_for(std::chrono::seconds(3)); //To account for updating rdb from ldb
         verify_sync();
@@ -174,6 +177,30 @@ bool set_robot_value(const std::string& name,const std::string& key,const std::s
         return true;
     }
     
+}
+
+/**
+ * @brief This function helps fetching the robot charge and updating it in the table 
+ * 
+ * @param robot_name: the name of the robot
+ */
+void update_robot_charge(const std::string& robot_name){
+    ros::NodeHandle n;
+    ros::ServiceClient client_ldb_server = n.serviceClient<chargepal_services::readRobotCharge>("/mir_rest_api/robot_charge");
+    chargepal_services::readRobotCharge srv_ldb_server;
+    srv_ldb_server.request.robot_name = robot_name;
+
+    if (client_ldb_server.call(srv_ldb_server)){
+        int charge = srv_ldb_server.response.robot_charge;
+
+        SQLite::Database db(ros::package::getPath("chargepal_bundle")+"/db/rdb_copy.db",SQLite::OPEN_READWRITE|SQLite::OPEN_CREATE);
+        std::string sql_query = "UPDATE robot_info SET robot_charge = ? WHERE robot_name = ?";
+        SQLite::Statement query(db,sql_query);
+        query.bind(1, charge);
+        query.bind(2, robot_name);
+        query.exec(); 
+        query.reset();
+    }
 }
 
 /**

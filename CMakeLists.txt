@@ -35,7 +35,6 @@ include_directories(
 
 add_executable(${PROJECT_NAME} "util/util.cpp" "scripts/chargepal_bt.cpp")
 
-add_executable(${PROJECT_NAME}_test "util/util.cpp" "scripts/test_functions.cpp" ) 
 
 add_dependencies(
   ${PROJECT_NAME}
@@ -49,11 +48,6 @@ target_link_libraries(
   SQLiteCpp
   )
 
-target_link_libraries(
-  ${PROJECT_NAME}_test
-  ${catkin_LIBRARIES}
-  SQLiteCpp
-  )
 
 find_package(ament_cmake QUIET)
 
@@ -65,10 +59,8 @@ elseif( CATKIN_DEVEL_PREFIX OR CATKIN_BUILD_BINARY_PACKAGE)
     find_package(catkin REQUIRED COMPONENTS behaviortree_cpp)
     catkin_package(CATKIN_DEPENDS behaviortree_cpp)
     target_include_directories(${PROJECT_NAME} PRIVATE ${catkin_INCLUDE_DIRS})
-    target_include_directories(${PROJECT_NAME}_test PRIVATE ${catkin_INCLUDE_DIRS})
 
     target_link_libraries(${PROJECT_NAME} ${catkin_LIBRARIES})
-    target_link_libraries(${PROJECT_NAME}_test ${catkin_LIBRARIES})
 
 else()
     find_package(behaviortree_cpp REQUIRED)
