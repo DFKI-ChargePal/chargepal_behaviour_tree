@@ -16,6 +16,8 @@
 #include "chargepal_actions/ArriveAtHomeAction.h"
 #include "chargepal_actions/PickUpChargerAction.h"
 #include "chargepal_actions/PlaceChargerAction.h"
+#include "chargepal_actions/DisconnectPlugFromCarAction.h"
+#include "chargepal_actions/ConnectPlugToCarAction.h"
 #include "chargepal_actions/PlugInAction.h"
 #include "chargepal_actions/PlugOutAction.h"
 #include "chargepal_actions/CallForHelpAction.h"
@@ -272,9 +274,13 @@ class isArmFree : public  BT::ConditionNode {
         virtual NodeStatus tick() override {
             BT::Blackboard::Ptr masterBlackboard = config().blackboard;
             std::string robot_name = masterBlackboard->get<std::string>("robot_name");
-            
-            
-            return BT::NodeStatus::SUCCESS;
+            std::cout << "Enter y/n if the arm is free  ";
+            char userInput;
+            std::cin >> userInput;
+            if (userInput == 'y'){
+                return BT::NodeStatus::SUCCESS;}
+            else if (userInput == 'n'){
+                return BT::NodeStatus::FAILURE;}
             
         }
 };
@@ -394,8 +400,16 @@ class askAssertLift : public  BT::ConditionNode {
             std::string robot_name = masterBlackboard->get<std::string>("robot_name");
 
             std::string assertLift = read_assertLift_value(robot_name);
-            
 
+            std::cout << "Enter y/n if the assert lift is down  ";
+            char userInput;
+            std::cin >> userInput;
+            if (userInput == 'y'){
+                return BT::NodeStatus::SUCCESS;}
+            else if (userInput == 'n'){
+                return BT::NodeStatus::FAILURE;}
+            
+            /*
             if (assertLift == "down"){
                 std::cout << "Assert lift is down" << std::endl;
                 return BT::NodeStatus::SUCCESS;
@@ -403,7 +417,7 @@ class askAssertLift : public  BT::ConditionNode {
             else {
                 std::cout << "Assert lift is up" << std::endl;
                 return NodeStatus::FAILURE;
-            }
+            }*/
             
         }
 };
@@ -725,9 +739,9 @@ class plugin_ADS: public BT::SyncActionNode
     {
         int retry_attempt = 0;
         bool retry_flag = true;
-        actionlib::SimpleActionClient<chargepal_actions::PlugInAction> pi_ads("plugin_charger_ads", true);
+        actionlib::SimpleActionClient<chargepal_actions::ConnectPlugToCarAction> pi_ads("connect_to_car", true);
         pi_ads.waitForServer();
-        chargepal_actions::PlugInGoal goal;
+        chargepal_actions::ConnectPlugToCarGoal goal;
         
         BT::Blackboard::Ptr masterBlackboard = config().blackboard;
         std::string charger = masterBlackboard->get<std::string>("charger");
@@ -738,8 +752,8 @@ class plugin_ADS: public BT::SyncActionNode
         set_robot_value(robot_name,"ongoing_action", "plugin_charger_ads");
         bool pi_ads_action = pi_ads.waitForResult(ros::Duration(900.0));
         if (pi_ads_action){
-            chargepal_actions::PlugInResult result = *pi_ads.getResult();
-            bool plug_in = result.plug_in;
+            chargepal_actions::ConnectPlugToCarResult result = *pi_ads.getResult();
+            bool plug_in = result.connect_to_car;
             if (plug_in){
                 set_robot_value(robot_name,"ongoing_action", "none");
                 set_robot_value(robot_name,"previous_action", "plugin_charger_ads");
@@ -811,9 +825,9 @@ class plugout_ADS: public BT::SyncActionNode
     {
         int retry_attempt = 0;
         bool retry_flag = true;
-        actionlib::SimpleActionClient<chargepal_actions::PlugOutAction> po_ads("plugout_charger_ads", true);
+        actionlib::SimpleActionClient<chargepal_actions::DisconnectPlugFromCarAction> po_ads("disconnect_from_car", true);
         po_ads.waitForServer();
-        chargepal_actions::PlugOutGoal goal;
+        chargepal_actions::DisconnectPlugFromCarGoal goal;
         
         BT::Blackboard::Ptr masterBlackboard = config().blackboard;
         std::string charger = masterBlackboard->get<std::string>("charger");
@@ -824,8 +838,8 @@ class plugout_ADS: public BT::SyncActionNode
         set_robot_value(robot_name,"ongoing_action", "plugout_charger_ads");
         bool po_ads_action = po_ads.waitForResult(ros::Duration(900.0));
         if (po_ads_action){
-            chargepal_actions::PlugOutResult result = *po_ads.getResult();
-            bool plug_out = result.plug_out;
+            chargepal_actions::DisconnectPlugFromCarResult result = *po_ads.getResult();
+            bool plug_out = result.disconnect_from_car;
             if (plug_out){
                 set_robot_value(robot_name,"ongoing_action", "none");
                 set_robot_value(robot_name,"previous_action", "plugout_charger_ads");
@@ -1249,11 +1263,11 @@ while (job_requested.empty()){
 
     else {
 
-        std::string job_type = job_requested["job_type"];
-        std::string robot_name = job_requested["robot_name"];
-        std::string charger = job_requested["charger"];
-        std::string source_station = job_requested["source_station"];
-        std::string target_station = job_requested["target_station"];
+        std::string job_type = "BRING_CHARGER"; //job_requested["job_type"];
+        std::string robot_name = "ChargePal1"; //job_requested["robot_name"];
+        std::string charger = "BAT_1"; //job_requested["charger"];
+        std::string source_station = "BWS_1"; //job_requested["source_station"];
+        std::string target_station = "ADS_1"; //job_requested["target_station"];
 
         masterBlackboard->set("job_type", job_type);
         masterBlackboard->set("robot_name",robot_name);
