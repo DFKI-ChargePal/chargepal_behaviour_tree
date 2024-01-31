@@ -1263,11 +1263,11 @@ while (job_requested.empty()){
 
     else {
 
-        std::string job_type = "BRING_CHARGER"; //job_requested["job_type"];
-        std::string robot_name = "ChargePal1"; //job_requested["robot_name"];
-        std::string charger = "BAT_1"; //job_requested["charger"];
-        std::string source_station = "BWS_1"; //job_requested["source_station"];
-        std::string target_station = "ADS_1"; //job_requested["target_station"];
+        std::string job_type = job_requested["job_type"];
+        std::string robot_name = job_requested["robot_name"];
+        std::string charger = job_requested["charger"];
+        std::string source_station = job_requested["source_station"];
+        std::string target_station = job_requested["target_station"];
 
         masterBlackboard->set("job_type", job_type);
         masterBlackboard->set("robot_name",robot_name);
