@@ -477,8 +477,13 @@ class arrive_at_station: public BT::SyncActionNode
         std::string source_station = masterBlackboard->get<std::string>("source_station");
         std::string target_station = masterBlackboard->get<std::string>("target_station");
         std::string robot_location = read_robot_value(robot_name,"robot_location");
+        
+        if (robot_location == target_station){
+            goal.target_station = target_station;
+
+        }
         // When the robot is at the source station
-        if (robot_location.find(source_station) !=std::string::npos) {
+        else if (robot_location.find(source_station) !=std::string::npos) {
             goal.target_station = target_station;
 
             if (goal.target_station.find("ADS")!= std::string::npos && job == "BRING_CHARGER"){
@@ -1255,7 +1260,12 @@ json job_requested;
 
 while (job_requested.empty()){
     std::string job_input = fetch_job();
-    job_requested = json::parse(job_input);
+    try{
+        job_requested = json::parse(job_input);
+        }
+    catch(const nlohmann::json::exception& e){
+        std::cerr << "Error parsing JSON: " << e.what() << std::endl;
+    }
 
     if (job_requested.empty()){
         std::cout << "Waiting for new job";
