@@ -191,7 +191,7 @@ void update_robot_charge(const std::string& robot_name){
     srv_ldb_server.request.robot_name = robot_name;
 
     if (client_ldb_server.call(srv_ldb_server)){
-        int charge = srv_ldb_server.response.robot_charge;
+        float charge = srv_ldb_server.response.robot_charge;
 
         SQLite::Database db(ros::package::getPath("chargepal_bundle")+"/db/rdb_copy.db",SQLite::OPEN_READWRITE|SQLite::OPEN_CREATE);
         std::string sql_query = "UPDATE robot_info SET robot_charge = ? WHERE robot_name = ?";
@@ -339,14 +339,21 @@ std::string fetch_job() {
     ros::ServiceClient client_ldb_server = n.serviceClient<chargepal_services::fetchJob>("/ldb_server/fetch_job");
     chargepal_services::fetchJob srv_ldb_server;
 
-    if (client_ldb_server.call(srv_ldb_server)){
-        
-        job = srv_ldb_server.response.job;
-        
+    try{
+        if (client_ldb_server.call(srv_ldb_server)){
+            
+            job = srv_ldb_server.response.job;
+            
+        }
+        else {
+            ROS_ERROR("Fetch job service failed");
+        }
     }
-    else {
-        ROS_ERROR("Fetch job service failed");
+    catch(...){
+        ROS_INFO("Connecting to server failed");
     }
+
+
     return job;
 }
 

@@ -766,6 +766,18 @@ class plugin_ADS: public BT::SyncActionNode
                 return BT::NodeStatus::SUCCESS;
             }
         }
+        std::cout << "Enter y/n if plugin is successful  ";
+        char userInput;
+        std::cin >> userInput;
+        if (userInput == 'y'){
+            set_robot_value(robot_name,"ongoing_action", "none");
+            set_robot_value(robot_name,"previous_action", "plugin_charger_ads");
+            set_cart_value(charger,"plugged", "true");
+            return BT::NodeStatus::SUCCESS;}
+        else if (userInput == 'n'){
+            set_robot_value(robot_name,"ongoing_action", "none");
+            set_robot_value(robot_name,"previous_action", "plugin_charger_ads_failure"); 
+            return BT::NodeStatus::FAILURE;}
                 
         set_robot_value(robot_name,"ongoing_action", "none");
         set_robot_value(robot_name,"previous_action", "plugin_charger_ads_failure"); 
@@ -852,6 +864,21 @@ class plugout_ADS: public BT::SyncActionNode
                 return BT::NodeStatus::SUCCESS;
             }
         }
+
+        std::cout << "Enter y/n if plugout is successful  ";
+        char userInput;
+        std::cin >> userInput;
+        if (userInput == 'y'){
+            set_robot_value(robot_name,"ongoing_action", "none");
+                set_robot_value(robot_name,"previous_action", "plugout_charger_ads");
+                set_cart_value(charger,"plugged", "false");
+            return BT::NodeStatus::SUCCESS;}
+        else if (userInput == 'n'){
+            set_robot_value(robot_name,"ongoing_action", "none");
+            set_robot_value(robot_name,"previous_action", "plugout_charger_ads_failure"); 
+            return BT::NodeStatus::FAILURE;}
+
+
         set_robot_value(robot_name,"ongoing_action", "none");
         set_robot_value(robot_name,"previous_action", "plugout_charger_ads_failure");
         return BT::NodeStatus::FAILURE;    
@@ -1259,23 +1286,24 @@ json job_requested;
 
 
 while (job_requested.empty()){
-    std::string job_input = fetch_job();
+    
     try{
+        std::string job_input = fetch_job();
         job_requested = json::parse(job_input);
+        
+        if (job_requested.empty()){
+            std::cout << "Waiting for new job";
         }
+    }
     catch(const nlohmann::json::exception& e){
         std::cerr << "Error parsing JSON: " << e.what() << std::endl;
     }
 
-    if (job_requested.empty()){
-        std::cout << "Waiting for new job";
-    }
-
-    else {
+    if (!job_requested.empty()) {
 
         std::string job_type = job_requested["job_type"];
         std::string robot_name = job_requested["robot_name"];
-        std::string charger = job_requested["charger"];
+        std::string charger = job_requested["cart"];
         std::string source_station = job_requested["source_station"];
         std::string target_station = job_requested["target_station"];
 
