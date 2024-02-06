@@ -1,10 +1,13 @@
 <root BTCPP_format="4">
   <BehaviorTree ID="action_arrive_station">
     <Fallback name="arrive_at_station">
-      <RetryUntilSuccessful num_attempts="3">
+      <RetryUntilSuccessful num_attempts="3"
+                            _onSuccess="job_status=1">
         <arrive_at_station/>
       </RetryUntilSuccessful>
       <SubTree ID="recovery_aas"
+               _onSuccess="job_status=2"
+               _onFailure="job_status=3"
                _autoremap="true"/>
       <ForceFailure>
         <call_for_help/>

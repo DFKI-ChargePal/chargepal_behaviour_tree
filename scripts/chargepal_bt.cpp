@@ -1,42 +1,4 @@
-#include <iostream>
-#include <chrono>
-#include <ros/ros.h>
-#include <ros/package.h>
-#include <unordered_map>
-#include <string>
-#include <vector>
-#include <SQLiteCpp/SQLiteCpp.h>
 #include "util.h"
-#include<nlohmann/json.hpp>
-#include <cctype>
-
-#include <actionlib/client/simple_action_client.h>
-#include <actionlib/client/terminal_state.h>
-#include "chargepal_actions/ArriveAtStationAction.h"
-#include "chargepal_actions/ArriveAtHomeAction.h"
-#include "chargepal_actions/PickUpChargerAction.h"
-#include "chargepal_actions/PlaceChargerAction.h"
-#include "chargepal_actions/DisconnectPlugFromCarAction.h"
-#include "chargepal_actions/ConnectPlugToCarAction.h"
-#include "chargepal_actions/PlugInAction.h"
-#include "chargepal_actions/PlugOutAction.h"
-#include "chargepal_actions/CallForHelpAction.h"
-
-#include "behaviortree_cpp/tree_node.h"
-#include "behaviortree_cpp/exceptions.h"
-#include "behaviortree_cpp/action_node.h"
-#include "behaviortree_cpp/condition_node.h"
-#include "behaviortree_cpp/decorators/delay_node.h"
-#include "behaviortree_cpp/bt_factory.h"
-#include "behaviortree_cpp/loggers/bt_observer.h"
-#include "behaviortree_cpp/loggers/groot2_publisher.h"
-#include "behaviortree_cpp/controls/reactive_fallback.h"
-
-using namespace BT;
-using namespace std::chrono_literals;
-using namespace std::chrono;
-using json = nlohmann::json;
-
 
 class isBRING_CHARGER : public  BT::ConditionNode {
     public:
@@ -150,11 +112,11 @@ class isRobotAtADSorBCSorBWS : public  BT::ConditionNode {
 
             std::string location = read_robot_value(robot_name,"robot_location"); 
             if (location.find("ADS") != std::string::npos || location.find("BCS")!= std::string::npos || location.find("BWS")!= std::string::npos){
-                std::cout << "Robot location is ADS or BCS" << std::endl;
+                //std::cout << "Robot location is ADS or BCS" << std::endl;
                 return BT::NodeStatus::SUCCESS;
             }
             else {
-                std::cout << "Robot location is not ADS or BCS or BWS" << std::endl;
+                //std::cout << "Robot location is not ADS or BCS or BWS" << std::endl;
                 return NodeStatus::FAILURE;
             }
 
@@ -177,11 +139,11 @@ class isRobotAtRBS : public  BT::ConditionNode {
 
             std::string location = read_robot_value(robot_name,"robot_location"); 
             if (location.find("RBS") != std::string::npos) {
-                std::cout << "Robot location is at RBS" << std::endl;
+                // << "Robot location is at RBS" << std::endl;
                 return BT::NodeStatus::SUCCESS;
             }
             else {
-                std::cout << "Robot location is not at RBS" << std::endl;
+                //std::cout << "Robot location is not at RBS" << std::endl;
                 return NodeStatus::FAILURE;
             }   
         }
@@ -202,11 +164,11 @@ class isRobotAtBWS : public  BT::ConditionNode {
 
             std::string location = read_robot_value(robot_name,"robot_location"); 
             if (location.find("BWS") != std::string::npos) {
-                std::cout << "Robot location is at BWS" << std::endl;
+                //std::cout << "Robot location is at BWS" << std::endl;
                 return BT::NodeStatus::SUCCESS;
             }
             else {
-                std::cout << "Robot location is not at BWS" << std::endl;
+                //std::cout << "Robot location is not at BWS" << std::endl;
                 return NodeStatus::FAILURE;
             }   
         }
@@ -227,11 +189,11 @@ class isRobotAtBCS : public  BT::ConditionNode {
 
             std::string location = read_robot_value(robot_name,"robot_location");
             if (location.find("BCS") != std::string::npos) {
-                std::cout << "Robot location is at BCS" << std::endl;
+                //std::cout << "Robot location is at BCS" << std::endl;
                 return BT::NodeStatus::SUCCESS;
             }
             else {
-                std::cout << "Robot location is not at BCS" << std::endl;
+                //std::cout << "Robot location is not at BCS" << std::endl;
                 return NodeStatus::FAILURE;
             } 
         }
@@ -252,11 +214,11 @@ class isRobotAtADS : public  BT::ConditionNode {
 
             std::string location = read_robot_value(robot_name,"robot_location");
             if (location.find("ADS") != std::string::npos) {
-                std::cout << "Robot location is at ADS" << std::endl;
+                //std::cout << "Robot location is at ADS" << std::endl;
                 return BT::NodeStatus::SUCCESS;
             }
             else {
-                std::cout << "Robot location is not at ADS" << std::endl;
+                //std::cout << "Robot location is not at ADS" << std::endl;
                 return NodeStatus::FAILURE;
             }    
         }
@@ -301,11 +263,11 @@ class isSameBattery : public  BT::ConditionNode {
             std::string cart_on_robot = read_robot_value(robot_name,"cart_on_robot");
             
             if (job_charger == cart_on_robot){
-                std::cout << "Same battery requested" << std::endl;
+                //std::cout << "Same battery requested" << std::endl;
                 return BT::NodeStatus::SUCCESS;
             }
             else {
-                std::cout << "Same battery not requested" << std::endl;
+                //std::cout << "Same battery not requested" << std::endl;
                 return NodeStatus::FAILURE;
             }   
         }
@@ -329,11 +291,11 @@ class isDifferentBattery : public  BT::ConditionNode {
             std::string cart_on_robot = read_robot_value(robot_name,"cart_on_robot");
             
             if (job_charger != cart_on_robot){
-                std::cout << "Different battery requested" << std::endl;
+                //std::cout << "Different battery requested" << std::endl;
                 return BT::NodeStatus::SUCCESS;
             }
             else {
-                std::cout << "Different battery not requested" << std::endl;
+                //std::cout << "Different battery not requested" << std::endl;
                 return NodeStatus::FAILURE;
             }    
         }
@@ -352,11 +314,11 @@ class isbattery_ADS_BCS : public  BT::ConditionNode {
             BT::Blackboard::Ptr masterBlackboard = config().blackboard;
             std::string source_station = masterBlackboard->get<std::string>("source_station");
             if (source_station.find("ADS") != std::string::npos || source_station.find("BCS")!= std::string::npos){
-                std::cout << "Requested battery is at ADS or BCS" << std::endl;
+                //std::cout << "Requested battery is at ADS or BCS" << std::endl;
                 return BT::NodeStatus::SUCCESS;
             }
             else {
-                std::cout << "Requested battery is not at ADS or BCS" << std::endl;
+                //std::cout << "Requested battery is not at ADS or BCS" << std::endl;
                 return NodeStatus::FAILURE;
             }    
         }
@@ -375,11 +337,11 @@ class isbattery_BWS : public  BT::ConditionNode {
             BT::Blackboard::Ptr masterBlackboard = config().blackboard;
             std::string source_station = masterBlackboard->get<std::string>("source_station");
             if (source_station.find("BWS") != std::string::npos){
-                std::cout << "Requested battery is at BWS" << std::endl;
+                //std::cout << "Requested battery is at BWS" << std::endl;
                 return BT::NodeStatus::SUCCESS;
             }
             else {
-                std::cout << "Requested battery is not at BWS" << std::endl;
+                //std::cout << "Requested battery is not at BWS" << std::endl;
                 return NodeStatus::FAILURE;
             }
             
@@ -441,11 +403,11 @@ class isCartPlaced : public  BT::ConditionNode {
             std::string robot_on_cart = read_cart_value(cart_name,"robot_on_cart");
 
             if (cart_on_robot == robot_on_cart && cart_on_robot == "none"){
-                std::cout << "Cart is placed" << std::endl;
+                //std::cout << "Cart is placed" << std::endl;
                 return BT::NodeStatus::SUCCESS;
             }
             else {
-                std::cout << "Cart is not placed" << std::endl;
+                //std::cout << "Cart is not placed" << std::endl;
                 return NodeStatus::FAILURE;
             }
             
@@ -465,7 +427,7 @@ class arrive_at_station: public BT::SyncActionNode
     BT::NodeStatus tick() override
     {
         int retry_attempt = 0;
-        bool retry_flag = true;
+        
         actionlib::SimpleActionClient<chargepal_actions::ArriveAtStationAction> aas("arrive_at_station", true);
         aas.waitForServer();
         chargepal_actions::ArriveAtStationGoal goal;
@@ -564,7 +526,7 @@ class go_home: public BT::SyncActionNode
     BT::NodeStatus tick() override
     {
         int retry_attempt = 0;
-        bool retry_flag = true;
+        
         actionlib::SimpleActionClient<chargepal_actions::ArriveAtHomeAction> aah("arrive_at_home", true);
         aah.waitForServer();
         chargepal_actions::ArriveAtHomeGoal goal;
@@ -617,7 +579,7 @@ class call_for_help: public BT::SyncActionNode
     BT::NodeStatus tick() override
     {
         int retry_attempt = 0;
-        bool retry_flag = true;
+        
         actionlib::SimpleActionClient<chargepal_actions::CallForHelpAction> cfh("call_for_help", true);
         chargepal_actions::CallForHelpGoal goal;
         cfh.waitForServer();
@@ -647,7 +609,7 @@ class drop_cart: public BT::SyncActionNode
     BT::NodeStatus tick() override
     {
         int retry_attempt = 0;
-        bool retry_flag = true;
+        
         actionlib::SimpleActionClient<chargepal_actions::PlaceChargerAction> plc("place_charger", true);
         plc.waitForServer();
         chargepal_actions::PlaceChargerGoal goal;
@@ -695,7 +657,7 @@ class pickup_cart: public BT::SyncActionNode
     BT::NodeStatus tick() override
     {
         int retry_attempt = 0;
-        bool retry_flag = true;
+        
         actionlib::SimpleActionClient<chargepal_actions::PickUpChargerAction> puc("pick_up_charger", true);
         puc.waitForServer();
         chargepal_actions::PickUpChargerGoal goal;
@@ -743,45 +705,55 @@ class plugin_ADS: public BT::SyncActionNode
     BT::NodeStatus tick() override
     {
         int retry_attempt = 0;
-        bool retry_flag = true;
-        actionlib::SimpleActionClient<chargepal_actions::ConnectPlugToCarAction> pi_ads("connect_to_car", true);
-        pi_ads.waitForServer();
-        chargepal_actions::ConnectPlugToCarGoal goal;
-        
         BT::Blackboard::Ptr masterBlackboard = config().blackboard;
         std::string charger = masterBlackboard->get<std::string>("charger");
         std::string robot_name = masterBlackboard->get<std::string>("robot_name");
-        
-
-        pi_ads.sendGoal(goal);
-        set_robot_value(robot_name,"ongoing_action", "plugin_charger_ads");
-        bool pi_ads_action = pi_ads.waitForResult(ros::Duration(900.0));
-        if (pi_ads_action){
-            chargepal_actions::ConnectPlugToCarResult result = *pi_ads.getResult();
-            bool plug_in = result.connect_to_car;
-            if (plug_in){
-                set_robot_value(robot_name,"ongoing_action", "none");
-                set_robot_value(robot_name,"previous_action", "plugin_charger_ads");
-                set_cart_value(charger,"plugged", "true");
-                return BT::NodeStatus::SUCCESS;
-            }
-        }
-        std::cout << "Enter y/n if plugin is successful  ";
-        char userInput;
-        std::cin >> userInput;
-        if (userInput == 'y'){
+        bool sim_flag;
+        ros::param::get("/sim_flag",sim_flag);
+        if (sim_flag){
+            set_robot_value(robot_name,"ongoing_action", "plugin_charger_ads");
+            ros::Duration(3).sleep();
             set_robot_value(robot_name,"ongoing_action", "none");
             set_robot_value(robot_name,"previous_action", "plugin_charger_ads");
             set_cart_value(charger,"plugged", "true");
-            return BT::NodeStatus::SUCCESS;}
-        else if (userInput == 'n'){
+            return BT::NodeStatus::SUCCESS;
+        }
+        else{
+        
+            actionlib::SimpleActionClient<chargepal_actions::ConnectPlugToCarAction> pi_ads("connect_to_car", true);
+            pi_ads.waitForServer();
+            chargepal_actions::ConnectPlugToCarGoal goal;
+            
+            pi_ads.sendGoal(goal);
+            set_robot_value(robot_name,"ongoing_action", "plugin_charger_ads");
+            bool pi_ads_action = pi_ads.waitForResult(ros::Duration(900.0));
+            if (pi_ads_action){
+                chargepal_actions::ConnectPlugToCarResult result = *pi_ads.getResult();
+                bool plug_in = result.connect_to_car;
+                if (plug_in){
+                    set_robot_value(robot_name,"ongoing_action", "none");
+                    set_robot_value(robot_name,"previous_action", "plugin_charger_ads");
+                    set_cart_value(charger,"plugged", "true");
+                    return BT::NodeStatus::SUCCESS;
+                }
+            }
+            std::cout << "Enter y/n if plugin is successful  ";
+            char userInput;
+            std::cin >> userInput;
+            if (userInput == 'y'){
+                set_robot_value(robot_name,"ongoing_action", "none");
+                set_robot_value(robot_name,"previous_action", "plugin_charger_ads");
+                set_cart_value(charger,"plugged", "true");
+                return BT::NodeStatus::SUCCESS;}
+            else if (userInput == 'n'){
+                set_robot_value(robot_name,"ongoing_action", "none");
+                set_robot_value(robot_name,"previous_action", "plugin_charger_ads_failure"); 
+                return BT::NodeStatus::FAILURE;}
+                    
             set_robot_value(robot_name,"ongoing_action", "none");
             set_robot_value(robot_name,"previous_action", "plugin_charger_ads_failure"); 
-            return BT::NodeStatus::FAILURE;}
-                
-        set_robot_value(robot_name,"ongoing_action", "none");
-        set_robot_value(robot_name,"previous_action", "plugin_charger_ads_failure"); 
-        return BT::NodeStatus::FAILURE;     
+            return BT::NodeStatus::FAILURE;
+        }    
     }
 };
             
@@ -799,7 +771,7 @@ class plugin_BCS: public BT::SyncActionNode
     BT::NodeStatus tick() override
     {
         int retry_attempt = 0;
-        bool retry_flag = true;
+        
         actionlib::SimpleActionClient<chargepal_actions::PlugInAction> pi_bcs("plugin_charger_bcs", true);
         pi_bcs.waitForServer();
         chargepal_actions::PlugInGoal goal;
@@ -841,47 +813,56 @@ class plugout_ADS: public BT::SyncActionNode
     BT::NodeStatus tick() override
     {
         int retry_attempt = 0;
-        bool retry_flag = true;
-        actionlib::SimpleActionClient<chargepal_actions::DisconnectPlugFromCarAction> po_ads("disconnect_from_car", true);
-        po_ads.waitForServer();
-        chargepal_actions::DisconnectPlugFromCarGoal goal;
-        
         BT::Blackboard::Ptr masterBlackboard = config().blackboard;
         std::string charger = masterBlackboard->get<std::string>("charger");
         std::string robot_name = masterBlackboard->get<std::string>("robot_name");
-        
-      
-        po_ads.sendGoal(goal);
-        set_robot_value(robot_name,"ongoing_action", "plugout_charger_ads");
-        bool po_ads_action = po_ads.waitForResult(ros::Duration(900.0));
-        if (po_ads_action){
-            chargepal_actions::DisconnectPlugFromCarResult result = *po_ads.getResult();
-            bool plug_out = result.disconnect_from_car;
-            if (plug_out){
-                set_robot_value(robot_name,"ongoing_action", "none");
-                set_robot_value(robot_name,"previous_action", "plugout_charger_ads");
-                set_cart_value(charger,"plugged", "false");
-                return BT::NodeStatus::SUCCESS;
-            }
+        bool sim_flag;
+        ros::param::get("/sim_flag",sim_flag);
+        if (sim_flag){
+            set_robot_value(robot_name,"ongoing_action", "plugout_charger_ads");
+            ros::Duration(3).sleep();
+            set_robot_value(robot_name,"ongoing_action", "none");
+            set_robot_value(robot_name,"previous_action", "plugout_charger_ads");
+            set_cart_value(charger,"plugged", "false");
+            return BT::NodeStatus::SUCCESS;
         }
+        else{
+            actionlib::SimpleActionClient<chargepal_actions::DisconnectPlugFromCarAction> po_ads("disconnect_from_car", true);
+            po_ads.waitForServer();
+            chargepal_actions::DisconnectPlugFromCarGoal goal;
+        
+            po_ads.sendGoal(goal);
+            set_robot_value(robot_name,"ongoing_action", "plugout_charger_ads");
+            bool po_ads_action = po_ads.waitForResult(ros::Duration(900.0));
+            if (po_ads_action){
+                chargepal_actions::DisconnectPlugFromCarResult result = *po_ads.getResult();
+                bool plug_out = result.disconnect_from_car;
+                if (plug_out){
+                    set_robot_value(robot_name,"ongoing_action", "none");
+                    set_robot_value(robot_name,"previous_action", "plugout_charger_ads");
+                    set_cart_value(charger,"plugged", "false");
+                    return BT::NodeStatus::SUCCESS;
+                }
+            }
 
-        std::cout << "Enter y/n if plugout is successful  ";
-        char userInput;
-        std::cin >> userInput;
-        if (userInput == 'y'){
+            std::cout << "Enter y/n if plugout is successful  ";
+            char userInput;
+            std::cin >> userInput;
+            if (userInput == 'y'){
+                set_robot_value(robot_name,"ongoing_action", "none");
+                    set_robot_value(robot_name,"previous_action", "plugout_charger_ads");
+                    set_cart_value(charger,"plugged", "false");
+                return BT::NodeStatus::SUCCESS;}
+            else if (userInput == 'n'){
+                set_robot_value(robot_name,"ongoing_action", "none");
+                set_robot_value(robot_name,"previous_action", "plugout_charger_ads_failure"); 
+                return BT::NodeStatus::FAILURE;}
+
+
             set_robot_value(robot_name,"ongoing_action", "none");
-                set_robot_value(robot_name,"previous_action", "plugout_charger_ads");
-                set_cart_value(charger,"plugged", "false");
-            return BT::NodeStatus::SUCCESS;}
-        else if (userInput == 'n'){
-            set_robot_value(robot_name,"ongoing_action", "none");
-            set_robot_value(robot_name,"previous_action", "plugout_charger_ads_failure"); 
-            return BT::NodeStatus::FAILURE;}
-
-
-        set_robot_value(robot_name,"ongoing_action", "none");
-        set_robot_value(robot_name,"previous_action", "plugout_charger_ads_failure");
-        return BT::NodeStatus::FAILURE;    
+            set_robot_value(robot_name,"previous_action", "plugout_charger_ads_failure");
+            return BT::NodeStatus::FAILURE;
+        }   
     }
 };
             
@@ -899,7 +880,7 @@ class plugout_BCS: public BT::SyncActionNode
     BT::NodeStatus tick() override
     {
         int retry_attempt = 0;
-        bool retry_flag = true;
+        
         actionlib::SimpleActionClient<chargepal_actions::PlugOutAction> po_bcs("plugout_charger_bcs", true);
         po_bcs.waitForServer();
         chargepal_actions::PlugOutGoal goal;
@@ -949,7 +930,7 @@ class recovery_arrive_BWS: public BT::SyncActionNode
         std::string robot_name = masterBlackboard->get<std::string>("robot_name");
         actionlib::SimpleActionClient<chargepal_actions::ArriveAtStationAction> aas("arrive_at_station", true);
         
-        std::cout << "Ask for free BWS" << std::endl;
+        std::cout << "Asking for free BWS" << std::endl;
 
         while (connection_status != " SUCCESSFUL"){
             auto free_bws_result = ask_free_BWS(ask_ldb);
@@ -1043,7 +1024,7 @@ class recovery_arrive_BCS: public BT::SyncActionNode
         std::string robot_name = masterBlackboard->get<std::string>("robot_name");
         actionlib::SimpleActionClient<chargepal_actions::ArriveAtStationAction> aas("arrive_at_station", true);
         
-        std::cout << "Ask for free BCS" << std::endl;
+        std::cout << "Asking for free BCS" << std::endl;
 
         while (connection_status != " SUCCESSFUL"){
             auto free_bcs_result = ask_free_BCS(ask_ldb);
@@ -1312,6 +1293,7 @@ while (job_requested.empty()){
         masterBlackboard->set("charger",charger);
         masterBlackboard->set("source_station",source_station);
         masterBlackboard->set("target_station",target_station);
+        masterBlackboard->set("job_status",JobEnum::ONGOING);
 
         mainTree.tickWhileRunning();
         
@@ -1319,12 +1301,14 @@ while (job_requested.empty()){
         
         if (status == BT::NodeStatus::SUCCESS || status == BT::NodeStatus::IDLE) {
             bool job_server_update = false;
-            while(job_server_update == false){
+            while(!job_server_update){
                 ROS_INFO("Updating job completion to server!");
-                job_server_update = update_job_monitor();
+                std::string job_status = enumToString(static_cast<JobEnum>(masterBlackboard->get<JobEnum>("job_status")));
+                job_server_update = update_job_monitor(job_type,job_status);
             }
             job_requested.clear();
-            ROS_INFO("Job completion succeeded.");
+            ROS_INFO("Job update succeeded.");
+            std::cout<<"................................"<<std::endl;
         } 
         
         else {

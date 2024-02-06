@@ -271,7 +271,6 @@ std::pair<std::string,std::string> ask_free_BWS(const bool& ask_ldb) {
     ros::ServiceClient client_ldb_server = n.serviceClient<chargepal_services::askFreeBWS>("/ldb_server/ask_free_bws");
     chargepal_services::askFreeBWS srv_ldb_server;
 
-    std::cout << "Ask for free BWS" << std::endl;
     srv_ldb_server.request.ask_ldb = ask_ldb;
     if (client_ldb_server.call(srv_ldb_server)){
         free_bws = srv_ldb_server.response.station_name;
@@ -296,7 +295,6 @@ std::pair<std::string,std::string> ask_free_BCS(const bool& ask_ldb) {
     ros::ServiceClient client_ldb_server = n.serviceClient<chargepal_services::askFreeBCS>("/ldb_server/ask_free_bcs");
     chargepal_services::askFreeBCS srv_ldb_server;
     
-    std::cout << "Ask for free BCS" << std::endl;
     srv_ldb_server.request.ask_ldb = ask_ldb;
     if (client_ldb_server.call(srv_ldb_server)){
         free_bcs = srv_ldb_server.response.station_name;
@@ -362,12 +360,14 @@ std::string fetch_job() {
  * 
  * @return returns a boolean of update success value
  */
-bool update_job_monitor() {
-    int operation_time = 0;
+bool update_job_monitor(const std::string& job_type, std::string& job_status) {
     ros::NodeHandle n;
     ros::ServiceClient client_ldb_server = n.serviceClient<chargepal_services::updateJobMonitor>("/ldb_server/update_job_monitor");
 
     chargepal_services::updateJobMonitor srv_ldb_server;
+    srv_ldb_server.request.job_type = job_type;
+    srv_ldb_server.request.job_status = job_status;
+
     if (client_ldb_server.call(srv_ldb_server)){
         return srv_ldb_server.response.success;
     }
@@ -421,6 +421,19 @@ int get_operation_time(const std::string& cart_name){
         ROS_ERROR("asking operation time service failed");
     }
     return operation_time;
+}
+
+std::string enumToString(JobEnum value) {
+    switch(value) {
+        case JobEnum::ONGOING:
+            return "Ongoing";
+        case JobEnum::SUCCESS:
+            return "Success";
+        case JobEnum::FAILURE:
+            return "Failure";
+        case JobEnum::RECOVERY:
+            return "Recovery";
+    }
 }
 
     
