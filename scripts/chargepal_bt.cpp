@@ -1266,14 +1266,17 @@ BT::Groot2Publisher publisher(mainTree);
 json job_requested;
 
 
-while (job_requested.empty()){
+while (ros::ok() && job_requested.empty()){
     
     try{
         std::string job_input = fetch_job();
-        job_requested = json::parse(job_input);
+        if (!job_input.empty()){
+            job_requested = json::parse(job_input);
+        }
         
-        if (job_requested.empty()){
+        else{
             std::cout << "Waiting for new job";
+            ros::Duration(1.0).sleep();
         }
     }
     catch(const nlohmann::json::exception& e){
@@ -1317,6 +1320,7 @@ while (job_requested.empty()){
         }
 
     }
+    ros::spinOnce();
 }
 
 // Exit the ROS node

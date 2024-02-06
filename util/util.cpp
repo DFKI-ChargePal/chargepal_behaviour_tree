@@ -1,26 +1,4 @@
-#include "ros/ros.h"
 #include "util.h"
-#include <ros/package.h>
-#include <SQLiteCpp/SQLiteCpp.h>
-#include <string>
-#include <list>
-#include<map>
-#include <thread>
-#include <chrono>
-
-
-#include <chargepal_services/deleteMirMission.h>
-#include <chargepal_services/askFreeBCS.h>
-#include <chargepal_services/askFreeBWS.h>
-#include <chargepal_services/fetchJob.h>
-#include <chargepal_services/assertLiftValue.h>
-#include <chargepal_services/askOperationTime.h>
-#include <chargepal_services/updateRdbCopy.h>
-#include <chargepal_services/pushToLDB.h>
-#include <chargepal_services/resetStationBlocker.h>
-#include <chargepal_services/verifyRdbSync.h>
-#include <chargepal_services/updateJobMonitor.h>
-#include <chargepal_services/readRobotCharge.h>
 
 /**
  * @brief This function calls the service to update the rdb_copy 

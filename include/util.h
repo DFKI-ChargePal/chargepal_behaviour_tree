@@ -9,9 +9,11 @@
 #include <vector>
 #include <SQLiteCpp/SQLiteCpp.h>
 #include "ros/ros.h"
-#include <string> 
 #include<nlohmann/json.hpp>
 #include <cctype>
+#include <list>
+#include<map>
+#include <thread>
 
 #include <actionlib/client/simple_action_client.h>
 #include <actionlib/client/terminal_state.h>
@@ -34,6 +36,19 @@
 #include "behaviortree_cpp/loggers/bt_observer.h"
 #include "behaviortree_cpp/loggers/groot2_publisher.h"
 #include "behaviortree_cpp/controls/reactive_fallback.h"
+
+#include <chargepal_services/deleteMirMission.h>
+#include <chargepal_services/askFreeBCS.h>
+#include <chargepal_services/askFreeBWS.h>
+#include <chargepal_services/fetchJob.h>
+#include <chargepal_services/assertLiftValue.h>
+#include <chargepal_services/askOperationTime.h>
+#include <chargepal_services/updateRdbCopy.h>
+#include <chargepal_services/pushToLDB.h>
+#include <chargepal_services/resetStationBlocker.h>
+#include <chargepal_services/verifyRdbSync.h>
+#include <chargepal_services/updateJobMonitor.h>
+#include <chargepal_services/readRobotCharge.h>
 
 using namespace BT;
 using namespace std::chrono_literals;
