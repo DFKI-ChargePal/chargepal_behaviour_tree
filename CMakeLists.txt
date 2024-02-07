@@ -13,6 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   actionlib
   actionlib_msgs
   chargepal_actions
+  chargepal_services
   roslib
 )
 
