@@ -2,17 +2,11 @@
   <BehaviorTree ID="recovery_aas">
     <Sequence>
       <error_count/>
-      <RetryUntilSuccessful num_attempts="3">
-        <delete_mir_mission_queue/>
-      </RetryUntilSuccessful>
       <IfThenElse>
         <isCartPlaced/>
-        <Fallback>
-          <RetryUntilSuccessful num_attempts="3">
-            <go_home/>
-          </RetryUntilSuccessful>
-          <call_for_help/>
-        </Fallback>
+        <RetryUntilSuccessful num_attempts="3">
+          <go_home/>
+        </RetryUntilSuccessful>
         <Fallback>
           <Sequence>
             <isRobotAtBWS/>
@@ -50,9 +44,6 @@
   <BehaviorTree ID="recovery_dc">
     <Sequence>
       <error_count/>
-      <RetryUntilSuccessful num_attempts="3">
-        <delete_mir_mission_queue/>
-      </RetryUntilSuccessful>
       <Fallback>
         <Sequence>
           <isRobotAtBCS/>
@@ -89,9 +80,6 @@
   <BehaviorTree ID="recovery_pc">
     <Sequence>
       <error_count/>
-      <RetryUntilSuccessful num_attempts="3">
-        <delete_mir_mission_queue/>
-      </RetryUntilSuccessful>
       <askAssertLift/>
       <RetryUntilSuccessful num_attempts="3">
         <go_home/>
@@ -138,10 +126,6 @@
   <TreeNodesModel>
     <Condition ID="askAssertLift"
                editable="true"/>
-    <Action ID="call_for_help"
-            editable="true"/>
-    <Action ID="delete_mir_mission_queue"
-            editable="true"/>
     <Action ID="drop_cart"
             editable="true"/>
     <Action ID="error_count"

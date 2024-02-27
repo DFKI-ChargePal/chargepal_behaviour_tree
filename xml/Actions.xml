@@ -5,12 +5,16 @@
                             _onSuccess="&quot;job_status=1&quot;">
         <arrive_at_station/>
       </RetryUntilSuccessful>
-      <SubTree ID="recovery_aas"
-               _onSuccess="job_status=2"
-               _onFailure="job_status=3"
-               _autoremap="true"/>
       <ForceFailure>
-        <call_for_help/>
+        <SubTree ID="recovery_aas"
+                 _skipIf="!recovery_enabled"
+                 _onSuccess="job_status=2"
+                 _onFailure="job_status=3"
+                 _autoremap="true"/>
+      </ForceFailure>
+      <ForceFailure>
+        <call_for_help _skipIf="job_status==2"
+                       _post="job_status=3"/>
       </ForceFailure>
     </Fallback>
   </BehaviorTree>
@@ -21,12 +25,16 @@
                             _onSuccess="job_status=1">
         <drop_cart/>
       </RetryUntilSuccessful>
-      <SubTree ID="recovery_dc"
-               _onSuccess="job_status=2"
-               _onFailure="job_status=3"
-               _autoremap="true"/>
       <ForceFailure>
-        <call_for_help/>
+        <SubTree ID="recovery_dc"
+                 _skipIf="!recovery_enabled"
+                 _onSuccess="job_status=2"
+                 _onFailure="job_status=3"
+                 _autoremap="true"/>
+      </ForceFailure>
+      <ForceFailure>
+        <call_for_help _skipIf="job_status==2"
+                       _post="job_status=3"/>
       </ForceFailure>
     </Fallback>
   </BehaviorTree>
@@ -37,8 +45,8 @@
                             _onSuccess="job_status=1">
         <go_home/>
       </RetryUntilSuccessful>
-      <ForceFailure _onFailure="job_status=3">
-        <call_for_help/>
+      <ForceFailure>
+        <call_for_help _post="job_status=3"/>
       </ForceFailure>
     </Fallback>
   </BehaviorTree>
@@ -49,12 +57,16 @@
                             _onSuccess="job_status=1">
         <pickup_cart/>
       </RetryUntilSuccessful>
-      <SubTree ID="recovery_pc"
-               _onSuccess="job_status=2"
-               _onFailure="job_status=3"
-               _autoremap="true"/>
       <ForceFailure>
-        <call_for_help/>
+        <SubTree ID="recovery_pc"
+                 _skipIf="!recovery_enabled"
+                 _onSuccess="job_status=2"
+                 _onFailure="job_status=3"
+                 _autoremap="true"/>
+      </ForceFailure>
+      <ForceFailure>
+        <call_for_help _skipIf="job_status==2"
+                       _post="job_status=3"/>
       </ForceFailure>
     </Fallback>
   </BehaviorTree>
@@ -65,24 +77,36 @@
         <isRobotAtBCS/>
         <Fallback name="plugin_bcs">
           <plugin_BCS _onSuccess="job_status=1"/>
-          <SubTree ID="recovery_plugin"
-                   _onSuccess="job_status=2"
-                   _onFailure="job_status=3"
-                   _autoremap="true"/>
+          <ForceFailure>
+            <SubTree ID="recovery_plugin"
+                     _skipIf="!recovery_enabled"
+                     _onSuccess="job_status=2"
+                     _onFailure="job_status=3"
+                     _autoremap="true"/>
+          </ForceFailure>
         </Fallback>
       </Sequence>
       <Sequence name="plugin_ads">
         <isRobotAtADS/>
         <Fallback name="plugin_ads">
-          <plugin_ADS _onSuccess="job_status=1"/>
-          <SubTree ID="recovery_plugin"
-                   _onSuccess="job_status=2"
-                   _onFailure="job_status=3"
-                   _autoremap="true"/>
+          <Sequence>
+            <RetryUntilSuccessful num_attempts="5">
+              <isReady2Plugin/>
+            </RetryUntilSuccessful>
+            <plugin_ADS _onSuccess="job_status=1"/>
+          </Sequence>
+          <ForceFailure>
+            <SubTree ID="recovery_plugin"
+                     _skipIf="!recovery_enabled"
+                     _onSuccess="job_status=2"
+                     _onFailure="job_status=3"
+                     _autoremap="true"/>
+          </ForceFailure>
         </Fallback>
       </Sequence>
       <ForceFailure>
-        <call_for_help/>
+        <call_for_help _skipIf="job_status==2"
+                       _post="job_status=3"/>
       </ForceFailure>
     </Fallback>
   </BehaviorTree>
@@ -93,24 +117,31 @@
         <isRobotAtBCS/>
         <Fallback name="plugout_bcs">
           <plugout_BCS _onSuccess="job_status=1"/>
-          <SubTree ID="recovery_plugout"
-                   _onSuccess="job_status=2"
-                   _onFailure="job_status=3"
-                   _autoremap="true"/>
+          <ForceFailure>
+            <SubTree ID="recovery_plugout"
+                     _skipIf="!recovery_enabled"
+                     _onSuccess="job_status=2"
+                     _onFailure="job_status=3"
+                     _autoremap="true"/>
+          </ForceFailure>
         </Fallback>
       </Sequence>
       <Sequence name="plugout_ads">
         <isRobotAtADS/>
         <Fallback name="plugout_ads">
           <plugout_ADS _onSuccess="job_status=1"/>
-          <SubTree ID="recovery_plugout"
-                   _onSuccess="job_status=2"
-                   _onFailure="job_status=3"
-                   _autoremap="true"/>
+          <ForceFailure>
+            <SubTree ID="recovery_plugout"
+                     _skipIf="!recovery_enabled"
+                     _onSuccess="job_status=2"
+                     _onFailure="job_status=3"
+                     _autoremap="true"/>
+          </ForceFailure>
         </Fallback>
       </Sequence>
       <ForceFailure>
-        <call_for_help/>
+        <call_for_help _skipIf="job_status==2"
+                       _post="job_status=3"/>
       </ForceFailure>
     </Fallback>
   </BehaviorTree>
@@ -125,6 +156,8 @@
             editable="true"/>
     <Action ID="go_home"
             editable="true"/>
+    <Condition ID="isReady2Plugin"
+               editable="true"/>
     <Condition ID="isRobotAtADS"
                editable="true"/>
     <Condition ID="isRobotAtBCS"
