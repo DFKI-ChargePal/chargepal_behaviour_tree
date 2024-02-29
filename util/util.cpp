@@ -311,18 +311,31 @@ bool reset_station_blocker(const std::string &station_name) {
 std::pair<std::string, std::string> ask_free_BWS(const bool &ask_ldb) {
   std::string connection_status = "";
   std::string free_bws = "";
+  bool ldb_check = ask_ldb;
   ros::NodeHandle n;
-  ros::ServiceClient client_ldb_server =
-      n.serviceClient<chargepal_services::askFreeBWS>(
-          "/ldb_server/ask_free_bws");
-  chargepal_services::askFreeBWS srv_ldb_server;
+  int ldb_connection_error_count = -1;
+  while (connection_status != " SUCCESSFUL" && ldb_connection_error_count < 5) {
+    ros::ServiceClient client_ldb_server =
+        n.serviceClient<chargepal_services::askFreeBWS>(
+            "/ldb_server/ask_free_bws");
+    chargepal_services::askFreeBWS srv_ldb_server;
 
-  srv_ldb_server.request.ask_ldb = ask_ldb;
-  if (client_ldb_server.call(srv_ldb_server)) {
-    free_bws = srv_ldb_server.response.station_name;
-    connection_status = srv_ldb_server.response.connection_status;
-  } else {
-    ROS_ERROR("ask_free_bws service failed");
+    srv_ldb_server.request.ask_ldb = ask_ldb;
+    if (client_ldb_server.call(srv_ldb_server)) {
+      free_bws = srv_ldb_server.response.station_name;
+      connection_status = srv_ldb_server.response.connection_status;
+      return std::make_pair(free_bws, connection_status);
+    } else {
+      ldb_connection_error_count++;
+      if (ldb_connection_error_count == 5) {
+        if (ldb_check) {
+          ldb_check = false;
+          ldb_connection_error_count = 0;
+        } else {
+          break;
+        }
+      }
+    }
   }
   return std::make_pair(free_bws, connection_status);
 }
@@ -338,18 +351,31 @@ std::pair<std::string, std::string> ask_free_BWS(const bool &ask_ldb) {
 std::pair<std::string, std::string> ask_free_BCS(const bool &ask_ldb) {
   std::string connection_status = "";
   std::string free_bcs = "";
+  bool ldb_check = ask_ldb;
   ros::NodeHandle n;
-  ros::ServiceClient client_ldb_server =
-      n.serviceClient<chargepal_services::askFreeBCS>(
-          "/ldb_server/ask_free_bcs");
-  chargepal_services::askFreeBCS srv_ldb_server;
+  int ldb_connection_error_count = -1;
+  while (connection_status != " SUCCESSFUL" && ldb_connection_error_count < 5) {
+    ros::ServiceClient client_ldb_server =
+        n.serviceClient<chargepal_services::askFreeBCS>(
+            "/ldb_server/ask_free_bcs");
+    chargepal_services::askFreeBCS srv_ldb_server;
 
-  srv_ldb_server.request.ask_ldb = ask_ldb;
-  if (client_ldb_server.call(srv_ldb_server)) {
-    free_bcs = srv_ldb_server.response.station_name;
-    connection_status = srv_ldb_server.response.connection_status;
-  } else {
-    ROS_ERROR("ask_free_bcs service failed");
+    srv_ldb_server.request.ask_ldb = ask_ldb;
+    if (client_ldb_server.call(srv_ldb_server)) {
+      free_bcs = srv_ldb_server.response.station_name;
+      connection_status = srv_ldb_server.response.connection_status;
+      return std::make_pair(free_bcs, connection_status);
+    } else {
+      ldb_connection_error_count++;
+      if (ldb_connection_error_count == 5) {
+        if (ldb_check) {
+          ldb_check = false;
+          ldb_connection_error_count = 0;
+        } else {
+          break;
+        }
+      }
+    }
   }
   return std::make_pair(free_bcs, connection_status);
 }

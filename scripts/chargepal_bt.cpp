@@ -734,38 +734,39 @@ private:
 
 class plugin_ADS : public BT::SyncActionNode {
 public:
-  plugin_ADS(const std::string &name, const BT::NodeConfiguration &config)
-      : BT::SyncActionNode(name, config) {}
+  plugin_ADS(const std::string &name, const BT::NodeConfiguration &config,
+             std::ofstream &logFile)
+      : BT::SyncActionNode(name, config), _argLog(logFile) {}
 
   static PortsList providedPorts() { return {}; }
 
   BT::NodeStatus tick() override {
-    int retry_attempt = 0;
-    BT::Blackboard::Ptr masterBlackboard = config().blackboard;
-    std::string charger = masterBlackboard->get<std::string>("charger");
-    std::string robot_name = masterBlackboard->get<std::string>("robot_name");
-    bool sim_flag;
     ros::param::get("/sim_flag", sim_flag);
+    masterBlackboard = config().blackboard;
+    charger = masterBlackboard->get<std::string>("charger");
+    robot_name = masterBlackboard->get<std::string>("robot_name");
+    target_station = masterBlackboard->get<std::string>("target_station");
+
     if (sim_flag) {
+      _argLog << "Performing plugin_ADS at" + target_station << std::endl;
       set_robot_value(robot_name, "ongoing_action", "plugin_charger_ads");
-      ROS_INFO("Executing Plugin ADS");
       ros::Duration(3).sleep();
       set_robot_value(robot_name, "ongoing_action", "none");
       set_robot_value(robot_name, "previous_action", "plugin_charger_ads");
       set_cart_value(charger, "plugged", "true");
       return BT::NodeStatus::SUCCESS;
     } else {
-
       actionlib::SimpleActionClient<chargepal_actions::ConnectPlugToCarAction>
           pi_ads("connect_to_car", true);
       pi_ads.waitForServer();
-      chargepal_actions::ConnectPlugToCarGoal goal;
 
       pi_ads.sendGoal(goal);
       set_robot_value(robot_name, "ongoing_action", "plugin_charger_ads");
-      bool pi_ads_action = pi_ads.waitForResult(ros::Duration(900.0));
+      _argLog << "Performing plugin_ADS at" + target_station << std::endl;
+
+      pi_ads_action = pi_ads.waitForResult(ros::Duration(900.0));
       if (pi_ads_action) {
-        chargepal_actions::ConnectPlugToCarResult result = *pi_ads.getResult();
+        result = *pi_ads.getResult();
         bool plug_in = result.connect_to_car;
         if (plug_in) {
           set_robot_value(robot_name, "ongoing_action", "none");
@@ -774,7 +775,8 @@ public:
           return BT::NodeStatus::SUCCESS;
         }
       }
-      std::cout << "Enter y/n if plugin is successful  ";
+
+      /*std::cout << "Enter y/n if Plugin is successful  ";
       char userInput;
       std::cin >> userInput;
       if (userInput == 'y') {
@@ -787,7 +789,7 @@ public:
         set_robot_value(robot_name, "previous_action",
                         "plugin_charger_ads_failure");
         return BT::NodeStatus::FAILURE;
-      }
+      }*/
 
       set_robot_value(robot_name, "ongoing_action", "none");
       set_robot_value(robot_name, "previous_action",
@@ -795,6 +797,14 @@ public:
       return BT::NodeStatus::FAILURE;
     }
   }
+
+private:
+  bool sim_flag, pi_ads_action;
+  BT::Blackboard::Ptr masterBlackboard;
+  std::ofstream &_argLog;
+  chargepal_actions::ConnectPlugToCarGoal goal;
+  chargepal_actions::ConnectPlugToCarResult result;
+  std::string charger, robot_name, target_station;
 };
 
 class plugin_BCS : public BT::SyncActionNode {
@@ -838,21 +848,22 @@ public:
 
 class plugout_ADS : public BT::SyncActionNode {
 public:
-  plugout_ADS(const std::string &name, const BT::NodeConfiguration &config)
-      : BT::SyncActionNode(name, config) {}
+  plugout_ADS(const std::string &name, const BT::NodeConfiguration &config,
+              std::ofstream &logFile)
+      : BT::SyncActionNode(name, config), _argLog(logFile) {}
 
   static PortsList providedPorts() { return {}; }
 
   BT::NodeStatus tick() override {
-    int retry_attempt = 0;
-    BT::Blackboard::Ptr masterBlackboard = config().blackboard;
-    std::string charger = masterBlackboard->get<std::string>("charger");
-    std::string robot_name = masterBlackboard->get<std::string>("robot_name");
-    bool sim_flag;
     ros::param::get("/sim_flag", sim_flag);
+    masterBlackboard = config().blackboard;
+    charger = masterBlackboard->get<std::string>("charger");
+    robot_name = masterBlackboard->get<std::string>("robot_name");
+    location = read_robot_value(robot_name, "robot_location");
+
     if (sim_flag) {
+      _argLog << "Performing plugout_ADS at" + location << std::endl;
       set_robot_value(robot_name, "ongoing_action", "plugout_charger_ads");
-      ROS_INFO("Executing plugout ADS");
       ros::Duration(3).sleep();
       set_robot_value(robot_name, "ongoing_action", "none");
       set_robot_value(robot_name, "previous_action", "plugout_charger_ads");
@@ -863,11 +874,10 @@ public:
           chargepal_actions::DisconnectPlugFromCarAction>
           po_ads("disconnect_from_car", true);
       po_ads.waitForServer();
-      chargepal_actions::DisconnectPlugFromCarGoal goal;
-
       po_ads.sendGoal(goal);
+      _argLog << "Performing plugout_ADS at" + location << std::endl;
       set_robot_value(robot_name, "ongoing_action", "plugout_charger_ads");
-      bool po_ads_action = po_ads.waitForResult(ros::Duration(900.0));
+      po_ads_action = po_ads.waitForResult(ros::Duration(900.0));
       if (po_ads_action) {
         chargepal_actions::DisconnectPlugFromCarResult result =
             *po_ads.getResult();
@@ -880,7 +890,7 @@ public:
         }
       }
 
-      std::cout << "Enter y/n if plugout is successful  ";
+      /*std::cout << "Enter y/n if plugout is successful  ";
       char userInput;
       std::cin >> userInput;
       if (userInput == 'y') {
@@ -893,7 +903,7 @@ public:
         set_robot_value(robot_name, "previous_action",
                         "plugout_charger_ads_failure");
         return BT::NodeStatus::FAILURE;
-      }
+      }*/
 
       set_robot_value(robot_name, "ongoing_action", "none");
       set_robot_value(robot_name, "previous_action",
@@ -901,6 +911,14 @@ public:
       return BT::NodeStatus::FAILURE;
     }
   }
+
+private:
+  bool sim_flag, po_ads_action;
+  BT::Blackboard::Ptr masterBlackboard;
+  std::ofstream &_argLog;
+  chargepal_actions::DisconnectPlugFromCarGoal goal;
+  chargepal_actions::DisconnectPlugFromCarResult result;
+  std::string charger, robot_name, location;
 };
 
 class plugout_BCS : public BT::SyncActionNode {
@@ -945,37 +963,29 @@ public:
 class recovery_arrive_BWS : public BT::SyncActionNode {
 public:
   recovery_arrive_BWS(const std::string &name,
-                      const BT::NodeConfiguration &config)
-      : BT::SyncActionNode(name, config) {}
+                      const BT::NodeConfiguration &config,
+                      std::ofstream &logFile)
+      : BT::SyncActionNode(name, config), _argLog(logFile) {}
 
   static PortsList providedPorts() { return {}; }
 
   BT::NodeStatus tick() override {
-    int retry_attempt = 0;
-    int ldb_connection_error_count = -1;
-    bool ask_ldb = true;
-    std::string free_bws = "";
-    std::string connection_status = "";
 
-    BT::Blackboard::Ptr masterBlackboard = config().blackboard;
-    std::string robot_name = masterBlackboard->get<std::string>("robot_name");
+    masterBlackboard = config().blackboard;
+    robot_name = masterBlackboard->get<std::string>("robot_name");
+
     actionlib::SimpleActionClient<chargepal_actions::ArriveAtStationAction> aas(
         "arrive_at_station", true);
 
-    std::cout << "Asking for free BWS" << std::endl;
+    _argLog << "Asking for free BWS" << std::endl;
 
-    while (connection_status != " SUCCESSFUL") {
-      auto free_bws_result = ask_free_BWS(ask_ldb);
-      free_bws = free_bws_result.first;
-      connection_status = free_bws_result.second;
-      ldb_connection_error_count++;
-      if (ldb_connection_error_count > 5) {
-        ask_ldb = false;
-      }
-    }
+    auto free_bws_result = ask_free_BWS(ask_ldb);
+    free_bws = free_bws_result.first;
+    connection_status = free_bws_result.second;
+    _argLog << "   Received: " << free_bws << std::endl;
+    _argLog << "   Server connection: " << connection_status << std::endl;
 
     while (free_bws != "none" || free_bws != "") {
-      ldb_connection_error_count = 0;
 
       while (retry_attempt < 3) {
         aas.waitForServer();
@@ -984,6 +994,8 @@ public:
         aas.sendGoal(goal);
         set_robot_value(robot_name, "ongoing_action",
                         "recovery_arrive_" + free_bws);
+        _argLog << "Performing arrive_at_station to" + goal.target_station
+                << std::endl;
         bool aas_action = aas.waitForResult(ros::Duration(900.0));
         if (aas_action) {
           chargepal_actions::ArriveAtStationResult result = *aas.getResult();
@@ -1002,67 +1014,72 @@ public:
             }
             reset_station_blocker("BWS");
             return BT::NodeStatus::SUCCESS;
-          } else {
-            retry_attempt += 1;
-            bool delete_mission = delete_mission_queue();
-
-            if (delete_mission == false) {
-              ROS_ERROR("mir_delete_mission service failed");
-            }
           }
-        } else {
-          ROS_ERROR("Failed waiting for arrive_at_station result");
+          action_result = result.action_status;
         }
+        _argLog << "arrive_at_station to" + goal.target_station +
+                       " status is " + action_result
+                << std::endl;
+        retry_attempt += 1;
+        delete_mission = delete_mission_queue();
 
-        ask_ldb = true;
-        connection_status = "";
-        while (connection_status != " SUCCESSFUL") {
-          auto free_bws_result = ask_free_BWS(ask_ldb);
-          free_bws = free_bws_result.first;
-          connection_status = free_bws_result.second;
-          ldb_connection_error_count++;
-          if (ldb_connection_error_count > 5) {
-            ask_ldb = false;
-          }
+        if (!delete_mission) {
+          _argLog << "ERROR: Unable to delete mission queue with "
+                     "arrive_at_station of" +
+                         goal.target_station
+                  << std::endl;
         }
       }
+
+      auto free_bws_result = ask_free_BWS(ask_ldb);
+      free_bws = free_bws_result.first;
+      connection_status = free_bws_result.second;
+      _argLog << "   Received: " << free_bws << std::endl;
+      _argLog << "   Server connection: " << connection_status << std::endl;
+      if (free_bws == "none" || free_bws == "") {
+        break;
+      }
     }
-    ROS_ERROR("No free BWS left");
+
+    _argLog << "No free BWS left" << std::endl;
     return BT::NodeStatus::FAILURE;
   }
+
+private:
+  BT::Blackboard::Ptr masterBlackboard;
+  std::ofstream &_argLog;
+  int retry_attempt = 0;
+  int ldb_connection_error_count = -1;
+  bool ask_ldb = true;
+  std::string free_bws = "";
+  std::string connection_status = "";
+  bool delete_mission = false;
+  std::string robot_name, robot_location, action_result;
 };
 
 class recovery_arrive_BCS : public BT::SyncActionNode {
 public:
   recovery_arrive_BCS(const std::string &name,
-                      const BT::NodeConfiguration &config)
-      : BT::SyncActionNode(name, config) {}
+                      const BT::NodeConfiguration &config,
+                      std::ofstream &logFile)
+      : BT::SyncActionNode(name, config), _argLog(logFile) {}
 
   static PortsList providedPorts() { return {}; }
 
   BT::NodeStatus tick() override {
-    int retry_attempt = 0;
-    int ldb_connection_error_count = -1;
-    bool ask_ldb = true;
-    std::string free_bcs = "";
-    std::string connection_status = "";
+    masterBlackboard = config().blackboard;
+    robot_name = masterBlackboard->get<std::string>("robot_name");
 
-    BT::Blackboard::Ptr masterBlackboard = config().blackboard;
-    std::string robot_name = masterBlackboard->get<std::string>("robot_name");
     actionlib::SimpleActionClient<chargepal_actions::ArriveAtStationAction> aas(
         "arrive_at_station", true);
 
-    std::cout << "Asking for free BCS" << std::endl;
+    _argLog << "Asking for free BCS" << std::endl;
 
-    while (connection_status != " SUCCESSFUL") {
-      auto free_bcs_result = ask_free_BCS(ask_ldb);
-      free_bcs = free_bcs_result.first;
-      connection_status = free_bcs_result.second;
-      ldb_connection_error_count++;
-      if (ldb_connection_error_count > 5) {
-        ask_ldb = false;
-      }
-    }
+    auto free_bcs_result = ask_free_BCS(ask_ldb);
+    free_bcs = free_bcs_result.first;
+    connection_status = free_bcs_result.second;
+    _argLog << "   Received: " << free_bcs << std::endl;
+    _argLog << "   Server connection: " << connection_status << std::endl;
 
     while (free_bcs != "none" || free_bcs != "") {
       while (retry_attempt < 3) {
@@ -1072,6 +1089,8 @@ public:
         aas.sendGoal(goal);
         set_robot_value(robot_name, "ongoing_action",
                         "recovery_arrive_" + free_bcs);
+        _argLog << "Performing arrive_at_station to" + goal.target_station
+                << std::endl;
         bool aas_action = aas.waitForResult(ros::Duration(900.0));
         if (aas_action) {
           chargepal_actions::ArriveAtStationResult result = *aas.getResult();
@@ -1090,34 +1109,47 @@ public:
             }
             reset_station_blocker("BCS");
             return BT::NodeStatus::SUCCESS;
-          } else {
-            retry_attempt += 1;
-            bool delete_mission = delete_mission_queue();
-
-            if (delete_mission == false) {
-              ROS_ERROR("mir_delete_mission service failed");
-            }
           }
-        } else {
-          ROS_ERROR("Failed waiting for arrive_at_station result");
+          action_result = result.action_status;
         }
+        _argLog << "arrive_at_station to" + goal.target_station +
+                       " status is " + action_result
+                << std::endl;
+        retry_attempt += 1;
+        delete_mission = delete_mission_queue();
 
-        ask_ldb = true;
-        connection_status = "";
-        while (connection_status != " SUCCESSFUL") {
-          auto free_bcs_result = ask_free_BCS(ask_ldb);
-          free_bcs = free_bcs_result.first;
-          connection_status = free_bcs_result.second;
-          ldb_connection_error_count++;
-          if (ldb_connection_error_count > 5) {
-            ask_ldb = false;
-          }
+        if (!delete_mission) {
+          _argLog << "ERROR: Unable to delete mission queue with "
+                     "arrive_at_station of" +
+                         goal.target_station
+                  << std::endl;
         }
       }
+
+      auto free_bcs_result = ask_free_BCS(ask_ldb);
+      free_bcs = free_bcs_result.first;
+      connection_status = free_bcs_result.second;
+      _argLog << "   Received: " << free_bcs << std::endl;
+      _argLog << "   Server connection: " << connection_status << std::endl;
+      if (free_bcs == "none" || free_bcs == "") {
+        break;
+      }
     }
-    ROS_ERROR("No free BWS left");
+
+    _argLog << "No free BCS left" << std::endl;
     return BT::NodeStatus::FAILURE;
   }
+
+private:
+  BT::Blackboard::Ptr masterBlackboard;
+  std::ofstream &_argLog;
+  int retry_attempt = 0;
+  int ldb_connection_error_count = -1;
+  bool ask_ldb = true;
+  std::string free_bcs = "";
+  std::string connection_status = "";
+  bool delete_mission = false;
+  std::string robot_name, robot_location, action_result;
 };
 
 class delete_mir_mission_queue : public BT::SyncActionNode {
@@ -1252,12 +1284,14 @@ int main(int argc, char **argv) {
   factory.registerNodeType<call_for_help>("call_for_help");
   factory.registerNodeType<drop_cart>("drop_cart", std::ref(logFile));
   factory.registerNodeType<pickup_cart>("pickup_cart", std::ref(logFile));
-  factory.registerNodeType<plugin_ADS>("plugin_ADS");
+  factory.registerNodeType<plugin_ADS>("plugin_ADS", std::ref(logFile));
   factory.registerNodeType<plugin_BCS>("plugin_BCS");
-  factory.registerNodeType<plugout_ADS>("plugout_ADS");
+  factory.registerNodeType<plugout_ADS>("plugout_ADS", std::ref(logFile));
   factory.registerNodeType<plugout_BCS>("plugout_BCS");
-  factory.registerNodeType<recovery_arrive_BWS>("recovery_arrive_BWS");
-  factory.registerNodeType<recovery_arrive_BCS>("recovery_arrive_BCS");
+  factory.registerNodeType<recovery_arrive_BWS>("recovery_arrive_BWS",
+                                                std::ref(logFile));
+  factory.registerNodeType<recovery_arrive_BCS>("recovery_arrive_BCS",
+                                                std::ref(logFile));
   factory.registerNodeType<sleep_until_charged>("sleep_until_charged");
   factory.registerNodeType<delete_mir_mission_queue>(
       "delete_mir_mission_queue");
