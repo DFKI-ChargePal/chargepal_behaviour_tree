@@ -211,9 +211,8 @@ public:
     std::cin >> userInput;
     if (userInput == 'y') {
       return BT::NodeStatus::SUCCESS;
-    } else if (userInput == 'n') {
-      return BT::NodeStatus::FAILURE;
     }
+    return BT::NodeStatus::FAILURE;
   }
 };
 
@@ -348,9 +347,8 @@ public:
     std::cin >> userInput;
     if (userInput == 'y') {
       return BT::NodeStatus::SUCCESS;
-    } else if (userInput == 'n') {
-      return BT::NodeStatus::FAILURE;
     }
+    return BT::NodeStatus::FAILURE;
 
     /*
     if (assertLift == "down"){
@@ -1248,6 +1246,7 @@ int main(int argc, char **argv) {
   ros::init(argc, argv, "chargepal_bt");
   ros::NodeHandle nh;
   bool recovery_flag;
+  float server_timeout;
   std::ofstream logFile(ros::package::getPath("chargepal_bundle") +
                         "/logs/logfile.txt");
 
@@ -1357,21 +1356,30 @@ int main(int argc, char **argv) {
       if (status == BT::NodeStatus::SUCCESS || status == BT::NodeStatus::IDLE ||
           status == BT::NodeStatus::FAILURE) {
         bool job_server_update = false;
-        while (!job_server_update && ros::ok()) {
-          std::string job_status = enumToString(static_cast<JobEnum>(
-              masterBlackboard->get<JobEnum>("job_status")));
-          job_server_update = update_job_monitor(job_type, job_status);
-          ROS_INFO("Updating job monitor in server updated as:  %s",
-                   job_status.c_str());
+        if (status == BT::NodeStatus::FAILURE) {
+          ROS_INFO(
+              "Is technical help handled? Can the robot continue to receive "
+              "a job? Press y to continue");
+          char userInput;
+          std::cin >> userInput;
+          if (userInput == 'y') {
+            continue;
+          }
+          float start_time = ros::Time::now().toSec();
+          ros::param::get("/server_timeout", server_timeout);
+          while (!job_server_update && ros::ok() && server_timeout == 0) {
+            std::string job_status = enumToString(static_cast<JobEnum>(
+                masterBlackboard->get<JobEnum>("job_status")));
+            logFile << "Job competed with status: " << job_status << std::endl;
+            job_server_update = update_job_monitor(job_type, job_status);
+            logFile << "    Updating job monitor is: " << job_server_update
+                    << std::endl;
+            server_timeout = ros::Time::now().toSec() - start_time;
+          }
+          // Call for help if server timeout is > 10 minutes
+          job_requested.clear();
+          std::cout << "................................" << std::endl;
         }
-        job_requested.clear();
-        ROS_INFO("Job handled by behaviour tree.");
-        std::cout << "................................" << std::endl;
-      }
-
-      else {
-        ROS_ERROR("Behavior Tree tick failed.");
-        break;
       }
     }
     ros::spinOnce();
