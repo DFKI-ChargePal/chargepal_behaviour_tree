@@ -1150,26 +1150,6 @@ private:
   std::string robot_name, robot_location, action_result;
 };
 
-class delete_mir_mission_queue : public BT::SyncActionNode {
-public:
-  delete_mir_mission_queue(const std::string &name,
-                           const BT::NodeConfiguration &config)
-      : BT::SyncActionNode(name, config) {}
-
-  static PortsList providedPorts() { return {}; }
-
-  BT::NodeStatus tick() override {
-    BT::Blackboard::Ptr masterBlackboard = config().blackboard;
-    std::string robot_name = masterBlackboard->get<std::string>("robot_name");
-
-    bool delete_mission = delete_mission_queue();
-    if (delete_mission) {
-      return BT::NodeStatus::SUCCESS;
-    }
-    return BT::NodeStatus::FAILURE;
-  }
-};
-
 class error_count : public BT::SyncActionNode {
 public:
   error_count(const std::string &name, const BT::NodeConfiguration &config)
@@ -1248,10 +1228,11 @@ int main(int argc, char **argv) {
   bool recovery_flag;
   float server_timeout;
   std::ofstream logFile(ros::package::getPath("chargepal_bundle") +
-                        "/logs/logfile.txt");
+                        "/logs/chargepal_logs.txt");
 
   ros::package::getPath("chargepal_bundle");
-  logFile.open(ros::package::getPath("chargepal_bundle") + "/logs/logfile.txt",
+  logFile.open(ros::package::getPath("chargepal_bundle") +
+                   "/logs/chargepal_logs.txt",
                std::ofstream::out | std::ofstream::app);
 
   BehaviorTreeFactory factory;
@@ -1292,8 +1273,6 @@ int main(int argc, char **argv) {
   factory.registerNodeType<recovery_arrive_BCS>("recovery_arrive_BCS",
                                                 std::ref(logFile));
   factory.registerNodeType<sleep_until_charged>("sleep_until_charged");
-  factory.registerNodeType<delete_mir_mission_queue>(
-      "delete_mir_mission_queue");
   factory.registerNodeType<error_count>("error_count");
   factory.registerNodeType<time_sleep>("time_sleep");
 
@@ -1329,7 +1308,7 @@ int main(int argc, char **argv) {
     if (!job_requested.empty()) {
       logFile.close();
       logFile.open(ros::package::getPath("chargepal_bundle") +
-                       "/logs/logfile.txt",
+                       "/logs/chargepal_logs.txt",
                    std::ofstream::out | std::ofstream::trunc);
 
       std::string job_type = job_requested["job_type"];
@@ -1359,7 +1338,7 @@ int main(int argc, char **argv) {
         if (status == BT::NodeStatus::FAILURE) {
           ROS_INFO(
               "Is technical help handled? Can the robot continue to receive "
-              "a job? Press y to continue");
+              "a job for the above failed job? Press y to continue");
           char userInput;
           std::cin >> userInput;
           if (userInput == 'y') {

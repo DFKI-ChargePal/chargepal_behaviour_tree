@@ -381,8 +381,8 @@ std::pair<std::string, std::string> ask_free_BCS(const bool &ask_ldb) {
 }
 
 /**
- * @brief This function calls the service to ask the mir platform if the status
- * of assert lift
+ * @brief This function calls the service to ask the mir platform if the
+ * status of assert lift
  *
  * @param robot_name: the name of the robot
  * @return returns a boolean of assert lift value
@@ -430,8 +430,8 @@ std::string fetch_job() {
 }
 
 /**
- * @brief This function calls the service to update the job monitor in the local
- * server
+ * @brief This function calls the service to update the job monitor in the
+ * local server
  *
  * @return returns a boolean of update success value
  */
@@ -479,8 +479,8 @@ bool delete_mission_queue() {
 }
 
 /**
- * @brief This function calls the service to fetch the booking time of the cart
- * in mseconds
+ * @brief This function calls the service to fetch the booking time of the
+ * cart in mseconds
  *
  * @param cart_name: the name of the cart
  * @return returns the time in mseconds
@@ -530,14 +530,16 @@ bool check_ready_to_plugin(const std::string &station_name) {
  * @return returns the corresponding string
  */
 std::string enumToString(JobEnum value) {
+  std::string set_string = "";
   switch (value) {
   case JobEnum::ONGOING:
-    return "Ongoing";
+    set_string = "Ongoing";
   case JobEnum::SUCCESS:
-    return "Success";
+    set_string = "Success";
   case JobEnum::FAILURE:
-    return "Failure";
+    set_string = "Failure";
   case JobEnum::RECOVERY:
-    return "Recovery";
+    set_string = "Recovery";
   }
+  return set_string;
 }
