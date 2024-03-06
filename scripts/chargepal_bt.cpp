@@ -746,7 +746,7 @@ public:
     target_station = masterBlackboard->get<std::string>("target_station");
 
     if (sim_flag) {
-      _argLog << "Performing plugin_ADS at" + target_station << std::endl;
+      _argLog << "Performing plugin_ADS at " + target_station << std::endl;
       set_robot_value(robot_name, "ongoing_action", "plugin_charger_ads");
       ros::Duration(3).sleep();
       set_robot_value(robot_name, "ongoing_action", "none");
@@ -1344,25 +1344,26 @@ int main(int argc, char **argv) {
           if (userInput == 'y') {
             continue;
           }
-          float start_time = ros::Time::now().toSec();
-          ros::param::get("/server_timeout", server_timeout);
-          while (!job_server_update && ros::ok() && server_timeout == 0) {
-            std::string job_status = enumToString(static_cast<JobEnum>(
-                masterBlackboard->get<JobEnum>("job_status")));
-            logFile << "Job competed with status: " << job_status << std::endl;
-            job_server_update = update_job_monitor(job_type, job_status);
-            logFile << "    Updating job monitor is: " << job_server_update
-                    << std::endl;
-            server_timeout = ros::Time::now().toSec() - start_time;
-          }
-          // Call for help if server timeout is > 10 minutes
-          job_requested.clear();
-          std::cout << "................................" << std::endl;
         }
+        float start_time = ros::Time::now().toSec();
+        ros::param::get("/server_timeout", server_timeout);
+        while (!job_server_update && ros::ok() && server_timeout > 0) {
+          std::string job_status = enumToString(static_cast<JobEnum>(
+              masterBlackboard->get<JobEnum>("job_status")));
+          logFile << "Job competed with status: " << job_status << std::endl;
+          job_server_update = update_job_monitor(job_type, job_status);
+          logFile << "    Updating job monitor is: " << job_server_update
+                  << std::endl;
+          server_timeout = ros::Time::now().toSec() - start_time;
+        }
+        // Call for help if server timeout is > 10 minutes
+        job_requested.clear();
+        std::cout << "................................" << std::endl;
       }
     }
-    ros::spinOnce();
   }
+
+  ros::spinOnce();
 
   // Exit the ROS node
   ros::shutdown();
