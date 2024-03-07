@@ -454,31 +454,6 @@ bool update_job_monitor(const std::string &job_type, std::string &job_status) {
 }
 
 /**
- * @brief This function calls the service to delete the queue actions in mir
- * platform
- *
- * @return returns a boolean of update success
- */
-bool delete_mission_queue() {
-  ros::NodeHandle n;
-  ros::ServiceClient client_mir_rapi =
-      n.serviceClient<chargepal_services::deleteMirMission>(
-          "/mir_rest_api/delete_mission_queue");
-  chargepal_services::deleteMirMission srv_mir_rapi;
-  if (client_mir_rapi.call(srv_mir_rapi)) {
-    if (srv_mir_rapi.response.success == false) {
-      ROS_ERROR("mir_delete_mission service failed");
-      return false;
-    } else {
-      return true;
-    }
-  } else {
-    ROS_ERROR("Failed to service call mir_delete_mission");
-    return false;
-  }
-}
-
-/**
  * @brief This function calls the service to fetch the booking time of the
  * cart in mseconds
  *
@@ -526,20 +501,39 @@ bool check_ready_to_plugin(const std::string &station_name) {
 /**
  * @brief This function converts the Job enum to string
  *
- * @param value: the value of the job enum
+ * @param job_value: the value of the job enum
  * @return returns the corresponding string
  */
-std::string enumToString(JobEnum value) {
+std::string enumToString(const int value) {
+  std::cout << "The value is" << value << std::endl;
+
   std::string set_string = "";
   switch (value) {
-  case JobEnum::ONGOING:
+  case 0:
     set_string = "Ongoing";
-  case JobEnum::SUCCESS:
+    break;
+  case 1:
     set_string = "Success";
-  case JobEnum::FAILURE:
-    set_string = "Failure";
-  case JobEnum::RECOVERY:
+    break;
+  case 2:
     set_string = "Recovery";
+    break;
+  case 3:
+    set_string = "Failure";
+    break;
+  default:
+    std::cout << "Unknown job status" << std::endl;
+    break;
   }
+  std::cout << set_string << std::endl;
   return set_string;
+}
+
+void enter_log_file(const std::string content) {
+  std::ofstream log_file;
+  log_file.open(ros::package::getPath("chargepal_bundle") +
+                    "/logs/chargepal_logs.txt",
+                std::ios::app);
+  log_file << content << std::endl;
+  log_file.close();
 }

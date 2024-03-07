@@ -1,6 +1,15 @@
 #ifndef MY_FUNCTIONS_H
 #define MY_FUNCTIONS_H
 
+#include "behaviortree_cpp/action_node.h"
+#include "behaviortree_cpp/bt_factory.h"
+#include "behaviortree_cpp/condition_node.h"
+#include "behaviortree_cpp/controls/reactive_fallback.h"
+#include "behaviortree_cpp/decorators/delay_node.h"
+#include "behaviortree_cpp/exceptions.h"
+#include "behaviortree_cpp/loggers/bt_observer.h"
+#include "behaviortree_cpp/loggers/groot2_publisher.h"
+#include "behaviortree_cpp/tree_node.h"
 #include "chargepal_actions/ArriveAtHomeAction.h"
 #include "chargepal_actions/ArriveAtStationAction.h"
 #include "chargepal_actions/CallForHelpAction.h"
@@ -17,6 +26,7 @@
 #include <cctype>
 #include <chrono>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <list>
 #include <map>
@@ -26,16 +36,6 @@
 #include <thread>
 #include <unordered_map>
 #include <vector>
-
-#include "behaviortree_cpp/action_node.h"
-#include "behaviortree_cpp/bt_factory.h"
-#include "behaviortree_cpp/condition_node.h"
-#include "behaviortree_cpp/controls/reactive_fallback.h"
-#include "behaviortree_cpp/decorators/delay_node.h"
-#include "behaviortree_cpp/exceptions.h"
-#include "behaviortree_cpp/loggers/bt_observer.h"
-#include "behaviortree_cpp/loggers/groot2_publisher.h"
-#include "behaviortree_cpp/tree_node.h"
 
 #include <chargepal_services/askFreeBCS.h>
 #include <chargepal_services/askFreeBWS.h>
@@ -55,7 +55,7 @@ using namespace std::chrono_literals;
 using namespace std::chrono;
 using json = nlohmann::json;
 
-enum class JobEnum { ONGOING, SUCCESS, RECOVERY, FAILURE };
+enum class JobEnum { ONGOING = 0, SUCCESS = 1, RECOVERY = 2, FAILURE = 3 };
 
 std::string read_robot_value(const std::string &name, const std::string &key);
 std::string read_cart_value(const std::string &name, const std::string &key);
@@ -63,7 +63,6 @@ bool set_robot_value(const std::string &name, const std::string &key,
                      const std::string &value);
 bool set_cart_value(const std::string &name, const std::string &key,
                     const std::string &value);
-bool delete_mission_queue();
 std::pair<std::string, std::string> ask_free_BWS(const bool &ask_ldb);
 std::pair<std::string, std::string> ask_free_BCS(const bool &ask_ldb);
 std::string read_assertLift_value(const std::string &cart_name);
@@ -72,10 +71,10 @@ int get_operation_time(const std::string &robot);
 bool reset_station_blocker(const std::string &station);
 bool update_job_monitor(const std::string &job_type, std::string &job_status);
 void update_robot_charge(const std::string &robot_name);
-std::string enumToString(JobEnum value);
+std::string enumToString(const int value);
 bool check_ready_to_plugin(const std::string &station_name);
 bool update_rdb_copy();
-
+void enter_log_file(const std::string content);
 template <typename T> std::string convertToString(const T &value) {
   if constexpr (std::is_convertible_v<T, std::string>) {
     return value;

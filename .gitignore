@@ -1,0 +1,6 @@
+__pycache__
+BehaviorTree.CPP
+SQLiteCpp
+*.pyc
+*test*.py*
+*Test*

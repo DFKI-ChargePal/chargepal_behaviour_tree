@@ -449,8 +449,7 @@ public:
     aas.sendGoal(goal);
     set_robot_value(robot_name, "ongoing_action",
                     "arrive_at_station_" + goal.target_station);
-    _argLog << "Performing arrive_at_station_" + goal.target_station
-            << std::endl;
+    enter_log_file("Performing arrive_at_station_" + goal.target_station);
     bool aas_action = aas.waitForResult(ros::Duration(900.0));
     if (aas_action) {
       chargepal_actions::ArriveAtStationResult result = *aas.getResult();
@@ -473,30 +472,21 @@ public:
       }
       action_result = result.action_status;
     }
-    _argLog << "arrive_at_station_" + goal.target_station + " status is " +
-                   action_result
-            << std::endl;
-    while (!delete_mission) {
-      delete_mission = delete_mission_queue();
-      if (!delete_mission) {
-        _argLog
-            << "ERROR: Unable to delete mission queue with arrive_at_station_" +
-                   goal.target_station
-            << std::endl;
-      }
-    }
+    enter_log_file("arrive_at_station_" + goal.target_station + " status is " +
+                   action_result);
+
     set_robot_value(robot_name, "ongoing_action", "none");
     set_robot_value(robot_name, "previous_action",
                     "arrive_at_station_" + goal.target_station + "_" +
                         action_result);
     set_robot_value(robot_name, "robot_location", robot_location);
-    _argLog << std::endl;
+    // enter_log_file(std::endl;
     return BT::NodeStatus::FAILURE;
   }
 
 private:
   std::ofstream &_argLog;
-  bool delete_mission = false;
+
   std::string job, charger, robot_name, source_station, target_station,
       robot_location, action_result;
 };
@@ -528,8 +518,7 @@ public:
 
     aah.sendGoal(goal);
     set_robot_value(robot_name, "ongoing_action", "go_home");
-    _argLog << "Performing arrive_at_home to" + goal.target_station
-            << std::endl;
+    enter_log_file("Performing arrive_at_home to" + goal.target_station);
 
     bool aah_action = aah.waitForResult(ros::Duration(900.0));
     if (aah_action) {
@@ -544,18 +533,9 @@ public:
       }
       action_result = result.action_status;
     }
-    _argLog << "arrive_at_home to" + goal.target_station + " status is " +
-                   action_result
-            << std::endl;
-    while (!delete_mission) {
-      delete_mission = delete_mission_queue();
-      if (!delete_mission) {
-        _argLog
-            << "ERROR: Unable to delete mission queue with arrive_at_home of" +
-                   goal.target_station
-            << std::endl;
-      }
-    }
+    enter_log_file("arrive_at_home to" + goal.target_station + " status is " +
+                   action_result);
+
     set_robot_value(robot_name, "ongoing_action", "none");
     set_robot_value(robot_name, "previous_action",
                     "go_home_" + goal.target_station + "_" + action_result);
@@ -568,7 +548,7 @@ private:
   std::ofstream &_argLog;
   chargepal_actions::ArriveAtHomeGoal goal;
   chargepal_actions::ArriveAtHomeResult result;
-  bool delete_mission = false;
+
   std::string robot_name, robot_location, action_result, robot_number;
 };
 
@@ -622,7 +602,7 @@ public:
 
     plc.sendGoal(goal);
     set_robot_value(robot_name, "ongoing_action", "place_charger");
-    _argLog << "Performing place_charger of" + goal.charger_name << std::endl;
+    enter_log_file("Performing place_charger of " + goal.charger_name);
     bool plc_action = plc.waitForResult(ros::Duration(900.0));
     if (plc_action) {
       result = *plc.getResult();
@@ -638,22 +618,13 @@ public:
       action_result = result.action_status;
     }
 
-    _argLog << "place_charger of" + goal.charger_name + " status is " +
-                   action_result
-            << std::endl;
-    while (!delete_mission) {
-      delete_mission = delete_mission_queue();
-      if (!delete_mission) {
-        _argLog
-            << "ERROR: Unable to delete mission queue with place_charger of" +
-                   goal.charger_name
-            << std::endl;
-      }
-    }
+    enter_log_file("place_charger of" + goal.charger_name + " status is " +
+                   action_result);
+
     set_robot_value(robot_name, "ongoing_action", "none");
     set_robot_value(robot_name, "previous_action",
                     "place_charger_" + goal.charger_name + "_" + action_result);
-    _argLog << std::endl;
+    // enter_log_file(std::endl;
     return BT::NodeStatus::FAILURE;
   }
 
@@ -662,7 +633,7 @@ private:
   std::ofstream &_argLog;
   chargepal_actions::PlaceChargerGoal goal;
   chargepal_actions::PlaceChargerResult result;
-  bool delete_mission = false;
+
   std::string charger, robot_name, robot_location, action_result;
 };
 
@@ -689,7 +660,7 @@ public:
 
     puc.sendGoal(goal);
     set_robot_value(robot_name, "ongoing_action", "pickup_charger");
-    _argLog << "Performing pickup_charger of" + goal.charger_name << std::endl;
+    enter_log_file("Performing pickup_charger of " + goal.charger_name);
     bool puc_action = puc.waitForResult(ros::Duration(900.0));
     if (puc_action) {
       chargepal_actions::PickUpChargerResult result = *puc.getResult();
@@ -704,21 +675,12 @@ public:
       }
       action_result = result.action_status;
     }
-    _argLog << "pickup_charger of" + goal.charger_name + " status is " +
-                   action_result
-            << std::endl;
-    while (!delete_mission) {
-      delete_mission = delete_mission_queue();
-      if (!delete_mission) {
-        _argLog
-            << "ERROR: Unable to delete mission queue with pickup_charger of" +
-                   goal.charger_name
-            << std::endl;
-      }
-    }
+    enter_log_file("pickup_charger of" + goal.charger_name + " status is " +
+                   action_result);
+
     set_robot_value(robot_name, "ongoing_action", "none");
     set_robot_value(robot_name, "previous_action", "pickup_charger_failure");
-    _argLog << std::endl;
+    // enter_log_file(std::endl;
     return BT::NodeStatus::FAILURE;
   }
 
@@ -726,7 +688,7 @@ private:
   BT::Blackboard::Ptr masterBlackboard;
   std::ofstream &_argLog;
   chargepal_actions::PickUpChargerGoal goal;
-  bool delete_mission = false;
+
   std::string charger, robot_name, robot_location, action_result;
 };
 
@@ -744,11 +706,11 @@ public:
     charger = masterBlackboard->get<std::string>("charger");
     robot_name = masterBlackboard->get<std::string>("robot_name");
     target_station = masterBlackboard->get<std::string>("target_station");
+    enter_log_file("Performing plugin_ADS at " + target_station);
+    if (!sim_flag) {
 
-    if (sim_flag) {
-      _argLog << "Performing plugin_ADS at " + target_station << std::endl;
       set_robot_value(robot_name, "ongoing_action", "plugin_charger_ads");
-      ros::Duration(3).sleep();
+      ros::Duration(10).sleep();
       set_robot_value(robot_name, "ongoing_action", "none");
       set_robot_value(robot_name, "previous_action", "plugin_charger_ads");
       set_cart_value(charger, "plugged", "true");
@@ -760,7 +722,6 @@ public:
 
       pi_ads.sendGoal(goal);
       set_robot_value(robot_name, "ongoing_action", "plugin_charger_ads");
-      _argLog << "Performing plugin_ADS at" + target_station << std::endl;
 
       pi_ads_action = pi_ads.waitForResult(ros::Duration(900.0));
       if (pi_ads_action) {
@@ -788,7 +749,7 @@ public:
                         "plugin_charger_ads_failure");
         return BT::NodeStatus::FAILURE;
       }*/
-
+      enter_log_file("Plugin_ADS at " + location + "failed!");
       set_robot_value(robot_name, "ongoing_action", "none");
       set_robot_value(robot_name, "previous_action",
                       "plugin_charger_ads_failure");
@@ -858,11 +819,10 @@ public:
     charger = masterBlackboard->get<std::string>("charger");
     robot_name = masterBlackboard->get<std::string>("robot_name");
     location = read_robot_value(robot_name, "robot_location");
-
-    if (sim_flag) {
-      _argLog << "Performing plugout_ADS at" + location << std::endl;
+    enter_log_file("Performing plugout_ADS at " + location);
+    if (!sim_flag) {
       set_robot_value(robot_name, "ongoing_action", "plugout_charger_ads");
-      ros::Duration(3).sleep();
+      ros::Duration(10).sleep();
       set_robot_value(robot_name, "ongoing_action", "none");
       set_robot_value(robot_name, "previous_action", "plugout_charger_ads");
       set_cart_value(charger, "plugged", "false");
@@ -873,7 +833,6 @@ public:
           po_ads("disconnect_from_car", true);
       po_ads.waitForServer();
       po_ads.sendGoal(goal);
-      _argLog << "Performing plugout_ADS at" + location << std::endl;
       set_robot_value(robot_name, "ongoing_action", "plugout_charger_ads");
       po_ads_action = po_ads.waitForResult(ros::Duration(900.0));
       if (po_ads_action) {
@@ -902,7 +861,7 @@ public:
                         "plugout_charger_ads_failure");
         return BT::NodeStatus::FAILURE;
       }*/
-
+      enter_log_file("Plugout_ADS at " + location + "failed!");
       set_robot_value(robot_name, "ongoing_action", "none");
       set_robot_value(robot_name, "previous_action",
                       "plugout_charger_ads_failure");
@@ -975,13 +934,13 @@ public:
     actionlib::SimpleActionClient<chargepal_actions::ArriveAtStationAction> aas(
         "arrive_at_station", true);
 
-    _argLog << "Asking for free BWS" << std::endl;
+    enter_log_file("Asking for free BWS");
 
     auto free_bws_result = ask_free_BWS(ask_ldb);
     free_bws = free_bws_result.first;
     connection_status = free_bws_result.second;
-    _argLog << "   Received: " << free_bws << std::endl;
-    _argLog << "   Server connection: " << connection_status << std::endl;
+    enter_log_file("   Received: " + free_bws);
+    enter_log_file("   Server connection: " + connection_status);
 
     while (free_bws != "none" || free_bws != "") {
 
@@ -992,8 +951,8 @@ public:
         aas.sendGoal(goal);
         set_robot_value(robot_name, "ongoing_action",
                         "recovery_arrive_" + free_bws);
-        _argLog << "Performing arrive_at_station to" + goal.target_station
-                << std::endl;
+        enter_log_file("Performing arrive_at_station to " +
+                       goal.target_station);
         bool aas_action = aas.waitForResult(ros::Duration(900.0));
         if (aas_action) {
           chargepal_actions::ArriveAtStationResult result = *aas.getResult();
@@ -1015,31 +974,22 @@ public:
           }
           action_result = result.action_status;
         }
-        _argLog << "arrive_at_station to" + goal.target_station +
-                       " status is " + action_result
-                << std::endl;
+        enter_log_file("arrive_at_station to" + goal.target_station +
+                       " status is " + action_result);
         retry_attempt += 1;
-        delete_mission = delete_mission_queue();
-
-        if (!delete_mission) {
-          _argLog << "ERROR: Unable to delete mission queue with "
-                     "arrive_at_station of" +
-                         goal.target_station
-                  << std::endl;
-        }
       }
 
       auto free_bws_result = ask_free_BWS(ask_ldb);
       free_bws = free_bws_result.first;
       connection_status = free_bws_result.second;
-      _argLog << "   Received: " << free_bws << std::endl;
-      _argLog << "   Server connection: " << connection_status << std::endl;
+      enter_log_file("   Received: " + free_bws);
+      enter_log_file("   Server connection: " + connection_status);
       if (free_bws == "none" || free_bws == "") {
         break;
       }
     }
 
-    _argLog << "No free BWS left" << std::endl;
+    enter_log_file("No free BWS left");
     return BT::NodeStatus::FAILURE;
   }
 
@@ -1051,7 +1001,7 @@ private:
   bool ask_ldb = true;
   std::string free_bws = "";
   std::string connection_status = "";
-  bool delete_mission = false;
+
   std::string robot_name, robot_location, action_result;
 };
 
@@ -1071,13 +1021,13 @@ public:
     actionlib::SimpleActionClient<chargepal_actions::ArriveAtStationAction> aas(
         "arrive_at_station", true);
 
-    _argLog << "Asking for free BCS" << std::endl;
+    enter_log_file("Asking for free BCS");
 
     auto free_bcs_result = ask_free_BCS(ask_ldb);
     free_bcs = free_bcs_result.first;
     connection_status = free_bcs_result.second;
-    _argLog << "   Received: " << free_bcs << std::endl;
-    _argLog << "   Server connection: " << connection_status << std::endl;
+    enter_log_file("   Received: " + free_bcs);
+    enter_log_file("   Server connection: " + connection_status);
 
     while (free_bcs != "none" || free_bcs != "") {
       while (retry_attempt < 3) {
@@ -1087,8 +1037,8 @@ public:
         aas.sendGoal(goal);
         set_robot_value(robot_name, "ongoing_action",
                         "recovery_arrive_" + free_bcs);
-        _argLog << "Performing arrive_at_station to" + goal.target_station
-                << std::endl;
+        enter_log_file("Performing arrive_at_station to " +
+                       goal.target_station);
         bool aas_action = aas.waitForResult(ros::Duration(900.0));
         if (aas_action) {
           chargepal_actions::ArriveAtStationResult result = *aas.getResult();
@@ -1110,31 +1060,22 @@ public:
           }
           action_result = result.action_status;
         }
-        _argLog << "arrive_at_station to" + goal.target_station +
-                       " status is " + action_result
-                << std::endl;
+        enter_log_file("arrive_at_station to" + goal.target_station +
+                       " status is " + action_result);
         retry_attempt += 1;
-        delete_mission = delete_mission_queue();
-
-        if (!delete_mission) {
-          _argLog << "ERROR: Unable to delete mission queue with "
-                     "arrive_at_station of" +
-                         goal.target_station
-                  << std::endl;
-        }
       }
 
       auto free_bcs_result = ask_free_BCS(ask_ldb);
       free_bcs = free_bcs_result.first;
       connection_status = free_bcs_result.second;
-      _argLog << "   Received: " << free_bcs << std::endl;
-      _argLog << "   Server connection: " << connection_status << std::endl;
+      enter_log_file("   Received: " + free_bcs);
+      enter_log_file("   Server connection: " + connection_status);
       if (free_bcs == "none" || free_bcs == "") {
         break;
       }
     }
 
-    _argLog << "No free BCS left" << std::endl;
+    enter_log_file("No free BCS left");
     return BT::NodeStatus::FAILURE;
   }
 
@@ -1146,7 +1087,7 @@ private:
   bool ask_ldb = true;
   std::string free_bcs = "";
   std::string connection_status = "";
-  bool delete_mission = false;
+
   std::string robot_name, robot_location, action_result;
 };
 
@@ -1231,9 +1172,9 @@ int main(int argc, char **argv) {
                         "/logs/chargepal_logs.txt");
 
   ros::package::getPath("chargepal_bundle");
-  logFile.open(ros::package::getPath("chargepal_bundle") +
-                   "/logs/chargepal_logs.txt",
-               std::ofstream::out | std::ofstream::app);
+  // logFile.open(ros::package::getPath("chargepal_bundle") +
+  //                 "/logs/chargepal_logs.txt",
+  //             std::ofstream::out | std::ofstream::app);
 
   BehaviorTreeFactory factory;
   BT::Blackboard::Ptr masterBlackboard = BT::Blackboard::create();
@@ -1306,10 +1247,11 @@ int main(int argc, char **argv) {
     }
 
     if (!job_requested.empty()) {
-      logFile.close();
+      // logFile.close();
       logFile.open(ros::package::getPath("chargepal_bundle") +
                        "/logs/chargepal_logs.txt",
                    std::ofstream::out | std::ofstream::trunc);
+      logFile.close();
 
       std::string job_type = job_requested["job_type"];
       std::string robot_name = job_requested["robot_name"];
@@ -1322,7 +1264,7 @@ int main(int argc, char **argv) {
       masterBlackboard->set("charger", charger);
       masterBlackboard->set("source_station", source_station);
       masterBlackboard->set("target_station", target_station);
-      masterBlackboard->set("job_status", JobEnum::ONGOING);
+      masterBlackboard->set("job_status", 0);
 
       ros::param::get("/recovery_enabled", recovery_flag);
       masterBlackboard->set("recovery_enabled", recovery_flag);
@@ -1348,12 +1290,13 @@ int main(int argc, char **argv) {
         float start_time = ros::Time::now().toSec();
         ros::param::get("/server_timeout", server_timeout);
         while (!job_server_update && ros::ok() && server_timeout > 0) {
-          std::string job_status = enumToString(static_cast<JobEnum>(
-              masterBlackboard->get<JobEnum>("job_status")));
-          logFile << "Job competed with status: " << job_status << std::endl;
+          std::string job_status =
+              enumToString(masterBlackboard->get<int>("job_status"));
+
+          enter_log_file("Job competed with status: " + job_status);
           job_server_update = update_job_monitor(job_type, job_status);
-          logFile << "    Updating job monitor is: " << job_server_update
-                  << std::endl;
+
+          enter_log_file("    Updating job monitor is: " + job_server_update);
           server_timeout = ros::Time::now().toSec() - start_time;
         }
         // Call for help if server timeout is > 10 minutes

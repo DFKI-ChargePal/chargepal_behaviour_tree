@@ -11,7 +11,6 @@
         <Action ID="arrive_at_station" editable="true"/>
         <Condition ID="askAssertLift" editable="true"/>
         <Action ID="call_for_help" editable="true"/>
-        <Action ID="delete_mir_mission_queue" editable="true"/>
         <Action ID="drop_cart" editable="true"/>
         <Action ID="error_count" editable="true"/>
         <Action ID="go_home" editable="true"/>
