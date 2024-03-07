@@ -707,7 +707,7 @@ public:
     robot_name = masterBlackboard->get<std::string>("robot_name");
     target_station = masterBlackboard->get<std::string>("target_station");
     enter_log_file("Performing plugin_ADS at " + target_station);
-    if (!sim_flag) {
+    if (sim_flag) {
 
       set_robot_value(robot_name, "ongoing_action", "plugin_charger_ads");
       ros::Duration(10).sleep();
@@ -749,7 +749,7 @@ public:
                         "plugin_charger_ads_failure");
         return BT::NodeStatus::FAILURE;
       }*/
-      enter_log_file("Plugin_ADS at " + location + "failed!");
+      enter_log_file("Plugin_ADS at " + target_station + "failed!");
       set_robot_value(robot_name, "ongoing_action", "none");
       set_robot_value(robot_name, "previous_action",
                       "plugin_charger_ads_failure");
@@ -820,7 +820,7 @@ public:
     robot_name = masterBlackboard->get<std::string>("robot_name");
     location = read_robot_value(robot_name, "robot_location");
     enter_log_file("Performing plugout_ADS at " + location);
-    if (!sim_flag) {
+    if (sim_flag) {
       set_robot_value(robot_name, "ongoing_action", "plugout_charger_ads");
       ros::Duration(10).sleep();
       set_robot_value(robot_name, "ongoing_action", "none");
