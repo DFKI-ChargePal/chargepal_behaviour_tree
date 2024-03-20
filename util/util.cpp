@@ -537,3 +537,15 @@ void enter_log_file(const std::string content) {
   log_file << content << std::endl;
   log_file.close();
 }
+
+void update_gui_config(const std::string key, const std::string value) {
+  std::string gui_yaml_path =
+      ros::package::getPath("chargepal_monitor_gui") + "/cfg/gui.yaml";
+
+  YAML::Node data = YAML::LoadFile(gui_yaml_path);
+
+  data[key] = value;
+
+  std::ofstream fout(gui_yaml_path);
+  fout << data;
+}

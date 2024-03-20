@@ -17,6 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
   roslib
 )
 
+find_package(yaml-cpp REQUIRED)
 
 catkin_package(
   CATKIN_DEPENDS
@@ -32,6 +33,7 @@ include_directories(
   include
   ${catkin_INCLUDE_DIRS}
   ${behaviortree_cpp_INCLUDE_DIRS}
+  ${YAML_CPP_INCLUDE_DIRS}
 )
 
 add_executable(${PROJECT_NAME} "util/util.cpp" "scripts/chargepal_bt.cpp")
@@ -46,9 +48,9 @@ add_dependencies(
 target_link_libraries(
   ${PROJECT_NAME}
   ${catkin_LIBRARIES}
+  ${YAML_CPP_LIBRARIES}
   SQLiteCpp
   )
-
 
 find_package(ament_cmake QUIET)
 

@@ -24,19 +24,6 @@
 #include <actionlib/client/simple_action_client.h>
 #include <actionlib/client/terminal_state.h>
 #include <cctype>
-#include <chrono>
-#include <fstream>
-#include <iomanip>
-#include <iostream>
-#include <list>
-#include <map>
-#include <nlohmann/json.hpp>
-#include <ros/package.h>
-#include <string>
-#include <thread>
-#include <unordered_map>
-#include <vector>
-
 #include <chargepal_services/askFreeBCS.h>
 #include <chargepal_services/askFreeBWS.h>
 #include <chargepal_services/askOperationTime.h>
@@ -50,6 +37,20 @@
 #include <chargepal_services/updateJobMonitor.h>
 #include <chargepal_services/updateRdbCopy.h>
 #include <chargepal_services/verifyRdbSync.h>
+#include <chrono>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <list>
+#include <map>
+#include <nlohmann/json.hpp>
+#include <ros/package.h>
+#include <string>
+#include <thread>
+#include <unordered_map>
+#include <variant>
+#include <vector>
+#include <yaml-cpp/yaml.h>
 using namespace BT;
 using namespace std::chrono_literals;
 using namespace std::chrono;
@@ -75,12 +76,9 @@ std::string enumToString(const int value);
 bool check_ready_to_plugin(const std::string &station_name);
 bool update_rdb_copy();
 void enter_log_file(const std::string content);
+void update_gui_config(const std::string key, const std::string value);
 template <typename T> std::string convertToString(const T &value) {
-  if constexpr (std::is_convertible_v<T, std::string>) {
-    return value;
-  } else {
-    return std::to_string(value);
-  }
+  return value;
 }
 
 #endif

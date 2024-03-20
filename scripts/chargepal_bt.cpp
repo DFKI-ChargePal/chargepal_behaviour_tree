@@ -14,6 +14,7 @@ public:
 
     if (job == "BRING_CHARGER") {
       std::cout << "BRING CHARGER requested" << std::endl;
+      update_gui_config("ongoing_job", "BRING_CHARGER");
       set_robot_value(robot_name, "current_job", "BRING_CHARGER");
       return NodeStatus::SUCCESS;
     } else {
@@ -36,6 +37,7 @@ public:
     std::string job = masterBlackboard->get<std::string>("job_type");
     if (job == "RECHARGE_CHARGER") {
       set_robot_value(robot_name, "current_job", "RECHARGE_CHARGER");
+      update_gui_config("ongoing_job", "RECHARGE_CHARGER");
       return NodeStatus::SUCCESS;
     } else {
       return NodeStatus::FAILURE;
@@ -56,6 +58,7 @@ public:
     std::string job = masterBlackboard->get<std::string>("job_type");
     if (job == "RECHARGE_SELF") {
       set_robot_value(robot_name, "current_job", "RECHARGE_SELF");
+      update_gui_config("ongoing_job", "RECHARGE_SELF");
       return NodeStatus::SUCCESS;
     } else {
       return NodeStatus::FAILURE;
@@ -76,6 +79,7 @@ public:
     std::string job = masterBlackboard->get<std::string>("job_type");
     if (job == "STOW_CHARGER") {
       set_robot_value(robot_name, "current_job", "STOW_CHARGER");
+      update_gui_config("ongoing_job", "STOW_CHARGER");
       return NodeStatus::SUCCESS;
     } else {
       return NodeStatus::FAILURE;
@@ -450,6 +454,8 @@ public:
     set_robot_value(robot_name, "ongoing_action",
                     "arrive_at_station_" + goal.target_station);
     enter_log_file("Performing arrive_at_station_" + goal.target_station);
+    update_gui_config("ongoing_action",
+                      "Performing arrive_at_station_" + goal.target_station);
     bool aas_action = aas.waitForResult(ros::Duration(900.0));
     if (aas_action) {
       chargepal_actions::ArriveAtStationResult result = *aas.getResult();
@@ -480,6 +486,8 @@ public:
                     "arrive_at_station_" + goal.target_station + "_" +
                         action_result);
     set_robot_value(robot_name, "robot_location", robot_location);
+    masterBlackboard->set("failed_action",
+                          "arrive_at_station_" + goal.target_station);
     // enter_log_file(std::endl;
     return BT::NodeStatus::FAILURE;
   }
@@ -519,7 +527,8 @@ public:
     aah.sendGoal(goal);
     set_robot_value(robot_name, "ongoing_action", "go_home");
     enter_log_file("Performing arrive_at_home to" + goal.target_station);
-
+    update_gui_config("ongoing_action",
+                      "Performing arrive_at_home to" + goal.target_station);
     bool aah_action = aah.waitForResult(ros::Duration(900.0));
     if (aah_action) {
       result = *aah.getResult();
@@ -540,6 +549,7 @@ public:
     set_robot_value(robot_name, "previous_action",
                     "go_home_" + goal.target_station + "_" + action_result);
     set_robot_value(robot_name, "robot_location", robot_location);
+    masterBlackboard->set("failed_action", "go_home_" + goal.target_station);
     return BT::NodeStatus::FAILURE;
   }
 
@@ -561,7 +571,7 @@ public:
 
   BT::NodeStatus tick() override {
     int retry_attempt = 0;
-
+    update_gui_config("ongoing_action", "Calling for help...");
     actionlib::SimpleActionClient<chargepal_actions::CallForHelpAction> cfh(
         "call_for_help", true);
     chargepal_actions::CallForHelpGoal goal;
@@ -603,6 +613,8 @@ public:
     plc.sendGoal(goal);
     set_robot_value(robot_name, "ongoing_action", "place_charger");
     enter_log_file("Performing place_charger of " + goal.charger_name);
+    update_gui_config("ongoing_action",
+                      "Performing place_charger of " + goal.charger_name);
     bool plc_action = plc.waitForResult(ros::Duration(900.0));
     if (plc_action) {
       result = *plc.getResult();
@@ -625,6 +637,8 @@ public:
     set_robot_value(robot_name, "previous_action",
                     "place_charger_" + goal.charger_name + "_" + action_result);
     // enter_log_file(std::endl;
+    masterBlackboard->set("failed_action",
+                          "place_charger of" + goal.charger_name);
     return BT::NodeStatus::FAILURE;
   }
 
@@ -661,6 +675,8 @@ public:
     puc.sendGoal(goal);
     set_robot_value(robot_name, "ongoing_action", "pickup_charger");
     enter_log_file("Performing pickup_charger of " + goal.charger_name);
+    update_gui_config("ongoing_action",
+                      "Performing pickup_charger of " + goal.charger_name);
     bool puc_action = puc.waitForResult(ros::Duration(900.0));
     if (puc_action) {
       chargepal_actions::PickUpChargerResult result = *puc.getResult();
@@ -681,6 +697,8 @@ public:
     set_robot_value(robot_name, "ongoing_action", "none");
     set_robot_value(robot_name, "previous_action", "pickup_charger_failure");
     // enter_log_file(std::endl;
+    masterBlackboard->set("failed_action",
+                          "pickup_charger of" + goal.charger_name);
     return BT::NodeStatus::FAILURE;
   }
 
@@ -707,7 +725,9 @@ public:
     robot_name = masterBlackboard->get<std::string>("robot_name");
     target_station = masterBlackboard->get<std::string>("target_station");
     enter_log_file("Performing plugin_ADS at " + target_station);
-    if (!sim_flag) {
+    update_gui_config("ongoing_action",
+                      "Performing plugin_ADS at " + target_station);
+    if (sim_flag) {
 
       set_robot_value(robot_name, "ongoing_action", "plugin_charger_ads");
       ros::Duration(10).sleep();
@@ -749,10 +769,11 @@ public:
                         "plugin_charger_ads_failure");
         return BT::NodeStatus::FAILURE;
       }*/
-      enter_log_file("Plugin_ADS at " + location + "failed!");
+      enter_log_file("Plugin_ADS failed at" + target_station);
       set_robot_value(robot_name, "ongoing_action", "none");
       set_robot_value(robot_name, "previous_action",
                       "plugin_charger_ads_failure");
+      masterBlackboard->set("failed_action", "Plugin at" + target_station);
       return BT::NodeStatus::FAILURE;
     }
   }
@@ -820,7 +841,9 @@ public:
     robot_name = masterBlackboard->get<std::string>("robot_name");
     location = read_robot_value(robot_name, "robot_location");
     enter_log_file("Performing plugout_ADS at " + location);
-    if (!sim_flag) {
+    update_gui_config("ongoing_action",
+                      "Performing plugout_ADS at " + location);
+    if (sim_flag) {
       set_robot_value(robot_name, "ongoing_action", "plugout_charger_ads");
       ros::Duration(10).sleep();
       set_robot_value(robot_name, "ongoing_action", "none");
@@ -861,10 +884,11 @@ public:
                         "plugout_charger_ads_failure");
         return BT::NodeStatus::FAILURE;
       }*/
-      enter_log_file("Plugout_ADS at " + location + "failed!");
+      enter_log_file("Plugout_ADS failed at " + location);
       set_robot_value(robot_name, "ongoing_action", "none");
       set_robot_value(robot_name, "previous_action",
                       "plugout_charger_ads_failure");
+      masterBlackboard->set("failed_action", "Plugout at" + location);
       return BT::NodeStatus::FAILURE;
     }
   }
@@ -1265,6 +1289,7 @@ int main(int argc, char **argv) {
       masterBlackboard->set("source_station", source_station);
       masterBlackboard->set("target_station", target_station);
       masterBlackboard->set("job_status", 0);
+      masterBlackboard->set("failed_action", "");
 
       ros::param::get("/recovery_enabled", recovery_flag);
       masterBlackboard->set("recovery_enabled", recovery_flag);
@@ -1276,28 +1301,22 @@ int main(int argc, char **argv) {
 
       if (status == BT::NodeStatus::SUCCESS || status == BT::NodeStatus::IDLE ||
           status == BT::NodeStatus::FAILURE) {
+
         bool job_server_update = false;
-        if (status == BT::NodeStatus::FAILURE) {
-          ROS_INFO(
-              "Is technical help handled? Can the robot continue to receive "
-              "a job for the above failed job? Press y to continue");
-          char userInput;
-          std::cin >> userInput;
-          if (userInput == 'y') {
-            continue;
-          }
-        }
+        update_gui_config("ongoing_action", "");
         float start_time = ros::Time::now().toSec();
         ros::param::get("/server_timeout", server_timeout);
-        while (!job_server_update && ros::ok() && server_timeout > 0) {
+        while (!job_server_update && ros::ok()) {
           std::string job_status =
               enumToString(masterBlackboard->get<int>("job_status"));
 
-          enter_log_file("Job competed with status: " + job_status);
+          enter_log_file("Job completed with status: " + job_status);
           job_server_update = update_job_monitor(job_type, job_status);
+          std::cout << "The job update received is  :" << job_server_update
+                    << std::endl;
 
           enter_log_file("    Updating job monitor is: " + job_server_update);
-          server_timeout = ros::Time::now().toSec() - start_time;
+          // server_timeout = ros::Time::now().toSec() - start_time;
         }
         // Call for help if server timeout is > 10 minutes
         job_requested.clear();
