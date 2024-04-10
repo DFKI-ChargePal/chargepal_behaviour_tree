@@ -13,12 +13,12 @@
 #include "chargepal_actions/ArriveAtHomeAction.h"
 #include "chargepal_actions/ArriveAtStationAction.h"
 #include "chargepal_actions/CallForHelpAction.h"
-#include "chargepal_actions/ConnectPlugToCarAction.h"
-#include "chargepal_actions/DisconnectPlugFromCarAction.h"
 #include "chargepal_actions/PickUpChargerAction.h"
 #include "chargepal_actions/PlaceChargerAction.h"
-#include "chargepal_actions/PlugInAction.h"
-#include "chargepal_actions/PlugOutAction.h"
+#include "chargepal_actions/PlugInAdsAcAction.h"
+#include "chargepal_actions/PlugInBcsAcAction.h"
+#include "chargepal_actions/PlugOutAdsAcAction.h"
+#include "chargepal_actions/PlugOutBcsAcAction.h"
 #include "ros/ros.h"
 #include <SQLiteCpp/SQLiteCpp.h>
 #include <actionlib/client/simple_action_client.h>
@@ -76,7 +76,7 @@ std::string enumToString(const int value);
 bool check_ready_to_plugin(const std::string &station_name);
 bool update_rdb_copy();
 void enter_log_file(const std::string content);
-void update_gui_config(const std::string key, const std::string value);
+void update_gui_config(const std::string key, std::string value);
 template <typename T> std::string convertToString(const T &value) {
   return value;
 }

@@ -538,11 +538,17 @@ void enter_log_file(const std::string content) {
   log_file.close();
 }
 
-void update_gui_config(const std::string key, const std::string value) {
+void update_gui_config(const std::string key, std::string value) {
   std::string gui_yaml_path =
       ros::package::getPath("chargepal_monitor_gui") + "/cfg/gui.yaml";
 
   YAML::Node data = YAML::LoadFile(gui_yaml_path);
+
+  size_t error_key = key.find("error_count");
+  if (error_key != std::string::npos) {
+    int error_count = std::stoi(data[key].as<std::string>());
+    value = std::to_string(error_count + 1);
+  }
 
   data[key] = value;
 

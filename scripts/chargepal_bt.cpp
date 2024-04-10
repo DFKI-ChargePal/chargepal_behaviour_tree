@@ -480,7 +480,7 @@ public:
     }
     enter_log_file("arrive_at_station_" + goal.target_station + " status is " +
                    action_result);
-
+    update_gui_config("error_count_arrive_at_station", "");
     set_robot_value(robot_name, "ongoing_action", "none");
     set_robot_value(robot_name, "previous_action",
                     "arrive_at_station_" + goal.target_station + "_" +
@@ -526,9 +526,9 @@ public:
 
     aah.sendGoal(goal);
     set_robot_value(robot_name, "ongoing_action", "go_home");
-    enter_log_file("Performing arrive_at_home to" + goal.target_station);
+    enter_log_file("Performing arrive_at_home to " + goal.target_station);
     update_gui_config("ongoing_action",
-                      "Performing arrive_at_home to" + goal.target_station);
+                      "Performing arrive_at_home to " + goal.target_station);
     bool aah_action = aah.waitForResult(ros::Duration(900.0));
     if (aah_action) {
       result = *aah.getResult();
@@ -544,7 +544,7 @@ public:
     }
     enter_log_file("arrive_at_home to" + goal.target_station + " status is " +
                    action_result);
-
+    update_gui_config("error_count_go_home", "");
     set_robot_value(robot_name, "ongoing_action", "none");
     set_robot_value(robot_name, "previous_action",
                     "go_home_" + goal.target_station + "_" + action_result);
@@ -604,11 +604,10 @@ public:
     plc.waitForServer();
 
     masterBlackboard = config().blackboard;
-    charger = masterBlackboard->get<std::string>("charger");
     robot_name = masterBlackboard->get<std::string>("robot_name");
     robot_location = read_robot_value(robot_name, "robot_location");
-
-    goal.charger_name = charger;
+    cart_on_robot = read_robot_value(robot_name, "cart_on_robot");
+    goal.charger_name = cart_on_robot;
 
     plc.sendGoal(goal);
     set_robot_value(robot_name, "ongoing_action", "place_charger");
@@ -623,8 +622,8 @@ public:
         set_robot_value(robot_name, "cart_on_robot", "none");
         set_robot_value(robot_name, "ongoing_action", "none");
         set_robot_value(robot_name, "previous_action", "place_charger");
-        set_cart_value(charger, "cart_location", robot_location);
-        set_cart_value(charger, "robot_on_cart", "none");
+        set_cart_value(cart_on_robot, "cart_location", robot_location);
+        set_cart_value(cart_on_robot, "robot_on_cart", "none");
         return BT::NodeStatus::SUCCESS;
       }
       action_result = result.action_status;
@@ -632,7 +631,7 @@ public:
 
     enter_log_file("place_charger of" + goal.charger_name + " status is " +
                    action_result);
-
+    update_gui_config("error_count_place_cart", "");
     set_robot_value(robot_name, "ongoing_action", "none");
     set_robot_value(robot_name, "previous_action",
                     "place_charger_" + goal.charger_name + "_" + action_result);
@@ -648,7 +647,7 @@ private:
   chargepal_actions::PlaceChargerGoal goal;
   chargepal_actions::PlaceChargerResult result;
 
-  std::string charger, robot_name, robot_location, action_result;
+  std::string cart_on_robot, robot_name, robot_location, action_result;
 };
 
 class pickup_cart : public BT::SyncActionNode {
@@ -693,7 +692,7 @@ public:
     }
     enter_log_file("pickup_charger of" + goal.charger_name + " status is " +
                    action_result);
-
+    update_gui_config("error_count_pickup_cart", "");
     set_robot_value(robot_name, "ongoing_action", "none");
     set_robot_value(robot_name, "previous_action", "pickup_charger_failure");
     // enter_log_file(std::endl;
@@ -736,8 +735,8 @@ public:
       set_cart_value(charger, "plugged", "true");
       return BT::NodeStatus::SUCCESS;
     } else {
-      actionlib::SimpleActionClient<chargepal_actions::ConnectPlugToCarAction>
-          pi_ads("connect_to_car", true);
+      actionlib::SimpleActionClient<chargepal_actions::PlugInAdsAcAction>
+          pi_ads("plugin_ads_ac", true);
       pi_ads.waitForServer();
 
       pi_ads.sendGoal(goal);
@@ -746,7 +745,7 @@ public:
       pi_ads_action = pi_ads.waitForResult(ros::Duration(900.0));
       if (pi_ads_action) {
         result = *pi_ads.getResult();
-        bool plug_in = result.connect_to_car;
+        bool plug_in = result.success;
         if (plug_in) {
           set_robot_value(robot_name, "ongoing_action", "none");
           set_robot_value(robot_name, "previous_action", "plugin_charger_ads");
@@ -770,6 +769,7 @@ public:
         return BT::NodeStatus::FAILURE;
       }*/
       enter_log_file("Plugin_ADS failed at" + target_station);
+      update_gui_config("error_count_plugin_ads", "");
       set_robot_value(robot_name, "ongoing_action", "none");
       set_robot_value(robot_name, "previous_action",
                       "plugin_charger_ads_failure");
@@ -782,8 +782,8 @@ private:
   bool sim_flag, pi_ads_action;
   BT::Blackboard::Ptr masterBlackboard;
   std::ofstream &_argLog;
-  chargepal_actions::ConnectPlugToCarGoal goal;
-  chargepal_actions::ConnectPlugToCarResult result;
+  chargepal_actions::PlugInAdsAcGoal goal;
+  chargepal_actions::PlugInAdsAcResult result;
   std::string charger, robot_name, target_station;
 };
 
@@ -797,10 +797,10 @@ public:
   BT::NodeStatus tick() override {
     int retry_attempt = 0;
 
-    actionlib::SimpleActionClient<chargepal_actions::PlugInAction> pi_bcs(
-        "plugin_charger_bcs", true);
+    actionlib::SimpleActionClient<chargepal_actions::PlugInBcsAcAction> pi_bcs(
+        "plugin_bcs_ac", true);
     pi_bcs.waitForServer();
-    chargepal_actions::PlugInGoal goal;
+    chargepal_actions::PlugInBcsAcGoal goal;
 
     BT::Blackboard::Ptr masterBlackboard = config().blackboard;
     std::string charger = masterBlackboard->get<std::string>("charger");
@@ -810,8 +810,8 @@ public:
     set_robot_value(robot_name, "ongoing_action", "plugin_charger_bcs");
     bool pi_bcs_action = pi_bcs.waitForResult(ros::Duration(900.0));
     if (pi_bcs_action) {
-      chargepal_actions::PlugInResult result = *pi_bcs.getResult();
-      bool plug_in = result.plug_in;
+      chargepal_actions::PlugInBcsAcResult result = *pi_bcs.getResult();
+      bool plug_in = result.success;
       if (plug_in) {
         set_robot_value(robot_name, "ongoing_action", "none");
         set_robot_value(robot_name, "previous_action", "plugin_charger_bcs");
@@ -851,17 +851,15 @@ public:
       set_cart_value(charger, "plugged", "false");
       return BT::NodeStatus::SUCCESS;
     } else {
-      actionlib::SimpleActionClient<
-          chargepal_actions::DisconnectPlugFromCarAction>
-          po_ads("disconnect_from_car", true);
+      actionlib::SimpleActionClient<chargepal_actions::PlugOutAdsAcAction>
+          po_ads("plugout_ads_ac", true);
       po_ads.waitForServer();
       po_ads.sendGoal(goal);
       set_robot_value(robot_name, "ongoing_action", "plugout_charger_ads");
       po_ads_action = po_ads.waitForResult(ros::Duration(900.0));
       if (po_ads_action) {
-        chargepal_actions::DisconnectPlugFromCarResult result =
-            *po_ads.getResult();
-        bool plug_out = result.disconnect_from_car;
+        result = *po_ads.getResult();
+        bool plug_out = result.success;
         if (plug_out) {
           set_robot_value(robot_name, "ongoing_action", "none");
           set_robot_value(robot_name, "previous_action", "plugout_charger_ads");
@@ -885,6 +883,7 @@ public:
         return BT::NodeStatus::FAILURE;
       }*/
       enter_log_file("Plugout_ADS failed at " + location);
+      update_gui_config("error_count_plugout_ads", "");
       set_robot_value(robot_name, "ongoing_action", "none");
       set_robot_value(robot_name, "previous_action",
                       "plugout_charger_ads_failure");
@@ -897,8 +896,8 @@ private:
   bool sim_flag, po_ads_action;
   BT::Blackboard::Ptr masterBlackboard;
   std::ofstream &_argLog;
-  chargepal_actions::DisconnectPlugFromCarGoal goal;
-  chargepal_actions::DisconnectPlugFromCarResult result;
+  chargepal_actions::PlugOutAdsAcGoal goal;
+  chargepal_actions::PlugOutAdsAcResult result;
   std::string charger, robot_name, location;
 };
 
@@ -912,10 +911,10 @@ public:
   BT::NodeStatus tick() override {
     int retry_attempt = 0;
 
-    actionlib::SimpleActionClient<chargepal_actions::PlugOutAction> po_bcs(
-        "plugout_charger_bcs", true);
+    actionlib::SimpleActionClient<chargepal_actions::PlugOutBcsAcAction> po_bcs(
+        "plugout_bcs_ac", true);
     po_bcs.waitForServer();
-    chargepal_actions::PlugOutGoal goal;
+    chargepal_actions::PlugOutBcsAcGoal goal;
 
     BT::Blackboard::Ptr masterBlackboard = config().blackboard;
     std::string charger = masterBlackboard->get<std::string>("charger");
@@ -925,8 +924,8 @@ public:
     set_robot_value(robot_name, "ongoing_action", "plugout_charger_bcs");
     bool po_bcs_action = po_bcs.waitForResult(ros::Duration(900.0));
     if (po_bcs_action) {
-      chargepal_actions::PlugOutResult result = *po_bcs.getResult();
-      bool plug_out = result.plug_out;
+      chargepal_actions::PlugOutBcsAcResult result = *po_bcs.getResult();
+      bool plug_out = result.success;
       if (plug_out) {
         set_robot_value(robot_name, "ongoing_action", "none");
         set_robot_value(robot_name, "previous_action", "plugout_charger_bcs");
