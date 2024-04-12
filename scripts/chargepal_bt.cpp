@@ -346,23 +346,13 @@ public:
 
     std::string assertLift = read_assertLift_value(robot_name);
 
-    std::cout << "Enter y/n if the assert lift is down  ";
-    char userInput;
-    std::cin >> userInput;
-    if (userInput == 'y') {
+    if (assertLift == "down") {
+      enter_log_file("Assert lift is : " + assertLift);
       return BT::NodeStatus::SUCCESS;
+    } else {
+      enter_log_file("Assert lift is : " + assertLift);
+      return NodeStatus::FAILURE;
     }
-    return BT::NodeStatus::FAILURE;
-
-    /*
-    if (assertLift == "down"){
-        std::cout << "Assert lift is down" << std::endl;
-        return BT::NodeStatus::SUCCESS;
-    }
-    else {
-        std::cout << "Assert lift is up" << std::endl;
-        return NodeStatus::FAILURE;
-    }*/
   }
 };
 
