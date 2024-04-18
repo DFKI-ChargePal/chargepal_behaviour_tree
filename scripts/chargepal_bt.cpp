@@ -726,7 +726,7 @@ public:
       return BT::NodeStatus::SUCCESS;
     } else {
       actionlib::SimpleActionClient<chargepal_actions::PlugInAdsAcAction>
-          pi_ads("plugin_ads_ac", true);
+          pi_ads("plug_in_ads_ac", true);
       pi_ads.waitForServer();
 
       pi_ads.sendGoal(goal);
@@ -788,7 +788,7 @@ public:
     int retry_attempt = 0;
 
     actionlib::SimpleActionClient<chargepal_actions::PlugInBcsAcAction> pi_bcs(
-        "plugin_bcs_ac", true);
+        "plug_in_bcs_ac", true);
     pi_bcs.waitForServer();
     chargepal_actions::PlugInBcsAcGoal goal;
 
@@ -842,7 +842,7 @@ public:
       return BT::NodeStatus::SUCCESS;
     } else {
       actionlib::SimpleActionClient<chargepal_actions::PlugOutAdsAcAction>
-          po_ads("plugout_ads_ac", true);
+          po_ads("plug_out_ads_ac", true);
       po_ads.waitForServer();
       po_ads.sendGoal(goal);
       set_robot_value(robot_name, "ongoing_action", "plugout_charger_ads");
@@ -902,7 +902,7 @@ public:
     int retry_attempt = 0;
 
     actionlib::SimpleActionClient<chargepal_actions::PlugOutBcsAcAction> po_bcs(
-        "plugout_bcs_ac", true);
+        "plug_out_bcs_ac", true);
     po_bcs.waitForServer();
     chargepal_actions::PlugOutBcsAcGoal goal;
 
@@ -1292,7 +1292,7 @@ int main(int argc, char **argv) {
           status == BT::NodeStatus::FAILURE) {
 
         bool job_server_update = false;
-        update_gui_config("ongoing_action", "");
+        update_gui_config("ongoing_action", "Job completed");
         float start_time = ros::Time::now().toSec();
         ros::param::get("/server_timeout", server_timeout);
         while (!job_server_update && ros::ok()) {
@@ -1304,7 +1304,6 @@ int main(int argc, char **argv) {
           std::cout << "The job update received is  :" << job_server_update
                     << std::endl;
 
-          enter_log_file("    Updating job monitor is: " + job_server_update);
           // server_timeout = ros::Time::now().toSec() - start_time;
         }
         // Call for help if server timeout is > 10 minutes
