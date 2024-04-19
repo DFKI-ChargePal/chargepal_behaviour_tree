@@ -124,7 +124,11 @@ public:
     std::string robot_name = masterBlackboard->get<std::string>("robot_name");
 
     std::string location = read_robot_value(robot_name, "robot_location");
-    if (location.find("RBS") != std::string::npos) {
+    if (location.find("RBS") != std::string::npos ||
+        (location.find("pick") != std::string::npos &&
+         location.find("BWS") != std::string::npos) ||
+        (location.find("pick") != std::string::npos &&
+         location.find("ADS") != std::string::npos)) {
       // << "Robot location is at RBS" << std::endl;
       return BT::NodeStatus::SUCCESS;
     } else {
@@ -168,11 +172,10 @@ public:
     std::string robot_name = masterBlackboard->get<std::string>("robot_name");
 
     std::string location = read_robot_value(robot_name, "robot_location");
-    if (location.find("BCS") != std::string::npos) {
-      // std::cout << "Robot location is at BCS" << std::endl;
+    if (location.find("BCS") != std::string::npos &&
+        location.find("pick") == std::string::npos) {
       return BT::NodeStatus::SUCCESS;
     } else {
-      // std::cout << "Robot location is not at BCS" << std::endl;
       return NodeStatus::FAILURE;
     }
   }
@@ -190,11 +193,10 @@ public:
     std::string robot_name = masterBlackboard->get<std::string>("robot_name");
 
     std::string location = read_robot_value(robot_name, "robot_location");
-    if (location.find("ADS") != std::string::npos) {
-      // std::cout << "Robot location is at ADS" << std::endl;
+    if (location.find("ADS") != std::string::npos &&
+        location.find("pick") == std::string::npos) {
       return BT::NodeStatus::SUCCESS;
     } else {
-      // std::cout << "Robot location is not at ADS" << std::endl;
       return NodeStatus::FAILURE;
     }
   }
