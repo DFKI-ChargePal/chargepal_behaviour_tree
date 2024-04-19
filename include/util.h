@@ -33,6 +33,7 @@
 #include <chargepal_services/isReadyToPlugin.h>
 #include <chargepal_services/pushToLDB.h>
 #include <chargepal_services/readRobotCharge.h>
+#include <chargepal_services/resetIoForCart.h>
 #include <chargepal_services/resetStationBlocker.h>
 #include <chargepal_services/updateJobMonitor.h>
 #include <chargepal_services/updateRdbCopy.h>
@@ -77,6 +78,7 @@ bool check_ready_to_plugin(const std::string &station_name);
 bool update_rdb_copy();
 void enter_log_file(const std::string content);
 void update_gui_config(const std::string key, std::string value);
+bool recover_cart(const std::string action_name);
 template <typename T> std::string convertToString(const T &value) {
   return value;
 }

@@ -470,9 +470,9 @@ public:
     }
     enter_log_file("arrive_at_station_" + goal.target_station + " status is " +
                    action_result);
-    update_gui_config("ongoing_action",
-                      "arrive_at_station_" + goal.target_station + " status is " +
-                   action_result);
+    update_gui_config("ongoing_action", "arrive_at_station_" +
+                                            goal.target_station +
+                                            " status is " + action_result);
     update_gui_config("error_count_arrive_at_station", "");
     set_robot_value(robot_name, "ongoing_action", "none");
     set_robot_value(robot_name, "previous_action",
@@ -537,9 +537,9 @@ public:
     }
     enter_log_file("arrive_at_home to" + goal.target_station + " status is " +
                    action_result);
-    update_gui_config("ongoing_action",
-                      "arrive_at_home to" + goal.target_station + " status is " +
-                   action_result);
+    update_gui_config("ongoing_action", "arrive_at_home to" +
+                                            goal.target_station +
+                                            " status is " + action_result);
     update_gui_config("error_count_go_home", "");
     set_robot_value(robot_name, "ongoing_action", "none");
     set_robot_value(robot_name, "previous_action",
@@ -624,13 +624,16 @@ public:
       }
       action_result = result.action_status;
     }
-
+    recover_status = recover_cart("place_cart");
+    if (!recover_status) {
+      enter_log_file("place_charger of" + goal.charger_name +
+                     " IO recover status is False");
+    }
     enter_log_file("place_charger of" + goal.charger_name + " status is " +
                    action_result);
     update_gui_config("error_count_place_cart", "");
-    update_gui_config("ongoing_action",
-                      "place_charger of" + goal.charger_name + " status is " +
-                   action_result);
+    update_gui_config("ongoing_action", "place_charger of" + goal.charger_name +
+                                            " status is " + action_result);
     set_robot_value(robot_name, "ongoing_action", "none");
     set_robot_value(robot_name, "previous_action",
                     "place_charger_" + goal.charger_name + "_" + action_result);
@@ -643,6 +646,7 @@ public:
 private:
   BT::Blackboard::Ptr masterBlackboard;
   std::ofstream &_argLog;
+  bool recover_status;
   chargepal_actions::PlaceChargerGoal goal;
   chargepal_actions::PlaceChargerResult result;
 
@@ -689,11 +693,17 @@ public:
       }
       action_result = result.action_status;
     }
+    recover_status = recover_cart("pickup_cart");
+    if (!recover_status) {
+      enter_log_file("pickup_charger of" + goal.charger_name +
+                     " IO recover status is False");
+    }
+
     enter_log_file("pickup_charger of" + goal.charger_name + " status is " +
                    action_result);
-    update_gui_config("ongoing_action",
-                      "pickup_charger of" + goal.charger_name + " status is " +
-                   action_result);
+    update_gui_config("ongoing_action", "pickup_charger of" +
+                                            goal.charger_name + " status is " +
+                                            action_result);
     update_gui_config("error_count_pickup_cart", "");
     set_robot_value(robot_name, "ongoing_action", "none");
     set_robot_value(robot_name, "previous_action", "pickup_charger_failure");
@@ -706,8 +716,8 @@ public:
 private:
   BT::Blackboard::Ptr masterBlackboard;
   std::ofstream &_argLog;
+  bool recover_status;
   chargepal_actions::PickUpChargerGoal goal;
-
   std::string charger, robot_name, robot_location, action_result;
 };
 
@@ -772,7 +782,7 @@ public:
       }*/
       enter_log_file("Plugin_ADS failed at" + target_station);
       update_gui_config("ongoing_action",
-                      "Plugin_ADS failed at" + target_station);
+                        "Plugin_ADS failed at" + target_station);
       update_gui_config("error_count_plugin_ads", "");
       set_robot_value(robot_name, "ongoing_action", "none");
       set_robot_value(robot_name, "previous_action",
@@ -887,8 +897,7 @@ public:
         return BT::NodeStatus::FAILURE;
       }*/
       enter_log_file("Plugout_ADS failed at " + location);
-      update_gui_config("ongoing_action",
-                      "Plugout_ADS failed at " + location);
+      update_gui_config("ongoing_action", "Plugout_ADS failed at " + location);
       update_gui_config("error_count_plugout_ads", "");
       set_robot_value(robot_name, "ongoing_action", "none");
       set_robot_value(robot_name, "previous_action",
@@ -1308,7 +1317,7 @@ int main(int argc, char **argv) {
           status == BT::NodeStatus::FAILURE) {
 
         bool job_server_update = false;
-        
+
         float start_time = ros::Time::now().toSec();
         ros::param::get("/server_timeout", server_timeout);
         while (!job_server_update && ros::ok()) {

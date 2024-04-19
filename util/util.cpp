@@ -555,3 +555,22 @@ void update_gui_config(const std::string key, std::string value) {
   std::ofstream fout(gui_yaml_path);
   fout << data;
 }
+
+bool recover_cart(const std::string action_name) {
+  ros::NodeHandle n;
+  bool success;
+  ros::ServiceClient client_ldb_server =
+      n.serviceClient<chargepal_services::resetIoForCart>(
+          "/mir_rest_api/reset_io_for_cart");
+  chargepal_services::resetIoForCart srv_ldb_server;
+  srv_ldb_server.request.action = action_name;
+
+  if (client_ldb_server.call(srv_ldb_server)) {
+    success = srv_ldb_server.response.success;
+  }
+  // else {
+  //  pass;
+  // ROS_ERROR("Recovering " + action_name + " action failed");
+  //}
+  return success;
+}
