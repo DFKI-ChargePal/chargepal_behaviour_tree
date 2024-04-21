@@ -471,7 +471,6 @@ public:
     update_gui_config("ongoing_action", "arrive_at_station_" +
                                             goal.target_station +
                                             " status is " + action_result);
-    update_gui_config("error_count_arrive_at_station", "");
     set_robot_value(robot_name, "ongoing_action", "none");
     set_robot_value(robot_name, "previous_action",
                     "arrive_at_station_" + goal.target_station + "_" +
@@ -538,7 +537,6 @@ public:
     update_gui_config("ongoing_action", "arrive_at_home to" +
                                             goal.target_station +
                                             " status is " + action_result);
-    update_gui_config("error_count_go_home", "");
     set_robot_value(robot_name, "ongoing_action", "none");
     set_robot_value(robot_name, "previous_action",
                     "go_home_" + goal.target_station + "_" + action_result);
@@ -564,8 +562,25 @@ public:
   static PortsList providedPorts() { return {}; }
 
   BT::NodeStatus tick() override {
-    int retry_attempt = 0;
-    update_gui_config("ongoing_action", "Calling for help...");
+    retry_attempt = 0;
+    masterBlackboard = config().blackboard;
+    robot_name = masterBlackboard->get<std::string>("robot_name");
+    failed_action = read_robot_value(robot_name, "previous_action");
+
+    if (failed_action.find("arrive_at_station") != std::string::npos) {
+      update_gui_config("error_count_arrive_at_station", "");
+    } else if (failed_action.find("go_home") != std::string::npos) {
+      update_gui_config("error_count_go_home", "");
+    } else if (failed_action.find("place_charger") != std::string::npos) {
+      update_gui_config("error_count_place_cart", "");
+    } else if (failed_action.find("pickup_charger") != std::string::npos) {
+      update_gui_config("error_count_pickup_cart", "");
+    } else if (failed_action.find("plugin") != std::string::npos) {
+      update_gui_config("error_count_plugin_ads", "");
+    } else if (failed_action.find("plugout") != std::string::npos) {
+      update_gui_config("error_count_plugout_ads", "");
+    }
+
     actionlib::SimpleActionClient<chargepal_actions::CallForHelpAction> cfh(
         "call_for_help", true);
     chargepal_actions::CallForHelpGoal goal;
@@ -581,6 +596,11 @@ public:
 
     return BT::NodeStatus::FAILURE;
   }
+
+private:
+  BT::Blackboard::Ptr masterBlackboard;
+  int retry_attempt;
+  std::string robot_name, failed_action;
 };
 
 class drop_cart : public BT::SyncActionNode {
@@ -629,7 +649,7 @@ public:
     }
     enter_log_file("place_charger of" + goal.charger_name + " status is " +
                    action_result);
-    update_gui_config("error_count_place_cart", "");
+
     update_gui_config("ongoing_action", "place_charger of" + goal.charger_name +
                                             " status is " + action_result);
     set_robot_value(robot_name, "ongoing_action", "none");
@@ -701,7 +721,7 @@ public:
     update_gui_config("ongoing_action", "pickup_charger of" +
                                             goal.charger_name + " status is " +
                                             action_result);
-    update_gui_config("error_count_pickup_cart", "");
+
     set_robot_value(robot_name, "ongoing_action", "none");
     set_robot_value(robot_name, "previous_action", "pickup_charger_failure");
     // enter_log_file(std::endl;
@@ -763,24 +783,9 @@ public:
         }
       }
 
-      /*std::cout << "Enter y/n if Plugin is successful  ";
-      char userInput;
-      std::cin >> userInput;
-      if (userInput == 'y') {
-        set_robot_value(robot_name, "ongoing_action", "none");
-        set_robot_value(robot_name, "previous_action", "plugin_charger_ads");
-        set_cart_value(charger, "plugged", "true");
-        return BT::NodeStatus::SUCCESS;
-      } else if (userInput == 'n') {
-        set_robot_value(robot_name, "ongoing_action", "none");
-        set_robot_value(robot_name, "previous_action",
-                        "plugin_charger_ads_failure");
-        return BT::NodeStatus::FAILURE;
-      }*/
       enter_log_file("Plugin_ADS failed at" + target_station);
       update_gui_config("ongoing_action",
                         "Plugin_ADS failed at" + target_station);
-      update_gui_config("error_count_plugin_ads", "");
       set_robot_value(robot_name, "ongoing_action", "none");
       set_robot_value(robot_name, "previous_action",
                       "plugin_charger_ads_failure");
@@ -879,23 +884,8 @@ public:
         }
       }
 
-      /*std::cout << "Enter y/n if plugout is successful  ";
-      char userInput;
-      std::cin >> userInput;
-      if (userInput == 'y') {
-        set_robot_value(robot_name, "ongoing_action", "none");
-        set_robot_value(robot_name, "previous_action", "plugout_charger_ads");
-        set_cart_value(charger, "plugged", "false");
-        return BT::NodeStatus::SUCCESS;
-      } else if (userInput == 'n') {
-        set_robot_value(robot_name, "ongoing_action", "none");
-        set_robot_value(robot_name, "previous_action",
-                        "plugout_charger_ads_failure");
-        return BT::NodeStatus::FAILURE;
-      }*/
       enter_log_file("Plugout_ADS failed at " + location);
       update_gui_config("ongoing_action", "Plugout_ADS failed at " + location);
-      update_gui_config("error_count_plugout_ads", "");
       set_robot_value(robot_name, "ongoing_action", "none");
       set_robot_value(robot_name, "previous_action",
                       "plugout_charger_ads_failure");
