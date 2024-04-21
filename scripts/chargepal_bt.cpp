@@ -421,20 +421,15 @@ public:
     // When goal station is BWS
     if (goal.target_station.find("BWS") != std::string::npos) {
       if (job == "BRING_CHARGER") {
-        goal.target_station = source_station + "_pick";
-      } else if (job == "STOW_CHARGER") {
-        goal.target_station = target_station;
+        goal.target_station = goal.target_station + "_pick";
       }
     } else if (goal.target_station.find("BCS") != std::string::npos) {
       if (job == "BRING_CHARGER" || job == "STOW_CHARGER") {
-        goal.target_station = source_station + "_pick";
-      } else if (job == "RECHARGE_CHARGER") {
-        goal.target_station = target_station;
+        goal.target_station = goal.target_station + "_pick";
       }
     } else if (goal.target_station.find("ADS") != std::string::npos) {
-      if (job == "RECHARGE_CHARGER" || job == "STOW_CHARGER" ||
-          job == "BRING_CHARGER") {
-        goal.target_station = source_station + "_pick";
+      if (job == "RECHARGE_CHARGER" || job == "STOW_CHARGER") {
+        goal.target_station = goal.target_station + "_pick";
       }
     }
 
