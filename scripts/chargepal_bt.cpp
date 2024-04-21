@@ -100,9 +100,10 @@ public:
     std::string robot_name = masterBlackboard->get<std::string>("robot_name");
 
     std::string location = read_robot_value(robot_name, "robot_location");
-    if (location.find("ADS") != std::string::npos ||
-        location.find("BCS") != std::string::npos ||
-        location.find("BWS") != std::string::npos) {
+    if ((location.find("ADS") != std::string::npos ||
+         location.find("BCS") != std::string::npos ||
+         location.find("BWS") != std::string::npos) &&
+        location.find("pick") == std::string::npos) {
       // std::cout << "Robot location is ADS or BCS" << std::endl;
       return BT::NodeStatus::SUCCESS;
     } else {
@@ -150,7 +151,8 @@ public:
     std::string robot_name = masterBlackboard->get<std::string>("robot_name");
 
     std::string location = read_robot_value(robot_name, "robot_location");
-    if (location.find("BWS") != std::string::npos) {
+    if (location.find("BWS") != std::string::npos &&
+        location.find("pick") == std::string::npos) {
       // std::cout << "Robot location is at BWS" << std::endl;
       return BT::NodeStatus::SUCCESS;
     } else {
@@ -406,39 +408,33 @@ public:
     target_station = masterBlackboard->get<std::string>("target_station");
     robot_location = read_robot_value(robot_name, "robot_location");
 
-    if (robot_location == target_station) {
+    if (robot_location == target_station || robot_location == source_station) {
       goal.target_station = target_station;
 
     }
-    // When the robot is at the source station
-    else if (robot_location.find(source_station) != std::string::npos) {
-      goal.target_station = target_station;
-    }
-    // When the robot is not at the source station
+
+    // When the robot is not at the source station or target station
     else {
       goal.target_station = source_station;
-      if (goal.target_station.find("ADS") != std::string::npos &&
-          job == "BRING_CHARGER") {
-        goal.target_station = source_station + "_pick";
-      }
     }
 
     // When goal station is BWS
     if (goal.target_station.find("BWS") != std::string::npos) {
       if (job == "BRING_CHARGER") {
-        goal.target_station = source_station + "_pick"; //"BWSpick_" + charger;
+        goal.target_station = source_station + "_pick";
       } else if (job == "STOW_CHARGER") {
-        goal.target_station = target_station; //"BWSplace_" + charger;
+        goal.target_station = target_station;
       }
     } else if (goal.target_station.find("BCS") != std::string::npos) {
       if (job == "BRING_CHARGER" || job == "STOW_CHARGER") {
-        goal.target_station = source_station + "_pick"; //"BCSpick_" + charger;
+        goal.target_station = source_station + "_pick";
       } else if (job == "RECHARGE_CHARGER") {
-        goal.target_station = target_station; //"BCSplace_" + charger;
+        goal.target_station = target_station;
       }
     } else if (goal.target_station.find("ADS") != std::string::npos) {
-      if (job == "RECHARGE_CHARGER" || job == "STOW_CHARGER") {
-        goal.target_station = source_station + "_pick"; //"ADSpick_" + charger;
+      if (job == "RECHARGE_CHARGER" || job == "STOW_CHARGER" ||
+          job == "BRING_CHARGER") {
+        goal.target_station = source_station + "_pick";
       }
     }
 
