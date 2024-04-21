@@ -672,7 +672,7 @@ public:
     masterBlackboard = config().blackboard;
     charger = masterBlackboard->get<std::string>("charger");
     robot_name = masterBlackboard->get<std::string>("robot_name");
-    robot_location = read_robot_value(robot_name, "robot_location");
+    cart_location = read_cart_value(charger, "cart_location");
 
     goal.charger_name = charger;
 
@@ -689,7 +689,7 @@ public:
         set_robot_value(robot_name, "cart_on_robot", charger);
         set_robot_value(robot_name, "ongoing_action", "none");
         set_robot_value(robot_name, "previous_action", "pickup_charger");
-        set_cart_value(charger, "cart_location", robot_location);
+        set_robot_value(robot_name, "robot_location", cart_location);
         set_cart_value(charger, "robot_on_cart", robot_name);
         return BT::NodeStatus::SUCCESS;
       }
@@ -700,7 +700,6 @@ public:
       enter_log_file("pickup_charger of" + goal.charger_name +
                      " IO recover status is False");
     }
-
     enter_log_file("pickup_charger of" + goal.charger_name + " status is " +
                    action_result);
     update_gui_config("ongoing_action", "pickup_charger of" +
@@ -720,7 +719,7 @@ private:
   std::ofstream &_argLog;
   bool recover_status;
   chargepal_actions::PickUpChargerGoal goal;
-  std::string charger, robot_name, robot_location, action_result;
+  std::string charger, robot_name, cart_location, action_result;
 };
 
 class plugin_ADS : public BT::SyncActionNode {
