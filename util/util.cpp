@@ -435,22 +435,19 @@ std::string fetch_job() {
  *
  * @return returns a boolean of update success value
  */
-bool update_job_monitor(const std::string &job_type, std::string &job_status) {
-  ros::NodeHandle n;
-  ros::ServiceClient client_ldb_server =
-      n.serviceClient<chargepal_services::updateJobMonitor>(
-          "/ldb_server/update_job_monitor");
-
-  chargepal_services::updateJobMonitor srv_ldb_server;
-  srv_ldb_server.request.job_type = job_type;
-  srv_ldb_server.request.job_status = job_status;
-
-  if (client_ldb_server.call(srv_ldb_server)) {
-    return srv_ldb_server.response.success;
-  } else {
-    ROS_ERROR("updating job monitor failed");
-    return false;
+bool update_job_monitor(const std::string &robot_name,
+                        const std::string &job_type, std::string &job_status) {
+  bool update_success = false;
+  int retry_update = 0;
+  while (!update_success) {
+    update_success = set_robot_value(robot_name, "job_status", job_status);
+    retry_update++;
+    if (retry_update > 100) {
+      break;
+    }
+    ros::Duration(30.0).sleep(); // Sleep for 30 seconds and retry
   }
+  return update_success;
 }
 
 /**
@@ -538,26 +535,9 @@ void enter_log_file(const std::string content) {
   log_file.close();
 }
 
-void update_gui_config(const std::string key, std::string value) {
-  std::string gui_yaml_path =
-      ros::package::getPath("chargepal_monitor_gui") + "/cfg/gui.yaml";
-
-  YAML::Node data = YAML::LoadFile(gui_yaml_path);
-
-  size_t error_key = key.find("error_count");
-  if (error_key != std::string::npos) {
-    int error_count = std::stoi(data[key].as<std::string>());
-    value = std::to_string(error_count + 1);
-  }
-
-  data[key] = value;
-
-  std::ofstream fout(gui_yaml_path);
-  fout << data;
-}
-
 bool recover_cart(const std::string action_name) {
   ros::NodeHandle n;
+  std::ostringstream oss;
   bool success;
   ros::ServiceClient client_ldb_server =
       n.serviceClient<chargepal_services::resetIoForCart>(
@@ -567,10 +547,10 @@ bool recover_cart(const std::string action_name) {
 
   if (client_ldb_server.call(srv_ldb_server)) {
     success = srv_ldb_server.response.success;
+  } else {
+    success = false;
+    oss << "Recovering " << action_name << " action failed";
+    ROS_ERROR("%s", oss.str().c_str());
   }
-  // else {
-  //  pass;
-  // ROS_ERROR("Recovering " + action_name + " action failed");
-  //}
   return success;
 }

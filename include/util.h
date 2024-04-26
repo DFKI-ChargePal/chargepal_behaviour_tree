@@ -46,6 +46,7 @@
 #include <map>
 #include <nlohmann/json.hpp>
 #include <ros/package.h>
+#include <sstream>
 #include <string>
 #include <thread>
 #include <unordered_map>
@@ -71,13 +72,13 @@ std::string read_assertLift_value(const std::string &cart_name);
 std::string fetch_job();
 int get_operation_time(const std::string &robot);
 bool reset_station_blocker(const std::string &station);
-bool update_job_monitor(const std::string &job_type, std::string &job_status);
+bool update_job_monitor(const std::string &robot_name,
+                        const std::string &job_type, std::string &job_status);
 void update_robot_charge(const std::string &robot_name);
 std::string enumToString(const int value);
 bool check_ready_to_plugin(const std::string &station_name);
 bool update_rdb_copy();
 void enter_log_file(const std::string content);
-void update_gui_config(const std::string key, std::string value);
 bool recover_cart(const std::string action_name);
 template <typename T> std::string convertToString(const T &value) {
   return value;
