@@ -5,6 +5,19 @@
                             _onSuccess="&quot;job_status=1&quot;">
         <arrive_at_station/>
       </RetryUntilSuccessful>
+      <Sequence _onSuccess="&quot;job_status=1&quot;">
+        <notPickGoalPosition/>
+        <Fallback>
+          <Sequence>
+            <isRobotOrGoalAtBWS/>
+            <recovery_arrive_BWS/>
+          </Sequence>
+          <Sequence>
+            <isRobotOrGoalAtBCS/>
+            <recovery_arrive_BCS/>
+          </Sequence>
+        </Fallback>
+      </Sequence>
       <ForceFailure>
         <SubTree ID="recovery_aas"
                  _skipIf="!recovery_enabled"
@@ -19,6 +32,88 @@
     </Fallback>
   </BehaviorTree>
 
+  <BehaviorTree ID="action_battery_ausschalten">
+    <RetryUntilSuccessful num_attempts="5">
+      <Fallback>
+        <battery_mode_req_standby/>
+        <ForceFailure>
+          <Sleep msec="60000"/>
+        </ForceFailure>
+      </Fallback>
+    </RetryUntilSuccessful>
+  </BehaviorTree>
+
+  <BehaviorTree ID="action_battery_einschalten">
+    <RetryUntilSuccessful num_attempts="5">
+      <Fallback>
+        <battery_wakeup/>
+        <ForceFailure>
+          <Sleep msec="60000"/>
+        </ForceFailure>
+      </Fallback>
+    </RetryUntilSuccessful>
+  </BehaviorTree>
+
+  <BehaviorTree ID="action_battery_end_ladeprozess">
+    <RetryUntilSuccessful num_attempts="5">
+      <Fallback>
+        <battery_ladeprozess_ende/>
+        <ForceFailure>
+          <Sleep msec="60000"/>
+        </ForceFailure>
+      </Fallback>
+    </RetryUntilSuccessful>
+  </BehaviorTree>
+
+  <BehaviorTree ID="action_battery_idle">
+    <RetryUntilSuccessful num_attempts="5">
+      <Fallback>
+        <battery_mode_req_idle/>
+        <ForceFailure>
+          <Sleep msec="60000"/>
+        </ForceFailure>
+      </Fallback>
+    </RetryUntilSuccessful>
+  </BehaviorTree>
+
+  <BehaviorTree ID="action_battery_modus_start">
+    <Fallback>
+      <battery_mode_req_charge/>
+      <RetryUntilSuccessful num_attempts="5">
+        <Fallback>
+          <Sequence>
+            <SubTree ID="action_battery_idle"
+                     _autoremap="true"/>
+            <battery_mode_req_charge/>
+          </Sequence>
+          <ForceFailure>
+            <Sleep msec="60000"/>
+          </ForceFailure>
+        </Fallback>
+      </RetryUntilSuccessful>
+    </Fallback>
+  </BehaviorTree>
+
+  <BehaviorTree ID="action_battery_start_ladeprozess">
+    <Fallback>
+      <battery_ladeprozess_start/>
+      <RetryUntilSuccessful num_attempts="5">
+        <Fallback>
+          <Sequence>
+            <SubTree ID="action_battery_idle"
+                     _autoremap="true"/>
+            <SubTree ID="action_battery_modus_start"
+                     _autoremap="true"/>
+            <battery_ladeprozess_start/>
+          </Sequence>
+          <ForceFailure>
+            <Sleep msec="60000"/>
+          </ForceFailure>
+        </Fallback>
+      </RetryUntilSuccessful>
+    </Fallback>
+  </BehaviorTree>
+
   <BehaviorTree ID="action_drop_cart">
     <Fallback name="drop_cart">
       <RetryUntilSuccessful num_attempts="3"
@@ -26,14 +121,7 @@
         <drop_cart/>
       </RetryUntilSuccessful>
       <ForceFailure>
-        <SubTree ID="recovery_dc"
-                 _skipIf="!recovery_enabled"
-                 _onSuccess="job_status=2"
-                 _onFailure="job_status=3"
-                 _autoremap="true"/>
-      </ForceFailure>
-      <ForceFailure>
-        <call_for_help _skipIf="job_status==2"
+        <call_for_help _skipIf="!recovery_enabled"
                        _post="job_status=3"/>
       </ForceFailure>
     </Fallback>
@@ -73,40 +161,60 @@
 
   <BehaviorTree ID="action_plugin">
     <Fallback name="plugin">
-      <Sequence name="plugin_bcs">
-        <isRobotAtBCS/>
-        <Fallback name="plugin_bcs">
-          <plugin_BCS _onSuccess="job_status=1"/>
-          <ForceFailure>
-            <SubTree ID="recovery_plugin"
-                     _skipIf="!recovery_enabled"
-                     _onSuccess="job_status=2"
-                     _onFailure="job_status=3"
-                     _autoremap="true"/>
-          </ForceFailure>
-        </Fallback>
-      </Sequence>
-      <Sequence name="plugin_ads">
-        <isRobotAtADS/>
-        <Fallback name="plugin_ads">
-          <Sequence>
-            <RetryUntilSuccessful num_attempts="5">
-              <isReady2Plugin/>
-            </RetryUntilSuccessful>
-            <plugin_ADS _onSuccess="job_status=1"/>
+      <ParallelAll max_failures="1">
+        <Sequence>
+          <SubTree ID="action_battery_idle"
+                   _autoremap="true"/>
+          <SubTree ID="action_battery_modus_start"
+                   _autoremap="true"/>
+        </Sequence>
+        <Fallback name="plugin">
+          <Sequence name="plugin_bcs">
+            <isRobotOrGoalAtBCS/>
+            <Fallback name="plugin_bcs">
+              <plugin_BCS/>
+              <ForceFailure>
+                <SubTree ID="recovery_plugin"
+                         _skipIf="!recovery_enabled"
+                         _onSuccess="job_status=2"
+                         _onFailure="job_status=3"
+                         _autoremap="true"/>
+              </ForceFailure>
+            </Fallback>
+          </Sequence>
+          <Sequence name="plugin_ads">
+            <isRobotOrGoalAtADS/>
+            <Fallback name="plugin_ads">
+              <plugin_ADS/>
+              <ForceFailure>
+                <SubTree ID="recovery_plugin"
+                         _skipIf="!recovery_enabled"
+                         _onSuccess="job_status=2"
+                         _onFailure="job_status=3"
+                         _autoremap="true"/>
+              </ForceFailure>
+            </Fallback>
           </Sequence>
           <ForceFailure>
-            <SubTree ID="recovery_plugin"
-                     _skipIf="!recovery_enabled"
-                     _onSuccess="job_status=2"
-                     _onFailure="job_status=3"
-                     _autoremap="true"/>
+            <call_for_help _skipIf="job_status==2"
+                           _post="job_status=3"/>
           </ForceFailure>
         </Fallback>
-      </Sequence>
+      </ParallelAll>
       <ForceFailure>
-        <call_for_help _skipIf="job_status==2"
-                       _post="job_status=3"/>
+        <Sequence>
+          <SubTree ID="action_battery_end_ladeprozess"
+                   _failureIf="job_status==2 || job_status==3"
+                   _autoremap="true"/>
+          <SubTree ID="action_plugout"
+                   _failureIf="job_status==2 || job_status==3"
+                   _autoremap="true"/>
+          <SubTree ID="recovery_plugin"
+                   _skipIf="!recovery_enabled"
+                   _onSuccess="job_status=2"
+                   _onFailure="job_status=3"
+                   _autoremap="true"/>
+        </Sequence>
       </ForceFailure>
     </Fallback>
   </BehaviorTree>
@@ -114,9 +222,9 @@
   <BehaviorTree ID="action_plugout">
     <Fallback name="plugout">
       <Sequence name="plugout_bcs">
-        <isRobotAtBCS/>
+        <isRobotOrGoalAtBCS/>
         <Fallback name="plugout_bcs">
-          <plugout_BCS _onSuccess="job_status=1"/>
+          <plugout_BCS/>
           <ForceFailure>
             <SubTree ID="recovery_plugout"
                      _skipIf="!recovery_enabled"
@@ -127,9 +235,9 @@
         </Fallback>
       </Sequence>
       <Sequence name="plugout_ads">
-        <isRobotAtADS/>
+        <isRobotOrGoalAtADS/>
         <Fallback name="plugout_ads">
-          <plugout_ADS _onSuccess="job_status=1"/>
+          <plugout_ADS/>
           <ForceFailure>
             <SubTree ID="recovery_plugout"
                      _skipIf="!recovery_enabled"
@@ -150,17 +258,31 @@
   <TreeNodesModel>
     <Action ID="arrive_at_station"
             editable="true"/>
+    <Action ID="battery_ladeprozess_ende"
+            editable="true"/>
+    <Action ID="battery_ladeprozess_start"
+            editable="true"/>
+    <Action ID="battery_mode_req_charge"
+            editable="true"/>
+    <Action ID="battery_mode_req_idle"
+            editable="true"/>
+    <Action ID="battery_mode_req_standby"
+            editable="true"/>
+    <Action ID="battery_wakeup"
+            editable="true"/>
     <Action ID="call_for_help"
             editable="true"/>
     <Action ID="drop_cart"
             editable="true"/>
     <Action ID="go_home"
             editable="true"/>
-    <Condition ID="isReady2Plugin"
+    <Condition ID="isRobotOrGoalAtADS"
                editable="true"/>
-    <Condition ID="isRobotAtADS"
+    <Condition ID="isRobotOrGoalAtBCS"
                editable="true"/>
-    <Condition ID="isRobotAtBCS"
+    <Condition ID="isRobotOrGoalAtBWS"
+               editable="true"/>
+    <Condition ID="notPickGoalPosition"
                editable="true"/>
     <Action ID="pickup_cart"
             editable="true"/>
@@ -171,6 +293,10 @@
     <Action ID="plugout_ADS"
             editable="true"/>
     <Action ID="plugout_BCS"
+            editable="true"/>
+    <Action ID="recovery_arrive_BCS"
+            editable="true"/>
+    <Action ID="recovery_arrive_BWS"
             editable="true"/>
   </TreeNodesModel>
 

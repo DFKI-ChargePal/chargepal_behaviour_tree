@@ -3,84 +3,46 @@
     <Sequence>
       <error_count/>
       <IfThenElse>
-        <isCartPlaced/>
-        <RetryUntilSuccessful num_attempts="3">
-          <go_home/>
-        </RetryUntilSuccessful>
+        <notPickGoalPosition/>
         <Fallback>
           <Sequence>
-            <isRobotAtBWS/>
-            <recovery_arrive_BWS/>
-          </Sequence>
-          <Sequence>
-            <isRobotAtBCS/>
-            <Fallback>
-              <recovery_arrive_BCS/>
-              <Sequence>
-                <recovery_arrive_BWS/>
-                <go_home/>
-              </Sequence>
-            </Fallback>
-          </Sequence>
-          <Sequence>
-            <isRobotAtADS/>
-            <recovery_arrive_BWS/>
-            <Fallback>
+            <isRobotOrGoalAtBCS/>
+            <Sequence>
+              <recovery_arrive_BWS/>
               <RetryUntilSuccessful num_attempts="3">
                 <drop_cart/>
               </RetryUntilSuccessful>
-              <SubTree ID="recovery_dc"
-                       _autoremap="true"/>
-            </Fallback>
+              <RetryUntilSuccessful num_attempts="3">
+                <go_home/>
+              </RetryUntilSuccessful>
+            </Sequence>
+          </Sequence>
+          <Sequence>
+            <isRobotOrGoalAtADS/>
+            <recovery_arrive_BWS/>
+            <RetryUntilSuccessful num_attempts="3">
+              <drop_cart/>
+            </RetryUntilSuccessful>
             <RetryUntilSuccessful num_attempts="3">
               <go_home/>
             </RetryUntilSuccessful>
           </Sequence>
         </Fallback>
+        <go_home/>
       </IfThenElse>
     </Sequence>
   </BehaviorTree>
 
-  <BehaviorTree ID="recovery_dc">
-    <Sequence>
-      <error_count/>
-      <Fallback>
-        <Sequence>
-          <isRobotAtBCS/>
-          <recovery_arrive_BWS/>
-          <RetryUntilSuccessful num_attempts="3">
-            <drop_cart/>
-          </RetryUntilSuccessful>
-          <RetryUntilSuccessful num_attempts="3">
-            <go_home/>
-          </RetryUntilSuccessful>
-        </Sequence>
-        <Sequence>
-          <isRobotAtADS/>
-          <ReactiveFallback>
-            <Sequence>
-              <time_sleep/>
-              <RetryUntilSuccessful num_attempts="3">
-                <drop_cart/>
-              </RetryUntilSuccessful>
-            </Sequence>
-            <sleep_until_charged/>
-          </ReactiveFallback>
-          <Sequence>
-            <isCartPlaced/>
-            <RetryUntilSuccessful num_attempts="3">
-              <go_home/>
-            </RetryUntilSuccessful>
-          </Sequence>
-        </Sequence>
-      </Fallback>
-    </Sequence>
+  <BehaviorTree ID="recovery_einschalten/ladeprozess">
+    <SubTree ID="action_go_home"
+             _skipIf="failed_robot_action!=&quot;&quot;"
+             _autoremap="true"/>
   </BehaviorTree>
 
   <BehaviorTree ID="recovery_pc">
     <Sequence>
       <error_count/>
-      <askAssertLift/>
+      <isAssertLiftDown/>
       <RetryUntilSuccessful num_attempts="3">
         <go_home/>
       </RetryUntilSuccessful>
@@ -89,16 +51,14 @@
 
   <BehaviorTree ID="recovery_plugin">
     <Sequence>
+      <SubTree ID="action_battery_end_ladeprozess"
+               _autoremap="true"/>
       <error_count/>
       <isArmFree/>
       <recovery_arrive_BWS/>
-      <Fallback>
-        <RetryUntilSuccessful num_attempts="3">
-          <drop_cart/>
-        </RetryUntilSuccessful>
-        <SubTree ID="recovery_dc"
-                 _autoremap="true"/>
-      </Fallback>
+      <RetryUntilSuccessful num_attempts="3">
+        <drop_cart/>
+      </RetryUntilSuccessful>
       <RetryUntilSuccessful num_attempts="3">
         <go_home/>
       </RetryUntilSuccessful>
@@ -109,13 +69,9 @@
     <Sequence>
       <error_count/>
       <isArmFree/>
-      <Fallback>
-        <RetryUntilSuccessful num_attempts="3">
-          <drop_cart/>
-        </RetryUntilSuccessful>
-        <SubTree ID="recovery_dc"
-                 _autoremap="true"/>
-      </Fallback>
+      <RetryUntilSuccessful num_attempts="3">
+        <drop_cart/>
+      </RetryUntilSuccessful>
       <RetryUntilSuccessful num_attempts="3">
         <go_home/>
       </RetryUntilSuccessful>
@@ -124,8 +80,6 @@
 
   <!-- Description of Node Models (used by Groot) -->
   <TreeNodesModel>
-    <Condition ID="askAssertLift"
-               editable="true"/>
     <Action ID="drop_cart"
             editable="true"/>
     <Action ID="error_count"
@@ -134,21 +88,15 @@
             editable="true"/>
     <Condition ID="isArmFree"
                editable="true"/>
-    <Condition ID="isCartPlaced"
+    <Condition ID="isAssertLiftDown"
                editable="true"/>
-    <Condition ID="isRobotAtADS"
+    <Condition ID="isRobotOrGoalAtADS"
                editable="true"/>
-    <Condition ID="isRobotAtBCS"
+    <Condition ID="isRobotOrGoalAtBCS"
                editable="true"/>
-    <Condition ID="isRobotAtBWS"
+    <Condition ID="notPickGoalPosition"
                editable="true"/>
-    <Action ID="recovery_arrive_BCS"
-            editable="true"/>
     <Action ID="recovery_arrive_BWS"
-            editable="true"/>
-    <Action ID="sleep_until_charged"
-            editable="true"/>
-    <Action ID="time_sleep"
             editable="true"/>
   </TreeNodesModel>
 
