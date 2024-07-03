@@ -673,7 +673,7 @@ std::string current_timestamp()
 }
 
 /**
- * @brief Recovers the specified action for the cart by resetting the io poins.
+ * @brief Recovers the specified action for the cart by resetting back the io pins to the action's initial state.
  *
  * This function calls the "/mir_rest_api/reset_io_for_cart" service to recover the specified action for the cart.
  *

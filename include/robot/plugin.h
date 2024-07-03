@@ -19,16 +19,16 @@ public:
         charging_type = masterBlackboard->get<std::string>("charging_type");
         std::transform(charging_type.begin(), charging_type.end(), charging_type.begin(), ::tolower);
 
-        enter_log_file(std::any_cast<std::string>(arg_param["log_file_path"]), "Performing plugin_ADS" + charging_type + " at " + target_station);
+        enter_log_file(std::any_cast<std::string>(arg_param["log_file_path"]), "Performing plugin_" + cart + "_" + charging_type + "_" + target_station);
         if (sim_flag)
         {
-            tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("plugin__cart_") + charging_type + target_station}}}}};
+            tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("plugin_") + cart + std::string("_") + charging_type + std::string("_") + target_station}}}}};
             set_rdbc_values(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, tables_values);
 
             ros::Duration(10).sleep();
-            tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("none")}, {"previous_action", std::string("plugin_cart_") + charging_type + target_station}}}}, {CART_TABLE, {cart, {{"plugged", true}}}}};
+            tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("none")}, {"previous_action", std::string("plugin_") + cart + std::string("_") + charging_type + std::string("_") + target_station}}}}, {CART_TABLE, {cart, {{"plugged", true}}}}};
             set_rdbc_values(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, tables_values);
-
+            masterBlackboard->set("previous_robot_action", "plugin _" + cart + "_" + charging_type + "_" + target_station);
             return BT::NodeStatus::SUCCESS;
         }
         else
@@ -37,7 +37,7 @@ public:
             pi_ads.waitForServer();
 
             pi_ads.sendGoal(goal);
-            tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("plugin_cart_") + charging_type + target_station}}}}};
+            tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("plugin_") + cart + std::string("_") + charging_type + std::string("_") + target_station}}}}};
             set_rdbc_values(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, tables_values);
 
             pi_ads_action = pi_ads.waitForResult(ros::Duration(900.0));
@@ -47,18 +47,23 @@ public:
                 bool plug_in = result.success;
                 if (plug_in)
                 {
-                    tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("none")}, {"previous_action", std::string("plugin_cart_") + charging_type + target_station}}}}, {CART_TABLE, {cart, {{"plugged", true}}}}};
+                    tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("none")}, {"previous_action", std::string("plugin_") + cart + std::string("_") + charging_type + target_station}}}}, {CART_TABLE, {cart, {{"plugged", true}}}}};
                     set_rdbc_values(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, tables_values);
-                    masterBlackboard->set("previous_robot_action", "Plugin at" + charging_type + target_station);
+                    masterBlackboard->set("previous_robot_action", "plugin _" + cart + "_" + charging_type + "_" + target_station);
                     return BT::NodeStatus::SUCCESS;
                 }
+
+                enter_log_file(std::any_cast<std::string>(arg_param["log_file_path"]), "Plugin failed :" + cart + "_" + charging_type + "_" + target_station);
+                tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("none")}, {"previous_action", std::string("plugin_") + cart + charging_type + std::string("_") + target_station + "_PluginFailure"}}}}};
             }
-
-            enter_log_file(std::any_cast<std::string>(arg_param["log_file_path"]), "Plugin_ADS failed at" + charging_type + target_station);
-            tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("none")}, {"previous_action", std::string("plugin_cart_failure") + charging_type + target_station}}}}};
+            else
+            {
+                pi_ads.cancelGoal();
+                enter_log_file(std::any_cast<std::string>(arg_param["log_file_path"]), "Plugin failed : " + cart + "_" + charging_type + "_" + target_station + " cannot be finished within a timeout of 900 seconds");
+                tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("none")}, {"previous_action", std::string("plugin_") + cart + charging_type + std::string("_") + target_station + std::string("_ActionTimeout")}}}}};
+            }
             set_rdbc_values(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, tables_values);
-
-            masterBlackboard->set("failed_robot_action", "Plugin at" + charging_type + target_station);
+            masterBlackboard->set("failed_robot_action", "plugin _" + cart + "_" + charging_type + "_" + target_station);
             return BT::NodeStatus::FAILURE;
         }
     }
@@ -88,16 +93,16 @@ public:
         cart = masterBlackboard->get<std::string>("cart");
         robot = masterBlackboard->get<std::string>("robot");
         target_station = masterBlackboard->get<std::string>("target_station");
-        enter_log_file(std::any_cast<std::string>(arg_param["log_file_path"]), "Performing plugin_BCS at " + target_station);
+        enter_log_file(std::any_cast<std::string>(arg_param["log_file_path"]), "Performing plugin_" + cart + "_ac_" + target_station);
         if (sim_flag)
         {
-            tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("plugin_cart_") + target_station}}}}};
+            tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("plugin_") + cart + std::string("_ac_") + target_station}}}}};
             set_rdbc_values(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, tables_values);
 
             ros::Duration(10).sleep();
-            tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("none")}, {"previous_action", std::string("plugin_cart_") + target_station}}}}, {CART_TABLE, {cart, {{"plugged", true}}}}};
+            tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("none")}, {"previous_action", std::string("plugin_") + cart + std::string("_ac_") + target_station}}}}, {CART_TABLE, {cart, {{"plugged", true}}}}};
             set_rdbc_values(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, tables_values);
-
+            masterBlackboard->set("previous_robot_action", "plugin _" + cart + "_ac_" + target_station);
             return BT::NodeStatus::SUCCESS;
         }
         else
@@ -106,7 +111,7 @@ public:
             pi_bcs.waitForServer();
 
             pi_bcs.sendGoal(goal);
-            tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("plugin_cart_") + target_station}}}}};
+            tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("plugin_") + cart + std::string("_ac_") + target_station}}}}};
             set_rdbc_values(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, tables_values);
 
             pi_bcs_action = pi_bcs.waitForResult(ros::Duration(900.0));
@@ -116,18 +121,23 @@ public:
                 bool plug_in = result.success;
                 if (plug_in)
                 {
-                    tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("none")}, {"previous_action", std::string("plugin_cart_") + target_station}}}}, {CART_TABLE, {cart, {{"plugged", true}}}}};
+                    tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("none")}, {"previous_action", std::string("plugin_") + cart + std::string("_ac_") + target_station}}}}, {CART_TABLE, {cart, {{"plugged", true}}}}};
                     set_rdbc_values(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, tables_values);
-                    masterBlackboard->set("previous_robot_action", "Plugin at" + target_station);
+                    masterBlackboard->set("previous_robot_action", "plugin _" + cart + "_ac_" + target_station);
                     return BT::NodeStatus::SUCCESS;
                 }
+
+                enter_log_file(std::any_cast<std::string>(arg_param["log_file_path"]), "Plugin failed : " + cart + "_ac_" + target_station);
+                tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("none")}, {"previous_action", std::string("plugin_") + cart + std::string("_ac_") + target_station + std::string("_PluginFailure")}}}}};
             }
-
-            enter_log_file(std::any_cast<std::string>(arg_param["log_file_path"]), "Plugin_ADS failed at" + target_station);
-            tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("none")}, {"previous_action", std::string("plugin_cart_failure") + target_station}}}}};
+            else
+            {
+                pi_bcs.cancelGoal();
+                enter_log_file(std::any_cast<std::string>(arg_param["log_file_path"]), "Plugin failed : " + cart + "_ac_" + target_station + " cannot be finished within a timeout of 900 seconds");
+                tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("none")}, {"previous_action", std::string("plugin_") + cart + std::string("_ac_") + target_station + std::string("_ActionTimeout")}}}}};
+            }
             set_rdbc_values(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, tables_values);
-
-            masterBlackboard->set("failed_robot_action", "Plugin at" + target_station);
+            masterBlackboard->set("failed_robot_action", "plugin _" + cart + "_ac_" + target_station);
             return BT::NodeStatus::FAILURE;
         }
     }

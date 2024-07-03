@@ -40,10 +40,20 @@ public:
       {
         tables_values = {{ROBOT_TABLE, {robot, {{"cart_on_robot", std::string("none")}, {"ongoing_action", std::string("none")}, {"previous_action", std::string("place_cart_") + goal.cart_name}}}}, {CART_TABLE, {cart_on_robot, {{"robot_on_cart", std::string("none")}, {"cart_location", robot_location}}}}};
         set_rdbc_values(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, tables_values);
-        masterBlackboard->set("previous_robot_action", "place_cart of" + goal.cart_name);
+        masterBlackboard->set("previous_robot_action", "place_cart_" + goal.cart_name);
         return BT::NodeStatus::SUCCESS;
       }
       action_result = result.action_status;
+
+      enter_log_file(std::any_cast<std::string>(arg_param["log_file_path"]), "place_cart of" + goal.cart_name + " status is " +
+                                                                                 action_result);
+      tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("none")}, {"previous_action", std::string("place_cart_") + goal.cart_name + "_" + action_result}}}}};
+    }
+    else
+    {
+      plc.cancelGoal();
+      enter_log_file(std::any_cast<std::string>(arg_param["log_file_path"]), "place_cart of" + goal.cart_name + " cannot be finished within a timeout of 900 seconds");
+      tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("none")}, {"previous_action", std::string("place_cart_") + goal.cart_name + std::string("_ActionTimeout")}}}}};
     }
     // RESET IO PINS OF THE ROBOT FOR RETRYING THE PLACE_CART ACTION AGAIN
     recover_status = recover_cart("place_cart");
@@ -52,12 +62,10 @@ public:
       enter_log_file(std::any_cast<std::string>(arg_param["log_file_path"]), "place_cart of" + goal.cart_name +
                                                                                  " IO recover status is False");
     }
-    enter_log_file(std::any_cast<std::string>(arg_param["log_file_path"]), "place_cart of" + goal.cart_name + " status is " +
-                                                                               action_result);
-    tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("none")}, {"previous_action", std::string("place_cart_failure") + goal.cart_name}}}}};
+
     set_rdbc_values(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, tables_values);
     masterBlackboard->set("failed_robot_action",
-                          "place_cart of" + goal.cart_name);
+                          "place_cart_" + goal.cart_name);
     return BT::NodeStatus::FAILURE;
   }
 

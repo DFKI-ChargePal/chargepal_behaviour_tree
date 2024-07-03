@@ -3,7 +3,7 @@
 
 /**
  * @brief The `arrive_at_station` class is a synchronous action node in the behavior tree.
- * 
+ *
  * This node is responsible for sending a goal to the `arrive_at_station` action server and
  * waiting for the robot to reach the target station. It retrieves necessary information from
  * the blackboard and performs appropriate actions based on the current state of the robot
@@ -70,9 +70,18 @@ public:
       }
     }
     aas_goal_string = std::string("arrive_at_station_") + goal.target_station;
+    station_transition = robot_location + "_" + goal.target_station;
     masterBlackboard->set("current_aas_goal", goal.target_station);
     aas.sendGoal(goal);
-    tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", aas_goal_string}}}}};
+    if (cart_on_robot != "none" && cart_on_robot != "")
+    {
+      tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", aas_goal_string}, {"robot_location", station_transition}}}}, {CART_TABLE, {cart_on_robot, {{"cart_location", station_transition}}}}};
+    }
+    else
+    {
+      tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", aas_goal_string}, {"robot_location", station_transition}}}}};
+    }
+
     set_rdbc_values(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, tables_values);
     enter_log_file(std::any_cast<std::string>(arg_param["log_file_path"]), "Performing " + aas_goal_string);
     bool aas_action = aas.waitForResult(ros::Duration(900.0));
@@ -81,6 +90,7 @@ public:
       chargepal_actions::ArriveAtStationResult result = *aas.getResult();
 
       bool station_reached = result.station_reached;
+      action_result = result.action_status;
 
       if (station_reached)
       {
@@ -99,19 +109,25 @@ public:
         masterBlackboard->set("previous_robot_action", aas_goal_string);
         return BT::NodeStatus::SUCCESS;
       }
-      action_result = result.action_status;
-    }
-    enter_log_file(std::any_cast<std::string>(arg_param["log_file_path"]), aas_goal_string + " status is " +
-                                                                               action_result);
 
-    tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("none")}, {"previous_action", aas_goal_string + "_" + action_result}, {"robot_location", robot_location}}}}};
+      enter_log_file(std::any_cast<std::string>(arg_param["log_file_path"]), aas_goal_string + " status is " +
+                                                                                 action_result);
+
+      tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("none")}, {"previous_action", aas_goal_string + "_" + action_result}}}}};
+    }
+    else
+    {
+      aas.cancelGoal();
+      enter_log_file(std::any_cast<std::string>(arg_param["log_file_path"]), aas_goal_string + " cannot be finished within a timeout of 900 seconds");
+      tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("none")}, {"previous_action", aas_goal_string + std::string("_ActionTimeout")}}}}};
+    }
     set_rdbc_values(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, tables_values);
     masterBlackboard->set("failed_robot_action", aas_goal_string);
     return BT::NodeStatus::FAILURE;
   }
 
 private:
-  std::string job, cart, robot, source_station, target_station, robot_location, cart_on_robot, action_result, aas_goal_string;
+  std::string job, cart, robot, source_station, target_station, robot_location, cart_on_robot, action_result, aas_goal_string, station_transition;
   std::vector<TableInfo> tables_values;
   std::map<std::string, std::any> arg_param;
 };

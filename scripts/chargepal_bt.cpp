@@ -806,7 +806,7 @@ int main(int argc, char **argv)
             status == BT::NodeStatus::FAILURE)
         {
           job_status = enumToString(masterBlackboard->get<int>("job_status"));
-          tables_values = {{ROBOT_TABLE, {std::any_cast<std::string>(cp_params["robot"]), {{"availability", true}, {"job_status", job_status}}}}};
+          tables_values = {{ROBOT_TABLE, {std::any_cast<std::string>(cp_params["robot"]), {{"availability", true}, {"job_status", job_status},{"current_job_id", std::string("none")}}}}};
           set_rdbc_values(std::any_cast<std::string>(cp_params["rdbc_path"]), std::any_cast<std::string>(cp_params["robot"]), tables_values);
           enter_log_file(std::any_cast<std::string>(cp_params["log_file_path"]), "Updating job status as: " + job_status);
 
