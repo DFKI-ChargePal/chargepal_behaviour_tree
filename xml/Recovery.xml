@@ -3,7 +3,7 @@
     <Sequence>
       <error_count/>
       <IfThenElse>
-        <notPickGoalPosition/>
+        <notPickGoalLocation/>
         <Fallback>
           <Sequence>
             <isRobotOrGoalAtBCS/>
@@ -94,7 +94,7 @@
                editable="true"/>
     <Condition ID="isRobotOrGoalAtBCS"
                editable="true"/>
-    <Condition ID="notPickGoalPosition"
+    <Condition ID="notPickGoalLocation"
                editable="true"/>
     <Action ID="recovery_arrive_BWS"
             editable="true"/>

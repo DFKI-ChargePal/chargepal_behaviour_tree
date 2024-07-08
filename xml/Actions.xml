@@ -6,7 +6,7 @@
         <arrive_at_station/>
       </RetryUntilSuccessful>
       <Sequence _onSuccess="&quot;job_status=1&quot;">
-        <notPickGoalPosition/>
+        <notPickGoalLocation/>
         <Fallback>
           <Sequence>
             <isRobotOrGoalAtBWS/>
@@ -282,7 +282,7 @@
                editable="true"/>
     <Condition ID="isRobotOrGoalAtBWS"
                editable="true"/>
-    <Condition ID="notPickGoalPosition"
+    <Condition ID="notPickGoalLocation"
                editable="true"/>
     <Action ID="pickup_cart"
             editable="true"/>

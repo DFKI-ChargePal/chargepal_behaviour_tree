@@ -170,7 +170,7 @@ public:
                 chargepal_actions::ArriveAtStationGoal goal;
                 robot_location = read_robot_value(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, "robot_location");
                 goal.target_station = free_bcs;
-                station_transition = robot_location + "_" + goal.target_station;
+                station_transition = robot_location + "_to_" + goal.target_station;
                 aas.sendGoal(goal);
                 if (cart_on_robot != "none" && cart_on_robot != "")
                 {

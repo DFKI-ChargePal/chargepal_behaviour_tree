@@ -167,10 +167,10 @@ private:
   std::map<std::string, std::any> arg_param;
 };
 
-class notPickGoalPosition : public BT::ConditionNode
+class notPickGoalLocation : public BT::ConditionNode
 {
 public:
-  notPickGoalPosition(const std::string &name, const BT::NodeConfiguration &config, std::map<std::string, std::any> arg_cp_params)
+  notPickGoalLocation(const std::string &name, const BT::NodeConfiguration &config, std::map<std::string, std::any> arg_cp_params)
       : BT::ConditionNode(name, config), arg_param(arg_cp_params) {}
 
   static PortsList providedPorts() { return {}; }
@@ -180,7 +180,7 @@ public:
     BT::Blackboard::Ptr masterBlackboard = config().blackboard;
     std::string current_aas_goal = masterBlackboard->get<std::string>("current_aas_goal");
 
-   if (current_aas_goal.find("pick") != std::string::npos)
+    if (current_aas_goal.find("pick") != std::string::npos)
     {
       return BT::NodeStatus::SUCCESS;
     }
@@ -239,10 +239,17 @@ public:
   {
     BT::Blackboard::Ptr masterBlackboard = config().blackboard;
     std::string robot = masterBlackboard->get<std::string>("robot");
-    std::string current_aas_goal = masterBlackboard->get<std::string>("current_aas_goal");
-
+    // std::string current_aas_goal = masterBlackboard->get<std::string>("current_aas_goal");
     std::string location = read_robot_value(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, "robot_location");
-    if (location.find("BWS") != std::string::npos || current_aas_goal.find("BWS") != std::string::npos)
+
+    size_t station_transition = location.find("_to_");
+    //"_to_" is found
+    if (station_transition != std::string::npos && location.find("BWS", station_transition + std::string("_to_").length()) != std::string::npos)
+    {
+      return BT::NodeStatus::SUCCESS;
+    }
+
+    else if (location.find("BWS") != std::string::npos)
     {
       return BT::NodeStatus::SUCCESS;
     }
@@ -250,10 +257,20 @@ public:
     {
       return NodeStatus::FAILURE;
     }
+
+    /* if (location.find("BWS") != std::string::npos || current_aas_goal.find("BWS") != std::string::npos)
+    {
+      return BT::NodeStatus::SUCCESS;
+    }
+    else
+    {
+      return NodeStatus::FAILURE;
+    } */
   }
 
 private:
-  std::map<std::string, std::any> arg_param;
+  std::map<std::string, std::any>
+      arg_param;
 };
 
 class isRobotOrGoalAtBCS : public BT::ConditionNode
@@ -268,10 +285,16 @@ public:
   {
     BT::Blackboard::Ptr masterBlackboard = config().blackboard;
     std::string robot = masterBlackboard->get<std::string>("robot");
-    std::string current_aas_goal = masterBlackboard->get<std::string>("current_aas_goal");
-
+    // std::string current_aas_goal = masterBlackboard->get<std::string>("current_aas_goal");
     std::string location = read_robot_value(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, "robot_location");
-    if (location.find("BCS") != std::string::npos || current_aas_goal.find("BCS") != std::string::npos)
+    size_t station_transition = location.find("_to_");
+
+    //"_to_" is found
+    if (station_transition != std::string::npos && location.find("BCS", station_transition + std::string("_to_").length()) != std::string::npos)
+    {
+      return BT::NodeStatus::SUCCESS;
+    }
+    else if (location.find("BCS") != std::string::npos)
     {
       return BT::NodeStatus::SUCCESS;
     }
@@ -297,11 +320,16 @@ public:
   {
     BT::Blackboard::Ptr masterBlackboard = config().blackboard;
     std::string robot = masterBlackboard->get<std::string>("robot");
-    std::string current_aas_goal = masterBlackboard->get<std::string>("current_aas_goal");
-
+    // std::string current_aas_goal = masterBlackboard->get<std::string>("current_aas_goal");
     std::string location = read_robot_value(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, "robot_location");
-    if (location.find("ADS") != std::string::npos ||
-        current_aas_goal.find("ADS") != std::string::npos)
+
+    size_t station_transition = location.find("_to_");
+    //"_to_" is found
+    if (station_transition != std::string::npos && location.find("ADS", station_transition + std::string("_to_").length()) != std::string::npos)
+    {
+      return BT::NodeStatus::SUCCESS;
+    }
+    else if (location.find("ADS") != std::string::npos)
     {
       return BT::NodeStatus::SUCCESS;
     }
@@ -681,7 +709,7 @@ int main(int argc, char **argv)
   factory.registerNodeType<isbattery_BWS>("isbattery_BWS", cp_params);
   factory.registerNodeType<isAssertLiftDown>("isAssertLiftDown", cp_params);
   factory.registerNodeType<isCartPlaced>("isCartPlaced", cp_params);
-  factory.registerNodeType<notPickGoalPosition>("notPickGoalPosition", cp_params);
+  factory.registerNodeType<notPickGoalLocation>("notPickGoalLocation", cp_params);
 
   factory.registerNodeType<arrive_at_station>("arrive_at_station", cp_params);
   factory.registerNodeType<go_home>("go_home", cp_params);
@@ -806,7 +834,7 @@ int main(int argc, char **argv)
             status == BT::NodeStatus::FAILURE)
         {
           job_status = enumToString(masterBlackboard->get<int>("job_status"));
-          tables_values = {{ROBOT_TABLE, {std::any_cast<std::string>(cp_params["robot"]), {{"availability", true}, {"job_status", job_status},{"current_job_id", std::string("none")}}}}};
+          tables_values = {{ROBOT_TABLE, {std::any_cast<std::string>(cp_params["robot"]), {{"availability", true}, {"job_status", job_status}, {"current_job_id", std::string("none")}}}}};
           set_rdbc_values(std::any_cast<std::string>(cp_params["rdbc_path"]), std::any_cast<std::string>(cp_params["robot"]), tables_values);
           enter_log_file(std::any_cast<std::string>(cp_params["log_file_path"]), "Updating job status as: " + job_status);
 
@@ -818,7 +846,8 @@ int main(int argc, char **argv)
           {
             break;
           }
-          if(job_status =="failure"){
+          if (job_status == "failure")
+          {
             break;
           }
         }

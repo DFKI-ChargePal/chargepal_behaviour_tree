@@ -70,7 +70,7 @@ public:
       }
     }
     aas_goal_string = std::string("arrive_at_station_") + goal.target_station;
-    station_transition = robot_location + "_" + goal.target_station;
+    station_transition = robot_location + "_to_" + goal.target_station;
     masterBlackboard->set("current_aas_goal", goal.target_station);
     aas.sendGoal(goal);
     if (cart_on_robot != "none" && cart_on_robot != "")

@@ -36,7 +36,7 @@ public:
         goal.target_station = "RBS_" + robot_number;
       }
     }
-    station_transition = robot_location + "_" + goal.target_station;
+    station_transition = robot_location + "_to_" + goal.target_station;
     aah.sendGoal(goal);
     tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("go_home_") + goal.target_station}, {"robot_location", station_transition}}}}};
     set_rdbc_values(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, tables_values);
