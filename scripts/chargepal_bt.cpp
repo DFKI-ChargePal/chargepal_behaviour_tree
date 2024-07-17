@@ -755,8 +755,107 @@ int main(int argc, char **argv)
       if (!job_input.empty())
       {
         job_requested = json::parse(job_input);
-      }
+        
+        // IF FETCHED JOB IS NOT EMPTY
+        if (!job_requested.empty())
+        {
+          // CLEAR LOG FILE
+          logFile.open(std::any_cast<std::string>(cp_params["log_file_path"]), std::ofstream::out | std::ofstream::trunc);
+          logFile.close();
+          enter_log_file(std::any_cast<std::string>(cp_params["log_file_path"]), "Received job : " + job_input);
 
+          int job_id = job_requested["job_id"];
+          std::string job_type = job_requested["job_type"];
+          std::string robot = job_requested["robot_name"];
+          std::string cart = job_requested["cart"];
+          std::string source_station = job_requested["source_station"];
+          std::string target_station = job_requested["target_station"];
+          std::string charging_type = job_requested["charging_type"];
+
+          try
+          {
+            if (robot != std::any_cast<std::string>(cp_params["robot"]))
+            {
+              enter_log_file(std::any_cast<std::string>(cp_params["log_file_path"]), "Robot Name in config and Robot Name from server do not match!");
+              break;
+            }
+          }
+          catch (const std::bad_any_cast &e)
+          {
+            std::cerr << "Bad any cast: " << e.what() << std::endl;
+          }
+
+          // VEFRIFY SERVER CONNECTION WITH ROBOT DATABASE
+          bool rdb_sync = verify_rdb_ldb_connection(std::any_cast<int>(cp_params["server_timeout"]));
+          if (rdb_sync)
+          {
+            // UPDATE RDBC TABLE WITH JOB'S ROBOT AND CART
+            std::map<std::string, std::vector<std::string>> target_components = identify_job_components(cp_params, job_requested);
+            pull_rdb_to_rdbc(target_components);
+
+            // SET BT BLACKBOARD
+            masterBlackboard->set("job_type", job_type);
+            masterBlackboard->set("robot", robot);
+            masterBlackboard->set("cart", cart);
+            masterBlackboard->set("source_station", source_station);
+            masterBlackboard->set("target_station", target_station);
+            masterBlackboard->set("charging_type", charging_type);
+            masterBlackboard->set("job_status", 0);
+            masterBlackboard->set("current_aas_goal", "");
+            masterBlackboard->set("failed_robot_action", "");
+            masterBlackboard->set("previous_robot_action", "");
+            masterBlackboard->set("previous_battery_action", "");
+            masterBlackboard->set("failed_battery_action", "");
+
+            ROS_INFO("Performing: %s", job_type.c_str());
+            job_status = enumToString(masterBlackboard->get<int>("job_status"));
+
+            tables_values = {{ROBOT_TABLE, {std::any_cast<std::string>(cp_params["robot"]), {{"current_job_id", job_id}, {"availability", false}, {"job_status", job_status}}}}};
+            set_rdbc_values(std::any_cast<std::string>(cp_params["rdbc_path"]), std::any_cast<std::string>(cp_params["robot"]), tables_values);
+            // update_job_monitor(std::any_cast<int>(cp_params["server_timeout"]), std::any_cast<std::string>(cp_params["robot"]), job_type, job_status);
+
+            mainTree.tickWhileRunning();
+            BT::NodeStatus status = mainTree.rootNode()->status();
+
+            if (status == BT::NodeStatus::SUCCESS || status == BT::NodeStatus::IDLE ||
+                status == BT::NodeStatus::FAILURE)
+            {
+              job_status = enumToString(masterBlackboard->get<int>("job_status"));
+              tables_values = {{ROBOT_TABLE, {std::any_cast<std::string>(cp_params["robot"]), {{"availability", true}, {"job_status", job_status}, {"current_job_id", std::string("none")}}}}};
+              set_rdbc_values(std::any_cast<std::string>(cp_params["rdbc_path"]), std::any_cast<std::string>(cp_params["robot"]), tables_values);
+              enter_log_file(std::any_cast<std::string>(cp_params["log_file_path"]), "Updating job status as: " + job_status);
+
+              job_server_update = update_job_monitor(std::any_cast<int>(cp_params["server_timeout"]), std::any_cast<std::string>(cp_params["robot"]), job_type, job_status);
+              enter_log_file(std::any_cast<std::string>(cp_params["log_file_path"]), "The job update to server is  :" + job_server_update);
+              job_requested.clear();
+              std::cout << "................................................................" << std::endl;
+              if (!job_server_update)
+              {
+                break;
+              }
+              if (job_status == "failure")
+              {
+                break;
+              }
+            }
+          }
+
+          // IF SERVER IS NOT CONNECTED AFTER JOB FETCH
+          else
+          {
+            enter_log_file(std::any_cast<std::string>(cp_params["log_file_path"]), "No server connection to the robot after job fetch.");
+            calling_help(robot, "No server connection after job fetch.");
+            break;
+            // job_server_update = update_job_monitor(std::any_cast<int>(cp_params["server_timeout"]), std::any_cast<std::string>(cp_params["robot"]), job_type, "Failure");
+            // enter_log_file(std::any_cast<std::string>(cp_params["log_file_path"]), "The job update received is  :" + job_server_update);
+            // job_requested.clear();
+            // if (!job_server_update)
+            //{
+            //   break;
+            // }
+          }
+        }
+      }
       else
       {
         tables_values = {{ROBOT_TABLE, {std::any_cast<std::string>(cp_params["robot"]), {{"robot_charge", ""}}}}};
@@ -767,106 +866,6 @@ int main(int argc, char **argv)
     catch (const nlohmann::json::exception &e)
     {
       std::cerr << "Error parsing JSON: " << e.what() << std::endl;
-    }
-
-    // IF FETCHED JOB IS NOT EMPTY
-    if (!job_requested.empty())
-    {
-      // CLEAR LOG FILE
-      logFile.open(std::any_cast<std::string>(cp_params["log_file_path"]), std::ofstream::out | std::ofstream::trunc);
-      logFile.close();
-      enter_log_file(std::any_cast<std::string>(cp_params["log_file_path"]), "Received job : " + job_input);
-
-      int job_id = job_requested["job_id"];
-      std::string job_type = job_requested["job_type"];
-      std::string robot = job_requested["robot_name"];
-      std::string cart = job_requested["cart"];
-      std::string source_station = job_requested["source_station"];
-      std::string target_station = job_requested["target_station"];
-      std::string charging_type = job_requested["charging_type"];
-
-      try
-      {
-        if (robot != std::any_cast<std::string>(cp_params["robot"]))
-        {
-          enter_log_file(std::any_cast<std::string>(cp_params["log_file_path"]), "Robot Name in config and Robot Name from server do not match!");
-          break;
-        }
-      }
-      catch (const std::bad_any_cast &e)
-      {
-        std::cerr << "Bad any cast: " << e.what() << std::endl;
-      }
-
-      // VEFRIFY SERVER CONNECTION WITH ROBOT DATABASE
-      bool rdb_sync = verify_rdb_ldb_connection(std::any_cast<int>(cp_params["server_timeout"]));
-      if (rdb_sync)
-      {
-        // UPDATE RDBC TABLE WITH JOB'S ROBOT AND CART
-        std::map<std::string, std::vector<std::string>> target_components = identify_job_components(cp_params, job_requested);
-        pull_rdb_to_rdbc(target_components);
-
-        // SET BT BLACKBOARD
-        masterBlackboard->set("job_type", job_type);
-        masterBlackboard->set("robot", robot);
-        masterBlackboard->set("cart", cart);
-        masterBlackboard->set("source_station", source_station);
-        masterBlackboard->set("target_station", target_station);
-        masterBlackboard->set("charging_type", charging_type);
-        masterBlackboard->set("job_status", 0);
-        masterBlackboard->set("current_aas_goal", "");
-        masterBlackboard->set("failed_robot_action", "");
-        masterBlackboard->set("previous_robot_action", "");
-        masterBlackboard->set("previous_battery_action", "");
-        masterBlackboard->set("failed_battery_action", "");
-
-        ROS_INFO("Performing: %s", job_type.c_str());
-        job_status = enumToString(masterBlackboard->get<int>("job_status"));
-
-        tables_values = {{ROBOT_TABLE, {std::any_cast<std::string>(cp_params["robot"]), {{"current_job_id", job_id}, {"availability", false}, {"job_status", job_status}}}}};
-        set_rdbc_values(std::any_cast<std::string>(cp_params["rdbc_path"]), std::any_cast<std::string>(cp_params["robot"]), tables_values);
-        // update_job_monitor(std::any_cast<int>(cp_params["server_timeout"]), std::any_cast<std::string>(cp_params["robot"]), job_type, job_status);
-
-        mainTree.tickWhileRunning();
-        BT::NodeStatus status = mainTree.rootNode()->status();
-
-        if (status == BT::NodeStatus::SUCCESS || status == BT::NodeStatus::IDLE ||
-            status == BT::NodeStatus::FAILURE)
-        {
-          job_status = enumToString(masterBlackboard->get<int>("job_status"));
-          tables_values = {{ROBOT_TABLE, {std::any_cast<std::string>(cp_params["robot"]), {{"availability", true}, {"job_status", job_status}, {"current_job_id", std::string("none")}}}}};
-          set_rdbc_values(std::any_cast<std::string>(cp_params["rdbc_path"]), std::any_cast<std::string>(cp_params["robot"]), tables_values);
-          enter_log_file(std::any_cast<std::string>(cp_params["log_file_path"]), "Updating job status as: " + job_status);
-
-          job_server_update = update_job_monitor(std::any_cast<int>(cp_params["server_timeout"]), std::any_cast<std::string>(cp_params["robot"]), job_type, job_status);
-          enter_log_file(std::any_cast<std::string>(cp_params["log_file_path"]), "The job update to server is  :" + job_server_update);
-          job_requested.clear();
-          std::cout << "................................................................" << std::endl;
-          if (!job_server_update)
-          {
-            break;
-          }
-          if (job_status == "failure")
-          {
-            break;
-          }
-        }
-      }
-
-      // IF SERVER IS NOT CONNECTED AFTER JOB FETCH
-      else
-      {
-        enter_log_file(std::any_cast<std::string>(cp_params["log_file_path"]), "No server connection to the robot after job fetch.");
-        calling_help(robot, "No server connection after job fetch.");
-        break;
-        // job_server_update = update_job_monitor(std::any_cast<int>(cp_params["server_timeout"]), std::any_cast<std::string>(cp_params["robot"]), job_type, "Failure");
-        // enter_log_file(std::any_cast<std::string>(cp_params["log_file_path"]), "The job update received is  :" + job_server_update);
-        // job_requested.clear();
-        // if (!job_server_update)
-        //{
-        //   break;
-        // }
-      }
     }
   }
   /* if (!job_server_update)

@@ -22,8 +22,9 @@ public:
     bcs.waitForServer();
     
     goal.cart_name = cart_name;
-    goal.request_name = "ladeprozess_start";
-    tables_values = {{BATTERY_ACTIONS_TABLE, {cart_name, {{"action_state", std::string("perfroming_ladeprozess_start_")+goal.cart_name}}}}};
+    goal.station_name = read_robot_value(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, "robot_location");
+    goal.request_name = "ladeprozess_start_"+std::string(masterBlackboard->get<std::string>("charging_type"));
+    tables_values = {{BATTERY_ACTIONS_TABLE, {cart_name, {{"action_state", std::string("perfroming_ladeprozess_start_")+cart_name}}}}};
     set_rdbc_values(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, tables_values);
     enter_log_file(std::any_cast<std::string>(arg_param["log_file_path"]), "Performing Ladeprozess start for " + cart_name);
     bcs.sendGoal(goal);
@@ -38,18 +39,18 @@ public:
       chargepal_actions::BatteryCommunicationResult result = *bcs.getResult();
       if (result.success)
       {
-        tables_values = {{BATTERY_ACTIONS_TABLE, {cart_name, {{"action_state", std::string("successful_ladeprozess_start_")+goal.cart_name}}}}};
+        tables_values = {{BATTERY_ACTIONS_TABLE, {cart_name, {{"action_state", std::string("successful_ladeprozess_start_")+cart_name}}}}};
         set_rdbc_values(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, tables_values);
         enter_log_file(std::any_cast<std::string>(arg_param["log_file_path"]), "Finished Ladeprozess ende for " + cart_name);
-        masterBlackboard->set("previous_battery_action", std::string("ladeprozess_start_") + goal.cart_name);
+        masterBlackboard->set("previous_battery_action", std::string("ladeprozess_start_") + cart_name);
         return BT::NodeStatus::SUCCESS;
       }
       else
       {
-        tables_values = {{BATTERY_ACTIONS_TABLE, {cart_name, {{"action_state", std::string("failure_ladeprozess_start_")+goal.cart_name}}}}};
+        tables_values = {{BATTERY_ACTIONS_TABLE, {cart_name, {{"action_state", std::string("failure_ladeprozess_start_")+cart_name}}}}};
         set_rdbc_values(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, tables_values);
         enter_log_file(std::any_cast<std::string>(arg_param["log_file_path"]), "Failure of Ladeprozess start for " + cart_name);
-        masterBlackboard->set("failed_battery_action", std::string("ladeprozess_start_") + goal.cart_name);
+        masterBlackboard->set("failed_battery_action", std::string("ladeprozess_start_") + cart_name);
         
         return BT::NodeStatus::FAILURE;
       }
@@ -60,10 +61,10 @@ public:
       if (system_clock::now() >= deadline_)
       {
         bcs.cancelGoal();
-        tables_values = {{BATTERY_ACTIONS_TABLE, {cart_name, {{"action_state", std::string("failure_ladeprozess_start_")+goal.cart_name}}}}};
+        tables_values = {{BATTERY_ACTIONS_TABLE, {cart_name, {{"action_state", std::string("failure_ladeprozess_start_")+cart_name}}}}};
         set_rdbc_values(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, tables_values);
         enter_log_file(std::any_cast<std::string>(arg_param["log_file_path"]), "Failure of Ladeprozess start for " + cart_name + ". Action timeout reached");
-        masterBlackboard->set("failed_battery_action", std::string("ladeprozess_start_") + goal.cart_name);
+        masterBlackboard->set("failed_battery_action", std::string("ladeprozess_start_") + cart_name);
         return BT::NodeStatus::FAILURE;
       }
       else
