@@ -31,6 +31,7 @@ public:
     job = masterBlackboard->get<std::string>("job_type");
     cart = masterBlackboard->get<std::string>("cart");
     robot = masterBlackboard->get<std::string>("robot");
+    charging_type = masterBlackboard->get<std::string>("charging_type");
     source_station = masterBlackboard->get<std::string>("source_station");
     target_station = masterBlackboard->get<std::string>("target_station");
     robot_location = read_robot_value(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, "robot_location");
@@ -66,8 +67,11 @@ public:
     {
       if (job == "RECHARGE_CHARGER" || job == "STOW_CHARGER")
       {
-        goal.target_station = goal.target_station + "_pick";
+        goal.target_station = goal.target_station + "_" + toupper(charging_type) + "_pick";
       }
+      else{
+        goal.target_station = goal.target_station + "_" + toupper(charging_type);
+        }
     }
     aas_goal_string = std::string("arrive_at_station_") + goal.target_station;
     station_transition = robot_location + "_to_" + goal.target_station;
@@ -127,7 +131,7 @@ public:
   }
 
 private:
-  std::string job, cart, robot, source_station, target_station, robot_location, cart_on_robot, action_result, aas_goal_string, station_transition;
+  std::string job, cart, robot, source_station, target_station, robot_location, cart_on_robot, action_result, aas_goal_string, station_transition, charging_type;
   std::vector<TableInfo> tables_values;
   std::map<std::string, std::any> arg_param;
 };
