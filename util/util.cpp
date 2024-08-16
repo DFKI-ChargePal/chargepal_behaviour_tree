@@ -761,7 +761,7 @@ std::map<std::string, std::any> set_ros_params(const ros::NodeHandle &nh)
   std::string rdb_path;
   std::string log_file_path;
   std::string robot;
-  bool sim_flag;
+  bool sim_flag, plugin_enabled, plugout_enabled;
 
   nh.getParam("/recovery_enabled", recovery_flag);
   nh.getParam("/server_timeout", server_timeout);
@@ -770,6 +770,8 @@ std::map<std::string, std::any> set_ros_params(const ros::NodeHandle &nh)
   nh.getParam("/log_file_path", log_file_path);
   nh.getParam("/robot_name", robot);
   nh.getParam("/sim_flag", sim_flag);
+  nh.getParam("/plugin_enabled", plugin_enabled);
+  nh.getParam("/plugout_enabled", plugout_enabled);
 
   chargepal_ros_params["recovery_flag"] = recovery_flag;
   chargepal_ros_params["server_timeout"] = server_timeout;
@@ -778,6 +780,8 @@ std::map<std::string, std::any> set_ros_params(const ros::NodeHandle &nh)
   chargepal_ros_params["log_file_path"] = log_file_path;
   chargepal_ros_params["robot"] = robot;
   chargepal_ros_params["sim_flag"] = sim_flag;
+  chargepal_ros_params["plugin_enabled"] = plugin_enabled;
+  chargepal_ros_params["plugout_enabled"] = plugout_enabled;
   return chargepal_ros_params;
 }
 

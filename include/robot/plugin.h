@@ -12,6 +12,7 @@ public:
     BT::NodeStatus tick() override
     {
         sim_flag = std::any_cast<bool>(arg_param["sim_flag"]);
+        plugin_enabled = std::any_cast<bool>(arg_param["plugin_enabled"]);
         masterBlackboard = config().blackboard;
         cart = masterBlackboard->get<std::string>("cart");
         robot = masterBlackboard->get<std::string>("robot");
@@ -20,7 +21,7 @@ public:
         std::transform(charging_type.begin(), charging_type.end(), charging_type.begin(), ::tolower);
 
         enter_log_file(std::any_cast<std::string>(arg_param["log_file_path"]), "Performing plugin_" + cart + "_" + charging_type + "_" + target_station);
-        if (sim_flag)
+        if (sim_flag || !plugin_enabled)
         {
             tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("plugin_") + cart + std::string("_") + charging_type + std::string("_") + target_station}}}}};
             set_rdbc_values(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, tables_values);
@@ -69,7 +70,7 @@ public:
     }
 
 private:
-    bool sim_flag, pi_ads_action;
+    bool sim_flag, plugin_enabled, pi_ads_action;
     BT::Blackboard::Ptr masterBlackboard;
     std::vector<TableInfo> tables_values;
     chargepal_actions::PlugInAdsAcGoal goal;
@@ -89,12 +90,13 @@ public:
     BT::NodeStatus tick() override
     {
         sim_flag = std::any_cast<bool>(arg_param["sim_flag"]);
+        plugin_enabled = std::any_cast<bool>(arg_param["plugin_enabled"]);
         masterBlackboard = config().blackboard;
         cart = masterBlackboard->get<std::string>("cart");
         robot = masterBlackboard->get<std::string>("robot");
         target_station = masterBlackboard->get<std::string>("target_station");
         enter_log_file(std::any_cast<std::string>(arg_param["log_file_path"]), "Performing plugin_" + cart + "_ac_" + target_station);
-        if (sim_flag)
+        if (sim_flag || !plugin_enabled)
         {
             tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("plugin_") + cart + std::string("_ac_") + target_station}}}}};
             set_rdbc_values(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, tables_values);
@@ -143,7 +145,7 @@ public:
     }
 
 private:
-    bool sim_flag, pi_bcs_action;
+    bool sim_flag, plugin_enabled, pi_bcs_action;
     BT::Blackboard::Ptr masterBlackboard;
     std::vector<TableInfo> tables_values;
     chargepal_actions::PlugInBcsAcGoal goal;

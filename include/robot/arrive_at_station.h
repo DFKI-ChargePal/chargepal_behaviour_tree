@@ -32,6 +32,7 @@ public:
     cart = masterBlackboard->get<std::string>("cart");
     robot = masterBlackboard->get<std::string>("robot");
     charging_type = masterBlackboard->get<std::string>("charging_type");
+    std::transform(charging_type.begin(), charging_type.end(), charging_type.begin(),[](unsigned char c){ return std::toupper(c); });
     source_station = masterBlackboard->get<std::string>("source_station");
     target_station = masterBlackboard->get<std::string>("target_station");
     robot_location = read_robot_value(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, "robot_location");
@@ -67,10 +68,10 @@ public:
     {
       if (job == "RECHARGE_CHARGER" || job == "STOW_CHARGER")
       {
-        goal.target_station = goal.target_station + "_" + toupper(charging_type) + "_pick";
+        goal.target_station = goal.target_station + "_" + charging_type + "_pick";
       }
       else{
-        goal.target_station = goal.target_station + "_" + toupper(charging_type);
+        goal.target_station = goal.target_station + "_" + charging_type;
         }
     }
     aas_goal_string = std::string("arrive_at_station_") + goal.target_station;

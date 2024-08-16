@@ -39,6 +39,7 @@
 #include <SQLiteCpp/SQLiteCpp.h>
 #include <actionlib/client/simple_action_client.h>
 #include <actionlib/client/terminal_state.h>
+#include <algorithm>
 #include <cctype>
 #include <chrono>
 #include <fstream>
