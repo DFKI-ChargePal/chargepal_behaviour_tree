@@ -9,23 +9,35 @@
             <isRobotOrGoalAtBCS/>
             <Sequence>
               <recovery_arrive_BWS/>
-              <RetryUntilSuccessful num_attempts="3">
-                <drop_cart/>
-              </RetryUntilSuccessful>
-              <RetryUntilSuccessful num_attempts="3">
-                <go_home/>
-              </RetryUntilSuccessful>
+              <ParallelAll max_failures="1">
+                <SubTree ID="action_battery_ausschalten"
+                         _autoremap="true"/>
+                <Sequence>
+                  <RetryUntilSuccessful num_attempts="3">
+                    <drop_cart/>
+                  </RetryUntilSuccessful>
+                  <RetryUntilSuccessful num_attempts="3">
+                    <go_home/>
+                  </RetryUntilSuccessful>
+                </Sequence>
+              </ParallelAll>
             </Sequence>
           </Sequence>
           <Sequence>
             <isRobotOrGoalAtADS/>
             <recovery_arrive_BWS/>
-            <RetryUntilSuccessful num_attempts="3">
-              <drop_cart/>
-            </RetryUntilSuccessful>
-            <RetryUntilSuccessful num_attempts="3">
-              <go_home/>
-            </RetryUntilSuccessful>
+            <ParallelAll max_failures="1">
+              <SubTree ID="action_battery_ausschalten"
+                       _autoremap="true"/>
+              <Sequence>
+                <RetryUntilSuccessful num_attempts="3">
+                  <drop_cart/>
+                </RetryUntilSuccessful>
+                <RetryUntilSuccessful num_attempts="3">
+                  <go_home/>
+                </RetryUntilSuccessful>
+              </Sequence>
+            </ParallelAll>
           </Sequence>
         </Fallback>
         <go_home/>

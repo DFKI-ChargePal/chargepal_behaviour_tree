@@ -12,6 +12,7 @@
 #include "battery/start_ladeprozess.h"
 #include "battery/idle.h"
 #include "battery/modus_start.h"
+#include "battery/bat_only.h"
 
 class isBRING_CHARGER : public BT::ConditionNode
 {
@@ -748,6 +749,7 @@ int main(int argc, char **argv)
   factory.registerNodeType<battery_mode_req_idle>("battery_mode_req_idle", cp_params);
   factory.registerNodeType<battery_mode_req_charge>("battery_mode_req_charge", cp_params);
   factory.registerNodeType<battery_mode_req_standby>("battery_mode_req_standby", cp_params);
+  factory.registerNodeType<battery_mode_bat_only>("battery_mode_bat_only", cp_params);
 
   std::string package_folder =
       ros::package::getPath("chargepal_behaviour_tree");

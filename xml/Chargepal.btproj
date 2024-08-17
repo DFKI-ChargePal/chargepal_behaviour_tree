@@ -1,19 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<root BTCPP_format="4" project_name="Project">
+<root BTCPP_format="4" project_name="ChargePal">
     <include path="Actions.xml"/>
     <include path="Actionsets.xml"/>
     <include path="Jobs.xml"/>
     <include path="Main.xml"/>
     <include path="Recovery.xml"/>
+    <include path="../ROS_interface/src/chargepal_behaviour_tree/xml/Test.xml"/>
     <!-- Description of Node Models (used by Groot) -->
     <TreeNodesModel>
         <Action ID="arrive_at_station" editable="true"/>
-        <Condition ID="askAssertLift" editable="true"/>
         <Action ID="battery_ladeprozess_ende" editable="true"/>
         <Action ID="battery_ladeprozess_start" editable="true"/>
+        <Action ID="battery_mode_bat_only" editable="true"/>
         <Action ID="battery_mode_req_charge" editable="true"/>
         <Action ID="battery_mode_req_idle" editable="true"/>
         <Action ID="battery_mode_req_standby" editable="true"/>
+        <Action ID="battery_unlock" editable="true"/>
         <Action ID="battery_wakeup" editable="true"/>
         <Action ID="call_for_help" editable="true"/>
         <Action ID="drop_cart" editable="true"/>
@@ -26,10 +28,7 @@
         <Condition ID="isDifferentBattery" editable="true"/>
         <Condition ID="isRECHARGE_CHARGER" editable="true"/>
         <Condition ID="isRECHARGE_SELF" editable="true"/>
-        <Condition ID="isRobotAtADS" editable="true"/>
         <Condition ID="isRobotAtADSorBCSorBWS" editable="true"/>
-        <Condition ID="isRobotAtBCS" editable="true"/>
-        <Condition ID="isRobotAtBWS" editable="true"/>
         <Condition ID="isRobotAtRBS" editable="true"/>
         <Condition ID="isRobotOrGoalAtADS" editable="true"/>
         <Condition ID="isRobotOrGoalAtBCS" editable="true"/>
@@ -44,11 +43,18 @@
         <Action ID="plugin_BCS" editable="true"/>
         <Action ID="plugout_ADS" editable="true"/>
         <Action ID="plugout_BCS" editable="true"/>
+        <Action ID="push_rdbc_to_ldb" editable="true"/>
         <Action ID="recovery_arrive_BCS" editable="true"/>
         <Action ID="recovery_arrive_BWS" editable="true"/>
         <Action ID="recovery_plugin_BCS" editable="true"/>
         <Action ID="sample_node" editable="true"/>
-        <Action ID="sleep_until_charged" editable="true"/>
+        <Action ID="sample_node_1" editable="true"/>
+        <Action ID="sample_node_2" editable="true"/>
+        <Action ID="sample_node_3" editable="true"/>
+        <Action ID="sleep_until_battery_charged" editable="true"/>
+        <Action ID="sleep_until_car_charged" editable="true"/>
         <Action ID="time_sleep" editable="true"/>
+        <Action ID="update_rdbc_values" editable="true"/>
+        <Action ID="verify_sync_rdb_rdbc" editable="true"/>
     </TreeNodesModel>
 </root>

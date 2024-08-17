@@ -20,9 +20,9 @@
                _autoremap="true"/>
       <SubTree ID="action_arrive_station"
                _autoremap="true"/>
-      <SubTree ID="action_plugin"
-               _autoremap="true"/>
       <SubTree ID="action_battery_start_ladeprozess"
+               _autoremap="true"/>
+      <SubTree ID="action_plugin"
                _autoremap="true"/>
     </Sequence>
   </BehaviorTree>
@@ -62,9 +62,9 @@
                _autoremap="true"/>
       <SubTree ID="action_arrive_station"
                _autoremap="true"/>
-      <SubTree ID="action_plugin"
-               _autoremap="true"/>
       <SubTree ID="action_battery_start_ladeprozess"
+               _autoremap="true"/>
+      <SubTree ID="action_plugin"
                _autoremap="true"/>
     </Sequence>
   </BehaviorTree>
