@@ -38,7 +38,7 @@ public:
     robot_location = read_robot_value(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, "robot_location");
     cart_on_robot = read_robot_value(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, "cart_on_robot");
 
-    if (robot_location == target_station || robot_location == source_station)
+    if ((robot_location.find(target_station) != std ::string::npos) || (robot_location.find(source_station) != std ::string::npos))
     {
       goal.target_station = target_station;
     }
