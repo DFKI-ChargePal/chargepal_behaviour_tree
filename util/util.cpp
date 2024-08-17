@@ -802,3 +802,31 @@ void calling_help(const std::string &robot_name, const std::string &text)
   cfh.sendGoal(goal);
   cfh.waitForResult(ros::Duration(900.0));
 }
+
+/**
+ * @brief Updates the GUI configuration with the given key-value pair.
+ * 
+ * This function updates the GUI configuration file located at "/home/guru_dfki/Projects/ChargePal/ROS_interface/src/chargepal_behaviour_tree/util/util.cpp".
+ * It takes a key and a value as parameters and modifies the corresponding entry in the GUI configuration file.
+ * If the key contains the substring "error_count", it increments the value by 1 before updating.
+ * 
+ * @param key The key to be updated in the GUI configuration.
+ * @param value The new value to be assigned to the key.
+ */
+void update_gui_config(const std::string key, std::string value) {
+  std::string gui_yaml_path =
+      ros::package::getPath("chargepal_monitor_gui") + "/cfg/gui.yaml";
+
+  YAML::Node data = YAML::LoadFile(gui_yaml_path);
+
+  size_t error_key = key.find("error_count");
+  if (error_key != std::string::npos) {
+    int error_count = std::stoi(data[key].as<std::string>());
+    value = std::to_string(error_count + 1);
+  }
+
+  data[key] = value;
+
+  std::ofstream fout(gui_yaml_path);
+  fout << data;
+}

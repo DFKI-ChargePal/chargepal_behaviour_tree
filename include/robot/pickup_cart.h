@@ -31,6 +31,7 @@ public:
     tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("pickup_cart_") + goal.cart_name}}}}};
     set_rdbc_values(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, tables_values);
     enter_log_file(std::any_cast<std::string>(arg_param["log_file_path"]), "Performing pickup_cart of " + goal.cart_name);
+    update_gui_config("ongoing_action", "Performing pickup_cart of " + goal.cart_name);
     bool puc_action = puc.waitForResult(ros::Duration(900.0));
     if (puc_action)
     {
@@ -47,12 +48,14 @@ public:
 
       enter_log_file(std::any_cast<std::string>(arg_param["log_file_path"]), "pickup_cart of" + goal.cart_name + " status is " +
                                                                                  action_result);
+      update_gui_config("ongoing_action", "pickup_cart of" + goal.cart_name + " status is " + action_result);
       tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("none")}, {"previous_action", std::string("pickup_cart_") + goal.cart_name + "_" + action_result}}}}};
     }
     else
     {
       puc.cancelGoal();
       enter_log_file(std::any_cast<std::string>(arg_param["log_file_path"]), "pickup_cart of" + goal.cart_name + " cannot be finished within a timeout of 900 seconds");
+      update_gui_config("ongoing_action", "pickup_cart of" + goal.cart_name + " cannot be finished within a timeout of 900 seconds");
       tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("none")}, {"previous_action", std::string("pickup_cart_") + goal.cart_name + std::string("_ActionTimeout")}}}}};
     }
 
@@ -61,6 +64,7 @@ public:
     {
       enter_log_file(std::any_cast<std::string>(arg_param["log_file_path"]), "pickup_cart of" + goal.cart_name +
                                                                                  " IO recover status is False");
+      update_gui_config("ongoing_action", "pickup_cart of" + goal.cart_name + " IO recover status is False");
     }
     set_rdbc_values(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, tables_values);
     masterBlackboard->set("failed_robot_action",

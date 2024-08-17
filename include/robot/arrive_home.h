@@ -41,6 +41,7 @@ public:
     tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("go_home_") + goal.target_station}, {"robot_location", station_transition}}}}};
     set_rdbc_values(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, tables_values);
     enter_log_file(std::any_cast<std::string>(arg_param["log_file_path"]), "Performing arrive_at_home to " + goal.target_station);
+    update_gui_config("ongoing_action", "Performing arrive_at_home to " + goal.target_station);
     bool aah_action = aah.waitForResult(ros::Duration(900.0));
     if (aah_action)
     {
@@ -58,13 +59,14 @@ public:
 
       enter_log_file(std::any_cast<std::string>(arg_param["log_file_path"]), "arrive_at_home to" + goal.target_station + " status is " +
                                                                                  action_result);
+      update_gui_config("ongoing_action", "arrive_at_home to" + goal.target_station + " status is " + action_result);
       tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("none")}, {"previous_action", std::string("go_home_") + goal.target_station + "_" + action_result}}}}};
         }
     else
     {
       aah.cancelGoal();
       enter_log_file(std::any_cast<std::string>(arg_param["log_file_path"]), "go_home_" + goal.target_station + " cannot be finished within a timeout of 900 seconds");
-
+      update_gui_config("ongoing_action", "go_home_" + goal.target_station + " cannot be finished within a timeout of 900 seconds");
       tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("none")}, {"previous_action", std::string("go_home_") + goal.target_station + std::string("_ActionTimeout")}}}}};
     }
     set_rdbc_values(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, tables_values);

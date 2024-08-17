@@ -32,13 +32,14 @@ public:
     cart = masterBlackboard->get<std::string>("cart");
     robot = masterBlackboard->get<std::string>("robot");
     charging_type = masterBlackboard->get<std::string>("charging_type");
-    std::transform(charging_type.begin(), charging_type.end(), charging_type.begin(),[](unsigned char c){ return std::toupper(c); });
+    std::transform(charging_type.begin(), charging_type.end(), charging_type.begin(), [](unsigned char c)
+                   { return std::toupper(c); });
     source_station = masterBlackboard->get<std::string>("source_station");
     target_station = masterBlackboard->get<std::string>("target_station");
     robot_location = read_robot_value(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, "robot_location");
     cart_on_robot = read_robot_value(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, "cart_on_robot");
 
-    if (robot_location == target_station || robot_location == source_station)
+    if ((robot_location.find(target_station) != std ::string::npos) || (robot_location.find(source_station) != std ::string::npos))
     {
       goal.target_station = target_station;
     }
@@ -70,9 +71,10 @@ public:
       {
         goal.target_station = goal.target_station + "_" + charging_type + "_pick";
       }
-      else{
+      else
+      {
         goal.target_station = goal.target_station + "_" + charging_type;
-        }
+      }
     }
     aas_goal_string = std::string("arrive_at_station_") + goal.target_station;
     station_transition = robot_location + "_to_" + goal.target_station;
@@ -89,6 +91,7 @@ public:
 
     set_rdbc_values(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, tables_values);
     enter_log_file(std::any_cast<std::string>(arg_param["log_file_path"]), "Performing " + aas_goal_string);
+    update_gui_config("ongoing_action", "Performing " + aas_goal_string);
     bool aas_action = aas.waitForResult(ros::Duration(900.0));
     if (aas_action)
     {
@@ -115,8 +118,8 @@ public:
         return BT::NodeStatus::SUCCESS;
       }
 
-      enter_log_file(std::any_cast<std::string>(arg_param["log_file_path"]), aas_goal_string + " status is " +
-                                                                                 action_result);
+      enter_log_file(std::any_cast<std::string>(arg_param["log_file_path"]), aas_goal_string + " status is " + action_result);
+      update_gui_config("ongoing_action", aas_goal_string + " status is " + action_result);
 
       tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("none")}, {"previous_action", aas_goal_string + "_" + action_result}}}}};
     }
@@ -124,6 +127,7 @@ public:
     {
       aas.cancelGoal();
       enter_log_file(std::any_cast<std::string>(arg_param["log_file_path"]), aas_goal_string + " cannot be finished within a timeout of 900 seconds");
+      update_gui_config("ongoing_action", aas_goal_string + " cannot be finished within a timeout of 900 seconds");
       tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("none")}, {"previous_action", aas_goal_string + std::string("_ActionTimeout")}}}}};
     }
     set_rdbc_values(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, tables_values);

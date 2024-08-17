@@ -1,11 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4">
   <BehaviorTree ID="action_arrive_station">
     <Fallback name="arrive_at_station">
       <RetryUntilSuccessful num_attempts="3"
-                            _onSuccess="&quot;job_status=1&quot;">
+                            _onSuccess="job_status=1"
+                            _onFailure="job_status=3">
         <arrive_at_station/>
       </RetryUntilSuccessful>
-      <Sequence _onSuccess="&quot;job_status=1&quot;">
+      <Sequence _onSuccess="job_status=1">
         <notPickGoalLocation/>
         <Fallback>
           <Sequence>
@@ -117,7 +119,8 @@
   <BehaviorTree ID="action_drop_cart">
     <Fallback name="drop_cart">
       <RetryUntilSuccessful num_attempts="3"
-                            _onSuccess="job_status=1">
+                            _onSuccess="job_status=1"
+                            _onFailure="job_status=3">
         <drop_cart/>
       </RetryUntilSuccessful>
       <ForceFailure>
@@ -130,7 +133,8 @@
   <BehaviorTree ID="action_go_home">
     <Fallback name="go_home">
       <RetryUntilSuccessful num_attempts="3"
-                            _onSuccess="job_status=1">
+                            _onSuccess="job_status=1"
+                            _onFailure="job_status=3">
         <go_home/>
       </RetryUntilSuccessful>
       <ForceFailure>
@@ -142,7 +146,8 @@
   <BehaviorTree ID="action_pickup_cart">
     <Fallback name="pickup_cart">
       <RetryUntilSuccessful num_attempts="3"
-                            _onSuccess="job_status=1">
+                            _onSuccess="job_status=1"
+                            _onFailure="job_status=3">
         <pickup_cart/>
       </RetryUntilSuccessful>
       <ForceFailure>
@@ -172,7 +177,8 @@
           <Sequence name="plugin_bcs">
             <isRobotOrGoalAtBCS/>
             <Fallback name="plugin_bcs">
-              <plugin_BCS/>
+              <plugin_BCS _onSuccess="job_status=1"
+                          _onFailure="job_status=3"/>
               <ForceFailure>
                 <SubTree ID="recovery_plugin"
                          _skipIf="!recovery_enabled"
@@ -185,7 +191,8 @@
           <Sequence name="plugin_ads">
             <isRobotOrGoalAtADS/>
             <Fallback name="plugin_ads">
-              <plugin_ADS/>
+              <plugin_ADS _onSuccess="job_status=1"
+                          _onFailure="job_status=3"/>
               <ForceFailure>
                 <SubTree ID="recovery_plugin"
                          _skipIf="!recovery_enabled"
@@ -224,7 +231,8 @@
       <Sequence name="plugout_bcs">
         <isRobotOrGoalAtBCS/>
         <Fallback name="plugout_bcs">
-          <plugout_BCS/>
+          <plugout_BCS _onSuccess="job_status=1"
+                       _onFailure="job_status=3"/>
           <ForceFailure>
             <SubTree ID="recovery_plugout"
                      _skipIf="!recovery_enabled"
@@ -237,7 +245,8 @@
       <Sequence name="plugout_ads">
         <isRobotOrGoalAtADS/>
         <Fallback name="plugout_ads">
-          <plugout_ADS/>
+          <plugout_ADS _onSuccess="job_status=1"
+                       _onFailure="job_status=3"/>
           <ForceFailure>
             <SubTree ID="recovery_plugout"
                      _skipIf="!recovery_enabled"

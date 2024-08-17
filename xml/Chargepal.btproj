@@ -1,20 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<root BTCPP_format="4" project_name="ChargePal">
+<root BTCPP_format="4" project_name="Project">
     <include path="Actions.xml"/>
     <include path="Actionsets.xml"/>
     <include path="Jobs.xml"/>
     <include path="Main.xml"/>
     <include path="Recovery.xml"/>
-    <include path="../ROS_interface/src/chargepal_behaviour_tree/xml/Test.xml"/>
     <!-- Description of Node Models (used by Groot) -->
     <TreeNodesModel>
         <Action ID="arrive_at_station" editable="true"/>
         <Condition ID="askAssertLift" editable="true"/>
+        <Action ID="battery_ladeprozess_ende" editable="true"/>
+        <Action ID="battery_ladeprozess_start" editable="true"/>
+        <Action ID="battery_mode_req_charge" editable="true"/>
+        <Action ID="battery_mode_req_idle" editable="true"/>
+        <Action ID="battery_mode_req_standby" editable="true"/>
+        <Action ID="battery_wakeup" editable="true"/>
         <Action ID="call_for_help" editable="true"/>
         <Action ID="drop_cart" editable="true"/>
         <Action ID="error_count" editable="true"/>
         <Action ID="go_home" editable="true"/>
         <Condition ID="isArmFree" editable="true"/>
+        <Condition ID="isAssertLiftDown" editable="true"/>
         <Condition ID="isBRING_CHARGER" editable="true"/>
         <Condition ID="isCartPlaced" editable="true"/>
         <Condition ID="isDifferentBattery" editable="true"/>
@@ -25,10 +31,14 @@
         <Condition ID="isRobotAtBCS" editable="true"/>
         <Condition ID="isRobotAtBWS" editable="true"/>
         <Condition ID="isRobotAtRBS" editable="true"/>
+        <Condition ID="isRobotOrGoalAtADS" editable="true"/>
+        <Condition ID="isRobotOrGoalAtBCS" editable="true"/>
+        <Condition ID="isRobotOrGoalAtBWS" editable="true"/>
         <Condition ID="isSTOW_CHARGER" editable="true"/>
         <Condition ID="isSameBattery" editable="true"/>
         <Condition ID="isbattery_ADS_BCS" editable="true"/>
         <Condition ID="isbattery_BWS" editable="true"/>
+        <Condition ID="notPickGoalLocation" editable="true"/>
         <Action ID="pickup_cart" editable="true"/>
         <Action ID="plugin_ADS" editable="true"/>
         <Action ID="plugin_BCS" editable="true"/>

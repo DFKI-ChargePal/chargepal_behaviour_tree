@@ -32,6 +32,7 @@ public:
     {
       tables_values = {{ROBOT_TABLE, {robot, {{"current_job", std::string("BRING_CHARGER")}}}}};
       set_rdbc_values(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, tables_values);
+      update_gui_config("ongoing_job", "BRING_CHARGER");
       return NodeStatus::SUCCESS;
     }
     else
@@ -61,6 +62,7 @@ public:
     std::vector<TableInfo> tables_values;
     if (job == "RECHARGE_CHARGER")
     {
+      update_gui_config("ongoing_job", "RECHARGE_CHARGER");
       tables_values = {{ROBOT_TABLE, {robot, {{"current_job", std::string("RECHARGE_CHARGER")}}}}};
       set_rdbc_values(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, tables_values);
       return NodeStatus::SUCCESS;
@@ -91,6 +93,7 @@ public:
     std::vector<TableInfo> tables_values;
     if (job == "RECHARGE_SELF")
     {
+      update_gui_config("ongoing_job", "RECHARGE_SELF");
       tables_values = {{ROBOT_TABLE, {robot, {{"current_job", std::string("RECHARGE_SELF")}}}}};
       set_rdbc_values(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, tables_values);
       return NodeStatus::SUCCESS;
@@ -122,7 +125,7 @@ public:
     if (job == "STOW_CHARGER")
     {
       tables_values = {{ROBOT_TABLE, {robot, {{"current_job", std::string("STOW_CHARGER")}}}}};
-
+      update_gui_config("ongoing_job", "STOW_CHARGER");
       set_rdbc_values(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, tables_values);
       return NodeStatus::SUCCESS;
     }
@@ -567,9 +570,23 @@ public:
     failed_robot_action = masterBlackboard->get<std::string>("failed_robot_action");
     failed_battery_action = masterBlackboard->get<std::string>("failed_battery_action");
 
+    if (failed_robot_action.find("arrive_at_station") != std::string::npos) {
+      update_gui_config("error_count_arrive_at_station", "");
+    } else if (failed_robot_action.find("go_home") != std::string::npos) {
+      update_gui_config("error_count_go_home", "");
+    } else if (failed_robot_action.find("place_charger") != std::string::npos) {
+      update_gui_config("error_count_place_cart", "");
+    } else if (failed_robot_action.find("pickup_charger") != std::string::npos) {
+      update_gui_config("error_count_pickup_cart", "");
+    } else if (failed_robot_action.find("plugin") != std::string::npos) {
+      update_gui_config("error_count_plugin_ads", "");
+    } else if (failed_robot_action.find("plugout") != std::string::npos) {
+      update_gui_config("error_count_plugout_ads", "");
+    }
+
     call_context = job_type + "with source_station:" + source_station + " and target_station:" + target_station + " reached failure with failed_robot_action:" + failed_robot_action + " and failed_battery_action:" + failed_battery_action + ". The previous successfull actions were previous_robot_action:" + previous_robot_action + " and previous_battery_action:" + previous_battery_action;
     enter_log_file(std::any_cast<std::string>(arg_param["log_file_path"]), "Calling for help");
-    calling_help(robot, call_context);
+    //calling_help(robot, call_context);
     return BT::NodeStatus::SUCCESS;
   }
 
@@ -824,7 +841,7 @@ int main(int argc, char **argv)
               tables_values = {{ROBOT_TABLE, {std::any_cast<std::string>(cp_params["robot"]), {{"availability", true}, {"job_status", job_status}, {"current_job_id", std::string("none")}}}}};
               set_rdbc_values(std::any_cast<std::string>(cp_params["rdbc_path"]), std::any_cast<std::string>(cp_params["robot"]), tables_values);
               enter_log_file(std::any_cast<std::string>(cp_params["log_file_path"]), "Updating job status as: " + job_status);
-
+              update_gui_config("ongoing_action", "Job completed");
               job_server_update = update_job_monitor(std::any_cast<int>(cp_params["server_timeout"]), std::any_cast<std::string>(cp_params["robot"]), job_type, job_status);
               enter_log_file(std::any_cast<std::string>(cp_params["log_file_path"]), "The job update to server is  :" + job_server_update);
               job_requested.clear();
@@ -858,6 +875,7 @@ int main(int argc, char **argv)
       }
       else
       {
+        std::cout << "No job received" << std::endl;
         tables_values = {{ROBOT_TABLE, {std::any_cast<std::string>(cp_params["robot"]), {{"robot_charge", ""}}}}};
         set_rdbc_values(std::any_cast<std::string>(cp_params["rdbc_path"]), std::any_cast<std::string>(cp_params["robot"]), tables_values);
         ros::Duration(1.0).sleep();

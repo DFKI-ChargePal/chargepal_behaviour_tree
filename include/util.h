@@ -113,6 +113,7 @@ std::string enumToString(const int value);
 
 void update_robot_charge(const std::string &rdbc_path, const std::string &robot_name);
 void enter_log_file(const std::string file_path, const std::string content);
+void update_gui_config(const std::string key, std::string value);
 void calling_help(const std::string &robot_name, const std::string &text);
 
 bool verify_rdb_ldb_connection(const int &server_timeout);
