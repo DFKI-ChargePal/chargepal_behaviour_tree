@@ -1,7 +1,5 @@
 <root BTCPP_format="4"
-      main_tree_to_execute="main">
-  <include path=""/>
-
+  main_tree_to_execute="main">
   <BehaviorTree ID="main">
     <Fallback name="job"
               _onSuccess="job_status=1"
