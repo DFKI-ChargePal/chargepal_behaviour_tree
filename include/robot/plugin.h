@@ -113,7 +113,7 @@ public:
         }
         else
         {
-            actionlib::SimpleActionClient<chargepal_actions::PlugInBcsAcAction> pi_bcs("plug_in_bcs", true);
+            actionlib::SimpleActionClient<chargepal_actions::PlugInBcsAcAction> pi_bcs("plug_in_bcs_ac", true);
             pi_bcs.waitForServer();
 
             pi_bcs.sendGoal(goal);

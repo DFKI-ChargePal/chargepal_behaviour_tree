@@ -112,7 +112,7 @@ public:
     }
     else
     {
-      actionlib::SimpleActionClient<chargepal_actions::PlugOutBcsAcAction> po_bcs("plug_out_bcs", true);
+      actionlib::SimpleActionClient<chargepal_actions::PlugOutBcsAcAction> po_bcs("plug_out_bcs_ac", true);
       po_bcs.waitForServer();
       po_bcs.sendGoal(goal);
 
