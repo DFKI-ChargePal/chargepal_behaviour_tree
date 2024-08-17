@@ -1,7 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <root BTCPP_format="4"
       main_tree_to_execute="main">
   <BehaviorTree ID="main">
-    <Fallback name="job">
+    <Fallback name="job"
+              _onFailure="job_status=3">
       <Sequence name="bring_charger">
         <isBRING_CHARGER/>
         <SubTree ID="BRING_CHARGER_MAIN"
