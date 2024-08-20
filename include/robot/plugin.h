@@ -37,7 +37,8 @@ public:
         {
             actionlib::SimpleActionClient<chargepal_actions::PlugInAdsAcAction> pi_ads("plug_in_ads_" + charging_type, true);
             pi_ads.waitForServer();
-
+            goal.cart_name = cart;
+            goal.station_name = target_station;
             pi_ads.sendGoal(goal);
             tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("plugin_") + cart + std::string("_") + target_station}}}}};
             set_rdbc_values(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, tables_values);
@@ -115,7 +116,8 @@ public:
         {
             actionlib::SimpleActionClient<chargepal_actions::PlugInBcsAcAction> pi_bcs("plug_in_bcs_ac", true);
             pi_bcs.waitForServer();
-
+            goal.cart_name = cart;
+            goal.station_name = target_station;
             pi_bcs.sendGoal(goal);
             tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("plugin_") + cart + std::string("_") + target_station}}}}};
             set_rdbc_values(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, tables_values);
