@@ -36,9 +36,9 @@ public:
     {
       actionlib::SimpleActionClient<chargepal_actions::PlugOutAdsAcAction> po_ads("plug_out_ads_" + charging_type, true);
       po_ads.waitForServer();
-      po_ads.sendGoal(goal);
       goal.cart_name = cart;
       goal.station_name = target_station;
+      po_ads.sendGoal(goal);
       tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("plugout_") + cart + std::string("_") + target_station}}}}};
       set_rdbc_values(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, tables_values);
       po_ads_action = po_ads.waitForResult(ros::Duration(900.0));
@@ -111,9 +111,9 @@ public:
     {
       actionlib::SimpleActionClient<chargepal_actions::PlugOutBcsAcAction> po_bcs("plug_out_bcs_ac", true);
       po_bcs.waitForServer();
-      po_bcs.sendGoal(goal);
       goal.cart_name = cart;
       goal.station_name = target_station;
+      po_bcs.sendGoal(goal);
       tables_values = {{ROBOT_TABLE, {robot, {{"ongoing_action", std::string("plugout_") + cart + std::string("_") + target_station}}}}};
       set_rdbc_values(std::any_cast<std::string>(arg_param["rdbc_path"]), robot, tables_values);
       po_bcs_action = po_bcs.waitForResult(ros::Duration(900.0));
