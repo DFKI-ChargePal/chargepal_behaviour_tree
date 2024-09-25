@@ -5,7 +5,6 @@
     <include path="Jobs.xml"/>
     <include path="Main.xml"/>
     <include path="Recovery.xml"/>
-    <include path="../ROS_interface/src/chargepal_behaviour_tree/xml/Test.xml"/>
     <!-- Description of Node Models (used by Groot) -->
     <TreeNodesModel>
         <Action ID="arrive_at_station" editable="true"/>
