@@ -755,7 +755,7 @@ bool pull_rdb_to_rdbc(std::map<std::string, std::vector<std::string>> &table_row
 std::map<std::string, std::any> set_ros_params(const ros::NodeHandle &nh)
 {
   std::map<std::string, std::any> chargepal_ros_params;
-  bool recovery_flag;
+  bool recovery_enabled;
   int server_timeout;
   std::string rdbc_path;
   std::string rdb_path;
@@ -763,7 +763,7 @@ std::map<std::string, std::any> set_ros_params(const ros::NodeHandle &nh)
   std::string robot;
   bool sim_flag, plugin_enabled, plugout_enabled;
 
-  nh.getParam("/recovery_enabled", recovery_flag);
+  nh.getParam("/recovery_enabled", recovery_enabled);
   nh.getParam("/server_timeout", server_timeout);
   nh.getParam("/rdbc_path", rdbc_path);
   nh.getParam("/rdb_path", rdb_path);
@@ -773,7 +773,7 @@ std::map<std::string, std::any> set_ros_params(const ros::NodeHandle &nh)
   nh.getParam("/plugin_enabled", plugin_enabled);
   nh.getParam("/plugout_enabled", plugout_enabled);
 
-  chargepal_ros_params["recovery_flag"] = recovery_flag;
+  chargepal_ros_params["recovery_enabled"] = recovery_enabled;
   chargepal_ros_params["server_timeout"] = server_timeout;
   chargepal_ros_params["rdbc_path"] = rdbc_path;
   chargepal_ros_params["rdb_path"] = rdb_path;
