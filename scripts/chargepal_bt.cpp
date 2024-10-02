@@ -562,6 +562,7 @@ public:
 
   BT::NodeStatus tick() override
   {
+    BT::Blackboard::Ptr masterBlackboard = config().blackboard;
     robot = masterBlackboard->get<std::string>("robot");
     job_type = masterBlackboard->get<std::string>("job_type");
     source_station = masterBlackboard->get<std::string>("source_station");
@@ -587,12 +588,11 @@ public:
 
     call_context = job_type + "with source_station:" + source_station + " and target_station:" + target_station + " reached failure with failed_robot_action:" + failed_robot_action + " and failed_battery_action:" + failed_battery_action + ". The previous successfull actions were previous_robot_action:" + previous_robot_action + " and previous_battery_action:" + previous_battery_action;
     enter_log_file(std::any_cast<std::string>(arg_param["log_file_path"]), "Calling for help");
-    //calling_help(robot, call_context);
+    calling_help(robot, call_context);
     return BT::NodeStatus::SUCCESS;
   }
 
 private:
-  BT::Blackboard::Ptr masterBlackboard;
   std::string robot, job_type, target_station, source_station, previous_robot_action, previous_battery_action, failed_robot_action, failed_battery_action, call_context;
   std::map<std::string, std::any> arg_param;
 };
