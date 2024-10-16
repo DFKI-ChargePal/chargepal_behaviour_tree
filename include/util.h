@@ -95,7 +95,7 @@ const std::string ROBOT_TABLE = "robot_info";
 const std::string CART_TABLE = "cart_info";
 const std::string BATTERY_ACTIONS_TABLE = "battery_action_info";
 
-extern bool recovery_flag;
+extern bool recovery_enabled;
 extern float server_timeout;
 extern std::string rdbc_path;
 extern std::string rdb_path;

@@ -692,6 +692,8 @@ int main(int argc, char **argv)
   BehaviorTreeFactory factory;
   BT::Blackboard::Ptr masterBlackboard = BT::Blackboard::create();
 
+  bool recovery_enabled = std::any_cast<bool>(cp_params["recovery_enabled"]);
+
   factory.registerNodeType<isBRING_CHARGER>("isBRING_CHARGER", cp_params);
   factory.registerNodeType<isRECHARGE_CHARGER>("isRECHARGE_CHARGER", cp_params);
   factory.registerNodeType<isRECHARGE_SELF>("isRECHARGE_SELF", cp_params);
@@ -796,6 +798,7 @@ int main(int argc, char **argv)
             pull_rdb_to_rdbc(target_components);
 
             // SET BT BLACKBOARD
+            masterBlackboard->set("recovery_enabled", recovery_enabled);
             masterBlackboard->set("job_type", job_type);
             masterBlackboard->set("robot", robot);
             masterBlackboard->set("cart", cart);
